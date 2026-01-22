@@ -3,7 +3,7 @@ import { defineConfig } from "vitepress";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Cris Wiki",
-  description: "Cris Wiki -- 一个半路出家的前端开发的私人知识库",
+  description: "Cris Wiki -- 一个半路出家的前端开发的私人笔记",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
