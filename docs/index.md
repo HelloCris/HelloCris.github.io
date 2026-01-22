@@ -7,7 +7,7 @@ hero:
   text: "前端🐮🐴的学习旅程~~~"
   tagline: 记录前端技术、学习笔记与实践经验，持续成长的技术分享平台
   image:
-    src: /logo.png
+    src: /logo_light.webp
     alt: Cris Wiki
   actions:
     - theme: brand

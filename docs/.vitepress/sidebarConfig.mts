@@ -2,6 +2,7 @@
 export const sidebarConfig = [
   {
     text: "简介",
+    collapsed: false,
     items: [
       {
         text: "Cris是谁?",

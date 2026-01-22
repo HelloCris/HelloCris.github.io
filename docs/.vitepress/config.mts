@@ -16,7 +16,7 @@ export default defineConfig({
   },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: "/logo.png",
+    logo: "/favicon.ico",
     nav: [
       { text: "首页", link: "/" },
       { text: "笔记", link: "/markdown-examples" },
