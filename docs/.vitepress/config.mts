@@ -19,7 +19,7 @@ export default defineConfig({
     logo: "/favicon.ico",
     nav: [
       { text: "首页", link: "/" },
-      { text: "笔记", link: "/markdown-examples" },
+      { text: "笔记", link: "/notes/index.md" },
       { text: "实战", link: "/markdown-examples" },
       { text: "面试", link: "/markdown-examples" },
       { text: "成长", link: "/markdown-examples" },

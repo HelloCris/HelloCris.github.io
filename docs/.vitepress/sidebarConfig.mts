@@ -15,17 +15,24 @@ export const sidebarConfig = [
     ],
   },
   {
-    text: "HTML+CSS",
+    text: "📚笔记",
+    collapsed: false,
     items: [
+      { text: "索引", link: "/notes/index.md" },
       {
         text: "HTML",
-        link: "/markdown-examples",
         items: [
-          { text: "HTML 基础", link: "/markdown-examples" },
-          { text: "HTML 语义化", link: "/markdown-examples" },
+          { text: "HTML基础", link: "/notes/html/base.md" },
+          { text: "HTML5", link: "/notes/html/html5.md" },
         ],
       },
-      { text: "CSS", link: "/api-examples" },
+      {
+        text: "CSS",
+        items: [
+          { text: "CSS基础", link: "/notes/css/base.md" },
+          { text: "CSS3", link: "/notes/css/css3.md" },
+        ],
+      },
     ],
   },
   {

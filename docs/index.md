@@ -16,14 +16,14 @@ hero:
       rel: noopener noreferrer
     - theme: alt
       text: 快速开始💯
-      link: /profile/getting-started
+      link: /notes/index.md
       rel: noopener noreferrer
 
 features:
   - title: 前端学习笔记✍️
     details: 记录从0到1的自学前端，从HTML、CSS、JavaScript到各种现代前端框架，给学习过程中的重点知识留下一点痕迹。
     icon: 📝
-    link: /guide/learning-notes
+    link: /notes/index.md
   - title: 项目实践经验🔧
     details: 分享项目开发中的最佳实践、解决方案和好用的开发工具。
     icon: 🛠️
