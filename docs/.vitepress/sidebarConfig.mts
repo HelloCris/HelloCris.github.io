@@ -9,7 +9,7 @@ export const sidebarConfig = [
         link: "/profile/who-is-cris",
       },
       {
-        text: "免责声明",
+        text: "笔记说明",
         link: "/profile/disclaimer",
       },
     ],
@@ -18,7 +18,7 @@ export const sidebarConfig = [
     text: "📚笔记",
     collapsed: false,
     items: [
-      { text: "索引", link: "/notes/index.md" },
+      { text: "目录", link: "/notes/index.md" },
       {
         text: "HTML",
         items: [

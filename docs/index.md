@@ -15,7 +15,7 @@ hero:
       link: /profile/who-is-cris
       rel: noopener noreferrer
     - theme: alt
-      text: 快速开始💯
+      text: 开始阅读💯
       link: /notes/index.md
       rel: noopener noreferrer
 
