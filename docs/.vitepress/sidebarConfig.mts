@@ -15,7 +15,7 @@ export const sidebarConfig = [
     ],
   },
   {
-    text: "📚笔记",
+    text: "📝 笔记",
     collapsed: false,
     items: [
       { text: "目录", link: "/notes/index.md" },
@@ -37,31 +37,36 @@ export const sidebarConfig = [
     ],
   },
   {
-    text: "Examples",
+    text: "🛠️ 实战（待排期）",
+    collapsed: false,
     items: [
-      { text: "Markdown Examples", link: "/markdown-examples" },
-      { text: "Runtime API Examples", link: "/api-examples" },
+      { text: "目录", link: "/projects/index.md" },
+      {
+        text: "课题一",
+        items: [{ text: "第一节", link: "" }],
+      },
     ],
   },
   {
-    text: "Examples",
+    text: "🎯 面试（待排期）",
+    collapsed: false,
     items: [
-      { text: "Markdown Examples", link: "/markdown-examples" },
-      { text: "Runtime API Examples", link: "/api-examples" },
+      { text: "目录", link: "/interview/index.md" },
+      {
+        text: "课题一",
+        items: [{ text: "第一节", link: "" }],
+      },
     ],
   },
   {
-    text: "Examples",
+    text: "📈 成长（预留）",
+    collapsed: false,
     items: [
-      { text: "Markdown Examples", link: "/markdown-examples" },
-      { text: "Runtime API Examples", link: "/api-examples" },
-    ],
-  },
-  {
-    text: "Examples",
-    items: [
-      { text: "Markdown Examples", link: "/markdown-examples" },
-      { text: "Runtime API Examples", link: "/api-examples" },
+      { text: "目录", link: "/growth/index.md" },
+      {
+        text: "课题一",
+        items: [{ text: "第一节", link: "" }],
+      },
     ],
   },
   {
