@@ -27,15 +27,15 @@ features:
   - title: 项目实践经验🔧
     details: 分享项目开发中的最佳实践、解决方案和好用的开发工具。
     icon: 🛠️
-    link: /guide/project-practices
+    link: /projects/index.md
   - title: 面试被拷打记录🥊
     details: 整理前端面试常见问题和解答。
     icon: 🎯
-    link: /guide/interview-questions
+    link: /interview/index.md
   - title: 个人成长日记🏅
     details: 分享职业发展和个人成长的思考。
     icon: 📈
-    link: /guide/growth-diary
+    link: /growth/index.md
 ---
 
 ## 欢迎来到 Cris Wiki

@@ -20,9 +20,9 @@ export default defineConfig({
     nav: [
       { text: "首页", link: "/" },
       { text: "笔记", link: "/notes/index.md" },
-      { text: "实战", link: "/markdown-examples" },
-      { text: "面试", link: "/markdown-examples" },
-      { text: "成长", link: "/markdown-examples" },
+      { text: "实战", link: "/projects/index.md" },
+      { text: "面试", link: "/interview/index.md" },
+      { text: "成长", link: "/growth/index.md" },
     ],
     outline: {
       level: [2, 3],
