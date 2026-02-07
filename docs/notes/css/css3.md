@@ -24,10 +24,15 @@ CSS3 是 CSS（层叠样式表）的第三代主要标准，它并不是一个�
 
 ## 文本与字体增强
 
-- **`@font-face`**：自定义网络字体。
 - **`text-overflow`**：控制溢出文本显示（如 `ellipsis`）。
 - **`word-wrap` / `overflow-wrap`**：允许长单词换行。
 - **`text-decoration` 扩展**：支持波浪线、颜色等（如 `text-decoration: wavy red`）。
+
+详细请见[文本属性](/notes/css/property.html#文本属性)
+
+- **`@font-face`**：自定义网络字体。
+
+详细请见[自定义字体](/notes/css/property.html#自定义字体)
 
 ## 2D/3D 变换（Transforms）
 
