@@ -11,32 +11,15 @@ CSS3 是 CSS（层叠样式表）的第三代主要标准，它并不是一个�
 
 ## 盒模型与边框/背景增强
 
-- **`box-sizing`**：改变盒模型计算方式（`content-box` vs `border-box`）。
-- **`border-radius`**：实现圆角边框。
-- **`box-shadow`**：为元素添加阴影。
-- **`text-shadow`**：为文字添加阴影。
-- **`border-image`**：用图像作为边框。
+- [盒模型与边框](/notes/css/property.html#盒模型): 如 `box-sizing` `border-radius` `box-shadow` `border-image`
 
-详细请见[盒模型](/notes/css/property.html#盒模型)
-
-- **渐变背景**：
-  - `linear-gradient()`（线性渐变）
-  - `radial-gradient()`（径向渐变）
-- **`background-size`**：控制背景图像尺寸（如 `cover`、`contain`）。
-
-详细请见[文本属性](/notes/css/property.html#文本属性)
+- [背景增强](/notes/css/property.html#背景)：如 `background-size` `background-clip` `background-origin` 背景渐变
 
 ## 文本与字体增强
 
-- **`text-overflow`**：控制溢出文本显示（如 `ellipsis`）。
-- **`word-wrap` / `overflow-wrap`**：允许长单词换行。
-- **`text-decoration` 扩展**：支持波浪线、颜色等（如 `text-decoration: wavy red`）。
+- [文本属性](/notes/css/property.html#文本属性)：如 `text-overflow` `word-wrap` `overflow-wrap` `text-decoration`等
 
-详细请见[文本属性](/notes/css/property.html#文本属性)
-
-- **`@font-face`**：自定义网络字体。
-
-详细请见[自定义字体](/notes/css/property.html#自定义字体)
+- [自定义字体](/notes/css/property.html#自定义字体)：如 `@font-face`
 
 ## 2D/3D 变换（Transforms）
 

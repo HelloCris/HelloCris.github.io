@@ -237,6 +237,29 @@ box-shadow:
 
 > 💡 提示：`box-shadow` 和 `text-shadow` 的语法结构一致，都支持多重阴影。
 
+---
+
+边框图片 `border-image`
+
+```css
+border-image-source: url("./images/border1.png"); /* 默认只填充容器四个角点 */
+border-image-slice: 27 fill; /* 设置四个方向上的裁切距离，fill 表示内部填充 */
+/* border-image-slice 可设置一个值（四边相同），或多个值：
+    - 27 10：左右 27，上下 10
+    - 27 20 15 5 fill：左 27，下 20，右 15，上 5，并填充内部 */
+border-image-width: 27px; /* 边框图片宽度，未设置时默认为元素原始边框宽度 */
+border-image-outset: 0px; /* 扩展边框，但会影响元素大小，box-sizing 不可挽回，建议不使用 */
+border-image-repeat: stretch; /* 图片重复方式 */
+/* border-image-repeat 可选值：
+   - stretch：拉伸（默认）
+   - repeat：重复
+   - round：重复，且最后一个片段会自动缩放以填充剩余空间 */
+
+/* 简写 */
+border-image: source slice / width / outset repeat;
+border-image: url("./images/border1.png") 27 / 27px / 0px stretch;
+```
+
 ### margin
 
 ```css
@@ -255,6 +278,132 @@ margin-right: auto; /* 等效 */
 3. margin: auto 的妙用：
    - 在 Flex/Grid 容器中：可实现任意方向居中。
    - 在普通块级元素中：仅水平居中有效（需固定宽度）。
+
+## 背景
+
+### background
+
+```css
+background: [background-color] [background-image] [background-repeat]
+  [background-attachment] [background-position] / [background-size]
+  [background-origin] [background-clip];
+```
+
+| 子属性                  | 说明                                                               | 默认值              |
+| ----------------------- | ------------------------------------------------------------------ | ------------------- |
+| `background-color`      | 背景颜色                                                           | `transparent`       |
+| `background-image`      | 背景图片（可为 `url()` 或 `none`）                                 | `none`              |
+| `background-repeat`     | 图片重复方式（如 `repeat`, `no-repeat`, `repeat-x`, `repeat-y`）   | `repeat`            |
+| `background-attachment` | 背景是否随页面滚动（`scroll`, `fixed`, `local`）                   | `scroll`            |
+| `background-position`   | 背景图片起始位置（如 `center`, `top left`, `50% 50%`）             | `0% 0%`（即左上角） |
+| `background-size`       | 背景图片尺寸（如 `auto`, `cover`, `contain`, `100px 200px`）       | `auto auto`         |
+| `background-origin`     | 背景绘制起点（`border-box`, `padding-box`, `content-box`）         | `padding-box`       |
+| `background-clip`       | 背景绘制区域（`border-box`, `padding-box`, `content-box`, `text`） | `border-box`        |
+
+::: warning 注意
+
+1. `background-size` 必须紧跟在 `background-position` 后面，并用 / 分隔。
+2. `background-origin` 和 `background-clip` 不能直接在标准 `background` 简写中使用（某些浏览器可能支持，但不推荐）。建议单独声明。
+3. 如果同时设置 `background-color` 和 `background-image`，颜色会作为图片的底层显示（当图片透明或未覆盖全部区域时可见）。
+4. 使用简写属性时，未指定的子属性会被重置为默认值，这可能导致意外覆盖。
+
+:::
+
+### 背景渐变
+
+- linear-gradient()
+- radial-gradient()
+- repeating-linear-gradient() / repeating-radial-gradient()
+
+#### 线性渐变
+
+**语法：**  
+`background: linear-gradient(direction, color1, color2...color3);`
+
+**参数说明：**
+
+- `direction`：表示线性渐变的方向，
+  - `to left`：设置渐变为从右到左。相当于：270deg；
+  - `to right`：设置渐变从左到右。相当于：90deg；
+  - `to top`：设置渐变从下到上。相当于：0deg；
+  - `to bottom`：设置渐变从上到下。相当于：180deg。这是默认值。
+  - `45deg`：45度方向渐变。
+
+- `color1`：起点颜色。
+- `color2`：过渡颜色，指定过渡颜色的位置。
+- `color3`：结束颜色。你还可以在后面添加更多的过渡颜色和位置，表示多种颜色的渐变。
+
+**示例：**  
+`background: linear-gradient(to right, blue, green 20%, yellow 50%, purple 80%, red);`
+
+---
+
+#### 径向渐变
+
+**语法：**  
+`background: radial-gradient(shape size at position, start-color, ..., color..., last-color);`
+
+**参数说明：**
+
+- `shape`：渐变的形状。
+  - `ellipse`：表示椭圆形；
+  - `circle`：表示圆形。默认为 **ellipse**；
+  - **如果元素宽高相同为正方形，则 ellipse 和 circle 显示一样；**
+  - **如果元素宽高不相同，默认效果为 ellipse。**
+
+- `size`：渐变的大小，即渐变到哪里停止。它有四个值：
+  - `closest-side`：最近边；
+  - `farthest-side`：最远边；
+  - `closest-corner`：最近角；
+  - `farthest-corner`：最远角。默认是 **最远角**。
+
+- `at position`：渐变的中心位置。比如：
+  - `at top left`：中心为元素左上角位置；
+  - `at center center`：中心为元素中心位置；
+  - `at 5px 10px`：中心为偏移元素左上角位置右边 5px，下边 10px 位置。
+
+- `start-color`：起始颜色；
+- `color`：渐变颜色，可选起始位置 stop；
+- `last-color`：结束颜色。
+
+**示例：**  
+`background: radial-gradient(circle farthest-side at right top, red, yellow 50%, blue);`
+
+---
+
+#### 重复渐变
+
+- `repeating-linear-gradient()`：重复线性渐变
+- `repeating-radial-gradient()`：重复径向渐变
+
+> 它们的行为与普通渐变类似，但**只要颜色停止点的范围有限，就会自动平铺重复**。
+
+1. **必须指定位置**  
+   ❌ 错误（不会重复）：
+
+   ```css
+   background: repeating-linear-gradient(
+     red,
+     blue
+   ); /* 无位置，等同于普通渐变 */
+   ```
+
+   ✅ 正确：
+
+   ```css
+   background: repeating-linear-gradient(red 0px, blue 10px);
+   ```
+
+2. **颜色停止点顺序决定重复单元**  
+   从第一个到最后一个 stop 构成一个“图案单元”，然后重复。
+
+## CSS动效
+
+### 过渡（Transition）
+
+### 变形（Transform）
+
+### 动画（Animation）
 
 ## 附录
 

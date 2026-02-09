@@ -308,7 +308,7 @@ p::first-letter {
 }
 ```
 
-::: info 注意
+::: warning 注意
 ::before 和 ::after 必须配合 content 属性使用，否则不会显示。
 :::
 
@@ -332,7 +332,7 @@ p::first-letter {
 | ⚪ 很低 | 通配符           | `*`                            |
 | ⚪ 最低 | 继承             | inherited styles               |
 
-::: info 注意
+::: warning 注意
 
 - **!important**  
   覆盖所有其他规则（包括内联样式）。应尽量避免使用，会破坏样式可维护性。

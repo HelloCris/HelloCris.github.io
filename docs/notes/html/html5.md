@@ -552,7 +552,7 @@ self.close(); // Worker 主动退出
 > `https://example.com` 和 `http://example.com`  
 > `http://localhost:8080/` 和 `http://localhost:3001/`
 
-::: info 注意事项
+::: warning 注意事项
 
 1. **只能存储字符串**
 
