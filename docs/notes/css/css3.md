@@ -21,49 +21,18 @@ CSS3 是 CSS（层叠样式表）的第三代主要标准，它并不是一个�
 
 - [自定义字体](/notes/css/property.html#自定义字体)：如 `@font-face`
 
-## 2D/3D 变换（Transforms）
-
-- **2D 变换**：`rotate()`, `scale()`, `translate()`, `skew()`
-- **3D 变换**：`rotateX()`, `rotateY()`, `perspective`, `transform-style: preserve-3d`
-- 无需 JS 即可实现元素的空间变换。
-
 ## 过渡与动画
 
-- **`transition`**：在状态变化时平滑过渡（如 hover 效果）。
-  ```css
-  .btn {
-    transition: background-color 0.3s ease;
-  }
-  ```
-- **`@keyframes` + `animation`**：创建复杂关键帧动画。
-  ```css
-  @keyframes slideIn {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-  .box {
-    animation: slideIn 1s forwards;
-  }
-  ```
+- [变形](/notes/css/property.html#变形-transform)：如 `transform`
+
+- [过渡](/notes/css/property.html#过渡-transition)：如 `transition`
+
+- [动画](/notes/css/property.html#动画-animation)：如 `@keyframes` `animation`
 
 ## 新型布局系统
 
-### 1. **Flexbox（弹性盒子）**
+- [flex布局](/notes/css/property.html#flex)：如 `flex` `flex-direction` `flex-wrap` `justify-content` `align-items` `align-content`
 
-- 一维布局利器，适合对齐、分布空间。
-- 核心属性：`display: flex`, `justify-content`, `align-items`, `flex-direction` 等。
+- [grid布局](/notes/css/property.html#grid)：如 `grid` `grid-template-columns` `grid-template-rows` `grid-gap` `grid-area`
 
-### 2. **Grid（网格布局）**
-
-- 强大的二维布局系统，可同时控制行和列。
-- 核心属性：`display: grid`, `grid-template-columns`, `grid-area`, `gap` 等。
-
-### 3. **多列布局（Multi-column Layout）**
-
-- 类似报纸排版：`column-count`, `column-gap`, `column-rule`
-
----
+- [多列布局（Multi-column Layout）](/notes/css/property.html#多列布局-multi-column-layout)：如 `column-count` `column-gap` `column-rule`

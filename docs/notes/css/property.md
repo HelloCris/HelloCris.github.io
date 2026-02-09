@@ -401,9 +401,147 @@ background: [background-color] [background-image] [background-repeat]
 
 ### 过渡（Transition）
 
+`transition` 是 CSS 中用于**在元素状态变化时创建平滑动画效果**的属性。比如鼠标悬停（`:hover`）、聚焦（`:focus`）或类名切换时，让颜色、大小、位置等属性的变化不是突变，而是**渐变过渡**。
+
+基本语法：
+
+```css
+selector {
+  transition: property duration timing-function delay;
+}
+
+/* 也可以分开写： */
+selector {
+  transition-property: width;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0.1s;
+}
+```
+
+| 属性                         | 说明                                 | 常用值                                                                      |
+| ---------------------------- | ------------------------------------ | --------------------------------------------------------------------------- |
+| `transition-property`        | 要过渡的 CSS 属性                    | `all`, `width`, `background-color`, `opacity` 等                            |
+| `transition-duration`        | 过渡持续时间（必须设置，否则无效果） | `0.3s`, `500ms`                                                             |
+| `transition-timing-function` | 过渡的速度曲线                       | `ease`, `linear`, `ease-in`, `ease-out`, `ease-in-out`, `cubic-bezier(...)` |
+| `transition-delay`           | 延迟多久开始过渡                     | `0s`, `0.2s`                                                                |
+
+> 💡 最常用的是简写：
+>
+> ```css
+> transition: all 0.3s ease;
+> ```
+
 ### 变形（Transform）
 
+`CSS transform` 是一个非常强大的属性，用于**对元素进行 2D 或 3D 空间变换**，比如移动、旋转、缩放、倾斜等，而**不会影响文档流**（即不会推挤其他元素），性能也很好（尤其配合 `transition` 或 `animation` 使用时）。
+
+基本语法：
+
+```css
+selector {
+  transform: <transform-function> [<transform-function>] *;
+}
+```
+
+可以连续使用多个变换函数，**从左到右依次应用**（注意顺序会影响结果！）。
+
+#### **2D 变换**
+
+| 函数                              | 说明               | 示例                                |
+| --------------------------------- | ------------------ | ----------------------------------- |
+| `translate(x, y)`                 | 平移（移动）       | `transform: translate(50px, 20px);` |
+| `translateX(x)` / `translateY(y)` | 单方向平移         | `transform: translateX(100px);`     |
+| `scale(sx, sy)`                   | 缩放（1 = 原大小） | `transform: scale(1.2);`            |
+| `scaleX(sx)` / `scaleY(sy)`       | 单方向缩放         | `transform: scaleY(0.5);`           |
+| `rotate(angle)`                   | 旋转（角度）       | `transform: rotate(45deg);`         |
+| `skew(ax, ay)`                    | 倾斜（剪切）       | `transform: skew(10deg, 5deg);`     |
+| `skewX(ax)` / `skewY(ay)`         | 单方向倾斜         | `transform: skewX(20deg);`          |
+
+#### **3D 变换**
+
+| 函数                                                 | 说明                             |
+| ---------------------------------------------------- | -------------------------------- |
+| `translate3d(x, y, z)`                               | 3D 平移                          |
+| `scale3d(sx, sy, sz)`                                | 3D 缩放                          |
+| `rotateX(angle)`, `rotateY(angle)`, `rotateZ(angle)` | 绕 X/Y/Z 轴旋转                  |
+| `perspective(n)`                                     | 设置 3D 透视（通常用在父容器上） |
+
+> ⚠️ 使用 3D 变换时，建议加上：
+>
+> ```css
+> transform-style: preserve-3d; /* 子元素保留 3D 空间 */
+> perspective: 800px; /* 父容器设置透视 */
+> ```
+
+#### ⚠️ 注意事项
+
+1. **`transform` 不会脱离文档流**，但视觉位置会变，**不影响其他元素布局**。
+2. **默认变换原点是元素中心**（`transform-origin: center`），可修改：
+   ```css
+   transform-origin: top left; /* 从左上角旋转/缩放 */
+   ```
+3. **与 `transition` 或 `animation` 搭配效果最佳**。
+4. **避免对 `width`/`height`/`left`/`top` 做动画**，优先用 `transform`（性能更高，不会触发重排）。
+
+5. `transform` 和 `opacity` 是**仅触发合成（composite）** 的属性，不会引起 layout（重排）或 paint（重绘），因此**动画更流畅**，适合做高性能交互动画。
+
 ### 动画（Animation）
+
+一个动画至少需要两个属性：
+
+- `animation-name`：动画的名字（创建动画时起的名字，如下为 moveTest）
+- `animation-duration`：动画的耗时
+
+```css
+animation-name: moveTest;
+animation-duration: 2s;
+```
+
+如需在 CSS3 中创建动画，需要学习 `@keyframes` 规则。`@keyframes` 规则用于创建动画。在 `@keyframes` 中规定某项 CSS 样式，就能创建由当前样式逐渐改为新样式的动画效果。
+
+使用 `@keyframes` 关键字来创建动画。
+
+```css
+@keyframes moveTest {
+  0% {
+    transform: translate(0px, 0px);
+  }
+  50% {
+    transform: translateY(200px);
+  }
+  100% {
+    transform: translate(200px, 200px);
+  }
+}
+```
+
+其中，百分比是指整个动画耗时的百分比。
+
+- `0%`：动画起始位置，也可以写成 from
+- `100%`：动画终点位置，也可以写成 to
+
+#### 动画的其他属性
+
+1. `animation-iteration-count`：设置动画的播放次数，默认为 1 次。可以指定具体的数值，也可以指定 `infinite`（无限次）
+
+2. `animation-direction`：设置交替动画，默认值为 `normal`，可以设置为 `alternate` 来回交替
+
+3. `animation-delay`：设置动画的延迟，例如 2s
+
+4. `animation-fill-mode`：设置动画结束时的状态：默认情况下，动画执行完毕之后，会回到原始状态。可以设置为 `forwards` 或 `backwards` 或 `both`。
+
+5. `animation-timing-function`：动画的时间函数（动画的效果，平滑、先快后慢等），默认值为 `ease`。动画的时间函数：`linear`, `ease`...
+
+6. `animation-play-state`：设置动画的播放状态，默认值为 `running`，可以设置为 `paused` 暂停动画
+
+## 布局
+
+### flex
+
+### grid
+
+### 多列布局（Multi-column Layout）
 
 ## 附录
 
