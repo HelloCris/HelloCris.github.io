@@ -1,1 +1,0 @@
-import{_ as e,c as t,o as s}from"./chunks/framework.bCALENAD.js";const m=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"notes/js/regex.md","filePath":"notes/js/regex.md","lastUpdated":1770859823000}'),a={name:"notes/js/regex.md"};function r(o,n,c,d,p,_){return s(),t("div")}const f=e(a,[["render",r]]);export{m as __pageData,f as default};
