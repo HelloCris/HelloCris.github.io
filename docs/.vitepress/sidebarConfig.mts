@@ -25,6 +25,7 @@ export const sidebarConfig = [
         items: [
           { text: "HTML基础", link: "/notes/html/base.md" },
           { text: "HTML5", link: "/notes/html/html5.md" },
+          { text: "无障碍(a11y)", link: "/notes/html/a11y.md" },
         ],
       },
       {
