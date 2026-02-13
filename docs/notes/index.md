@@ -25,4 +25,3 @@
 - [Linux](others/linux.md)
 - [Git](others/git.md)
 - [网络](others/network.md)
-- [浏览器工作原理](others/browser.md)
