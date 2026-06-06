@@ -813,9 +813,210 @@ export default {
 
 :::
 
-## 模块化开发
-
 ## webpack
+
+### 简单认识
+
+::: info Webpack的定义与核心
+
+- **定义**：Webpack 是一个现代的 JavaScript 应用的静态模块打包工具。
+- **核心理念（模块化）**：
+  - 让开发者进行模块化开发，并自动处理模块间的依赖关系。
+  - **万物皆模块**：不仅仅是 JavaScript，CSS、图片、JSON 文件等都可以被当作模块来使用。
+- **工作流程**：
+  1.  进行模块化分析，处理复杂的依赖关系。
+  2.  将各种资源模块打包合并成一个或多个包（Bundle）。
+- **附加功能（资源处理）**：在打包过程中可以对资源进行处理，例如：压缩图片、将SCSS转成CSS、将ES6语法转成ES5语法、将TypeScript转成JavaScript
+
+:::
+
+::: info Webpack 与 Grunt/Gulp 的对比
+
+| 工具       | 核心         | 适用场景                 | 侧重点                           |
+| ---------- | ------------ | ------------------------ | -------------------------------- |
+| Grunt/Gulp | Task（任务） | 简单项目，无强模块化需求 | 流程自动化                       |
+| Webpack    | 模块化打包   | 模块化强依赖项目         | 模块化管理（压缩合并为附带功能） |
+
+:::
+
+### 安装与使用
+
+::: info 安装
+
+安装 webpack 首先需要安装 Node.js，Node.js 自带了软件包管理工具 npm
+
+**全局安装** webpack(这里先指定版本号 3.6.0，因为 vue cli2 依赖该版本)
+
+```bash
+npm install webpack@3.6.0 -g
+```
+
+**局部安装** webpack (--save-dev 是开发时依赖，项目打包后不需要继续使用的)
+
+```bash
+cd 对应目录
+npm install webpack@3.6.0 --save-dev
+```
+
+> 为什么全局安装后，还需要局部安装呢？
+>
+> 在终端直接执行 webpack 命令，使用的是全局安装的 webpack。  
+> 当在 package.json 中定义了 scripts 时，其中包含了 webpack 命令，那么使用的是局部 webpack。
+
+:::
+
+::: info 使用
+
+**文件和文件夹说明：**
+
+- **dist 文件夹**：用于存放之后打包的文件
+- **src 文件夹**：用于存放我们写的源文件
+- **main.js**：项目的入口文件。
+- **index.html**：浏览器打开展示的首页 html
+- **package.json**：通过 npm init 生成的，npm 包管理的文件。
+
+**Webpack 打包指令**
+
+```bash
+webpack src/main.js dist/bundle.js
+```
+
+（通过全局 npm 打包）  
+打包后会在 dist 文件下，生成一个 bundle.js 文件  
+bundle.js 文件，是 webpack 处理了项目直接文件依赖后生成的一个 js 文件，我们只需要将这个 js 文件在 index.html 中引入即可。  
+**入口出口文件**  
+创建一个 webpack.config.js 文件
+
+```js
+const path = require("path");
+
+module.exports = {
+  // 入口：可以是字符串/数组/对象，这里我们入口只有一个，所以写一个字符串即可
+  entry: "./src/main.js",
+  // 出口：通常是一个对象，里面至少包含两个重要属性，path 和 filename
+  output: {
+    path: path.resolve(__dirname, "dist"), // 注意：path通常是一个绝对路径
+    filename: "bundle.js",
+  },
+};
+```
+
+:::
+
+::: info 局部 webpack
+
+一个项目往往依赖特定的 `webpack` 版本，全局的版本可能跟这个项目的 `webpack` 版本不一致，导出打包出现问题。所以通常一个项目，都有自己局部的 `webpack`。  
+**第一步，项目中需要安装自己局部的 webpack**  
+这里我们让局部安装 `webpack3.6.0`。Vue CLI3 中已经升级到 `webpack4`，但是它将配置文件隐藏了起来，所以查看起来不是很方便。
+
+```bash
+npm install webpack@3.6.0 --save-dev
+```
+
+**第二步，通过 `node_modules/.bin/webpack` 启动 webpack 打包**
+
+```bash
+node_modules/.bin/webpack
+```
+
+**package.json 中定义启动（重要）**  
+`package.json` 中的 scripts 的脚本在执行时，会按照一定的顺序寻找命令对应的位置。  
+首先，会寻找本地的 `node_modules/.bin` 路径中对应的命令。如果没有找到，会去全局的环境变量中寻找。如何执行我们的 build 指令呢？
+
+```bash
+npm run build
+```
+
+**说明：** `npm run xxx` 命令中的 `xxx` 定义在 `package.json` 中的 scripts 对象中。
+
+:::
+
+### loader
+
+- **定义**：webpack 的核心概念，用于扩展 webpack 能力
+- **作用**：处理 css、图片、ES6/TypeScript、scss/less、vue/jsx 等文件
+- **使用**：npm 安装 → webpack.config.js 的 modules 配置
+- **资源**：webpack 官网可查
+
+::: info CSS等样式文件的加载和解析
+
+- **引用**：入口文件 `main.js` 中 `require('./css/normal.css')`
+- **安装 loader**：`npm install --save-dev css-loader style-loader`
+- **配置**：style-loader 在前，css-loader 在后（从右向左执行）
+- **其他样式**：less/scss/stylus 安装相应 loader
+- **官网**：[webpackjs.com](http://www.webpackjs.com)（中文推荐）
+
+:::
+
+::: info 图片文件的加载和解析
+
+- **工具安装**：当 css 文件中引用了图片等文件时，项目进行打包需要安装 `url-loader` 。
+- **limit 属性**：该 loader 的配置文件中的 limit 属性的作用是：当图片小于 8kb（默认）时，对图片进行 base64 编码，当图片大于 8kb 时，需要用 `file-loader` 来进行处理。
+- **名称修改**：打包时，会对图片文件自动进行名称修改（目的是防止重复）。webpack 自动帮助我们生成名字，32 位 hash 值。但是，真实开发中，我们可能对打包的图片名字有一定的要求，比如，将所有的图片放在一个文件夹中，加上图片原来的名称，同时也要防止重复。所以，我们可以在配置 `url-loader` 的 options 属性中添加如下选项：
+  - img：文件要打包到的文件夹
+  - name：获取图片原来的名字，放在该位置
+  - hash:8：为了防止图片名称冲突，依然使用 hash，但是我们只保留 8 位
+  - ext：使用图片原来的扩展名
+  - 语法：`name:'img/[name].[hash:8].[ext]'`
+- **路径问题**：但是，我们发现图片并没有显示出来，这是因为图片使用的路径不正确。默认情况下，webpack 会将生成的路径直接返回给使用者。但是，我们整个程序是打包在 dist 文件夹下的，所以这里我们需要在路径下再添加一个 `dist/`。
+
+```js
+// 出口：通常是一个对象，里面至少包含两个重要属性，path 和 filename
+output: {
+    path: path.resolve(__dirname, 'dist'), // 注意：path通常是一个绝对路径
+    filename: 'bundle.js',
+    publicPath: 'dist/'
+},
+module: {
+    rules: []
+}
+```
+
+:::
+
+::: info ES6 语法处理
+
+- **工具**：如果希望将 ES6 的语法转成 ES5，那么就需要使用 babel。而在 webpack 中，我们直接使用 babel 对应的 loader 就可以了。
+- **安装命令**：
+
+  ```bash
+  npm install --save-dev babel-loader@7 babel-core babel-preset-es2015
+  ```
+
+- **配置**：对应的 `babel-loader` 配置文件中的 presets: `['es2015']`
+
+:::
+
+::: info Webpack 配置 Vue
+
+- **安装 Vue**：`npm install vue --save`
+- **报错原因**：默认引入的是 runtime-only 版本（不含 runtime-compiler），无法解析 template 模板
+- **解决方法**：配置别名指向完整版（含编译器）
+  ```javascript
+  resolve:{alias:{'vue$':'vue/dist/vue.esm.js'}},
+  ```
+
+:::
+
+::: info .vue 文件封装处理
+
+- **概念**：以一种全新的方式来组织一个 vue 的组件（.vue）
+- **依赖**：需要通过 `vue-loader` 和 `vue-template-compiler` 来进行加载解析
+- **安装命令**：安装 `vue-loader` 和 `vue-template-compiler` 的语法：(按需指定版本号)
+  ```bash
+  npm install vue-loader vue-template-compiler --save-dev
+  ```
+- **配置**：修改 `webpack.config.js` 的配置文件：在 loader 规则的数组中添加一条：
+  ```js
+  {
+      test: /\.vue$/,
+      use: ['vue-loader']
+  }
+  ```
+
+:::
+
+### plugin
 
 ## vue cli详解
 
