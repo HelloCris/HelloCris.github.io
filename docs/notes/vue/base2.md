@@ -710,6 +710,109 @@ export default {
 
 ### 插槽slot
 
+**目的**：抽取组件的共性，保留不同之处（即“封装”）。
+
+::: info 使用方式
+
+在子组件模板中使用特殊的 `<slot>` 元素来开启插槽。
+
+- **默认内容**：`<slot>默认内容</slot>`
+  - 如果父组件在使用时没有传入任何内容，则显示这里的默认内容。
+  - 如果父组件传入了内容，则默认内容会被替换。
+
+```html
+<!-- 子组件模板 -->
+<div class="child">
+  <slot>我是默认内容</slot>
+</div>
+```
+
+---
+
+**具名插槽**：当一个组件需要多个插槽时，可以使用 `name` 属性来区分不同的插槽。
+
+- **定义**：给 `<slot>` 添加 `name` 属性。
+- **分发**：父组件在使用时，通过 `slot="name"` 属性指定内容要插入到哪个位置。
+
+```html
+<!-- 子组件 (my-cpn) -->
+<template id="myCpn">
+  <div>
+    <slot name="left">我是左侧</slot>
+    <slot name="center">我是中间</slot>
+    <slot name="right">我是右侧</slot>
+  </div>
+</template>
+
+<!-- 父组件调用 -->
+<my-cpn>
+  <!-- 只传入左侧内容 -->
+  <span slot="left">我是返回按钮</span>
+</my-cpn>
+
+<my-cpn>
+  <!-- 传入所有内容 -->
+  <span slot="left">我是返回按钮</span>
+  <span slot="center">我是标题</span>
+  <span slot="right">我是菜单</span>
+</my-cpn>
+```
+
+:::
+
+#### 作用域插槽
+
+> **编译作用域官方准则**：
+>
+> - **父组件模板**的所有东西都会在**父级作用域**内编译。
+> - **子组件模板**的所有东西都会在**子级作用域**内编译。
+> - **通俗解释**：在 `<my-cpn>` 标签内部写的 HTML 和变量，只能访问父组件的数据；而在 `<template id="myCpn">` 内部写的变量，只能访问子组件的数据。
+
+- **作用域插槽使用场景**：父组件想替换插槽的内容，但渲染所需的数据却来源于子组件。
+- **机制**：
+  1. **子组件**：将数据绑定在 `<slot>` 上（例如 `:data="pLanguages"`）。
+  2. **父组件**：通过 `slot-scope` 接收子组件传递过来的数据对象。
+
+::: info 代码逻辑流程
+
+1. **子组件定义与传值**：
+
+   ```js
+   // 子组件数据
+   data() {
+     return {
+       pLanguages: ['JavaScript', 'Python', 'Swift', 'Go', 'C++']
+     }
+   }
+   ```
+
+   ```html
+   <!-- 子组件模板：将数据绑定到 slot 上 -->
+   <slot :data="pLanguages"></slot>
+   ```
+
+2. **父组件接收与使用**：
+
+   父组件使用 `<template slot-scope="slotProps">` 来获取子组件传来的数据对象。
+
+   ```html
+   <my-cpn>
+     <template slot-scope="slotProps">
+       <ul>
+         <!-- 注意这里使用的是 slotProps.data -->
+         <li v-for="info in slotProps.data">{{ info }}</li>
+       </ul>
+     </template>
+   </my-cpn>
+   <my-cpn>
+     <template slot-scope="slotProps">
+       <span v-for="info in slotProps.data">{{ info }} </span>
+     </template>
+   </my-cpn>
+   ```
+
+:::
+
 ## 模块化开发
 
 ## webpack
