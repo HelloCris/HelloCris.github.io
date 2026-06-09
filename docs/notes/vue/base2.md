@@ -1134,6 +1134,28 @@ module.exports = {
 
 ## vue cli详解
 
+### vue cli介绍
+
+CLI 是 Command-Line Interface，翻译为命令行界面，但是俗称脚手架。  
+Vue CLI 是一个官方发布 vue.js 项目脚手架，使用 vue-cli 可以快速搭建 Vue 开发环境以及对应的 webpack 配置。
+
+Vue cli 使用前提：nodejs、webpack  
+NPM 的全称是 Node Package Manager，是一个 NodeJS 包管理和分发工具，已经成为了非官方的发布 Node 模块（包）的标准。
+
+**安装 Vue 脚手架**：`npm install -g @vue/cli`  
+注意：上面安装的是 Vue CLI3 的版本，如果需要想按照 Vue CLI2 的方式初始化项目时不可以的。
+
+Vue CLI 3 和旧版使用了相同的 `vue` 命令，所以 Vue CLI 2 (`vue-cli`) 被覆盖了。如果你仍然需要使用旧版本的 `vue init` 功能，你可以全局安装一个桥接工具：
+
+```bash
+npm install -g @vue/cli-init
+# `vue init` 的运行效果将会跟 `vue-cli@2.x` 相同
+vue init webpack my-project
+```
+
+- Vue CLI2 初始化项目：`vue init webpack my-project`
+- Vue CLI3 初始化项目：`vue create my-project`
+
 ## vue-router
 
 ## vuex详解
