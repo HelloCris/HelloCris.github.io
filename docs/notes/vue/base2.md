@@ -931,6 +931,46 @@ npm run build
 
 :::
 
+::: info Webpack.config.js配置文件的抽离
+
+通常情况下，我们在项目根目录下创建一个 build 文件夹来进行配置文件的存放。其中的 baseConfig.js 文件用来存放一些公共的配置；prodConfig.js 文件用来存放生产版本配置，如压缩 js 的 plugin 的配置信息；devConfig.js 文件用来存放开发时以来的配置，如 webpack 提供的本地服务器 plugin 的配置信息。
+
+抽离完以后，需要对 package.json 文件中的 scripts 命令进行更改:  
+`"build": "webpack --config ./build/prod.config.js",`  
+`"dev": "webpack-dev-server --open --config ./build/dev.config.js"`
+
+这样在执行相应的命令时就会调用指定的配置文件了。
+:::
+
+::: info 搭建本地服务器
+
+webpack 提供了一个可选的本地开发服务器，这个本地服务器基于 node.js 搭建，内部使用 express 框架，可以实现我们想要的让浏览器自动刷新显示我们修改后的结果。
+不过它是一个单独的模块，在 webpack 中使用之前需要先安装它。
+`npm install --save-dev webpack-dev-server@2.9.1`
+
+devserver 也是作为 webpack 中的一个选项，选项本身可以设置如下属性:  
+contentBase: 为哪一个文件夹提供本地服务，默认是根文件夹，我们这里要填写 ./dist  
+port: 端口号  
+inline: 页面实时刷新  
+historyApiFallback: 在 SPA 页面中，依赖 HTML5 的 history 模式
+
+```js
+// webpack.config.js配置
+devServer: {
+    contentBase: './dist',
+    inline: true,
+    historyApiFallback: true,
+    port: 8080
+},
+```
+
+可以再配置另外一个 scripts :
+`"dev": "webpack-dev-server --open"`
+
+--open 参数表示直接打开浏览器
+
+:::
+
 ### loader
 
 - **定义**：webpack 的核心概念，用于扩展 webpack 能力
@@ -1017,6 +1057,80 @@ module: {
 :::
 
 ### plugin
+
+> loader 和 plugin 区别:
+>
+> loader 主要用于转换某些类型的模块，它是一个转换器。  
+> plugin 是插件，它是对 webpack 本身的扩展，是一个扩展器。
+
+> plugin 的使用过程:
+>
+> 步骤一：通过 npm 安装需要使用的 plugins(某些 webpack 已经内置的插件不需要安装)  
+> 步骤二：在 webpack.config.js 中的 plugins 中配置插件。
+
+::: info 添加版权的Plugin
+
+属于 webpack 自带的插件
+
+```js
+const webpack = require('webpack')
+
+module.exports = {
+    ...
+    plugins: [
+        new webpack.BannerPlugin('最终版权归coderwhy所有')
+    ]
+}
+```
+
+重新打包程序：查看 bundle.js 文件的头部，看到如下信息
+
+```text
+/*! 最终版权归coderwhy所有 */
+/******/ (function(modules) { // webpackBootstrap
+```
+
+:::
+
+::: info 打包html的plugin
+
+使用 HtmlWebpackPlugin 插件
+自动生成一个 index.html 文件(可以指定模板来生成)，将打包的 js 文件，自动通过 script 标签插入到 body 中。
+
+安装 HtmlWebpackPlugin 插件的指令:
+`npm install html-webpack-plugin --save-dev`
+
+```js
+plugins: [
+  new webpack.BannerPlugin("最终版权归coderwhy所有"),
+  new HtmlWebpackPlugin({
+    template: "index.html",
+  }),
+];
+```
+
+:::
+
+::: info js压缩的Plugin
+
+在项目发布之前，我们必然需要对 js 等文件进行压缩处理
+使用一个第三方的插件 uglifyjs-webpack-plugin，并且版本号指定 1.1.1，和 CLI2 保持一致。
+`npm install uglifyjs-webpack-plugin@1.1.1 --save-dev`
+
+```js
+const webpack = require('webpack')
+const uglifyJsPlugin = require('uglifyjs-webpack-plugin')
+
+module.exports = {
+    ...
+    plugins: [
+        new webpack.BannerPlugin('最终版权归coderwhy所有')
+        new uglifyJsPlugin()
+    ]
+}
+```
+
+:::
 
 ## vue cli详解
 
