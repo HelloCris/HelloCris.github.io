@@ -1156,6 +1156,78 @@ vue init webpack my-project
 - Vue CLI2 初始化项目：`vue init webpack my-project`
 - Vue CLI3 初始化项目：`vue create my-project`
 
+### Runtime-Compiler和Runtime-only
+
+- 若后续开发中**仍使用 `template`**，需选择 **Runtime-Compiler**；
+- 若后续开发中使用 **`.vue` 文件**，可选择 **Runtime-only（推荐）**。
+
+::: info 核心差异
+
+1. **Runtime + Compiler**
+   - 特点：适合多数用户，但体积更大；
+   - 适用场景：需在**客户端编译模板**（如向 `template` 选项传字符串、将非 DOM 的 HTML 模板挂载到元素）。
+   - 运行过程：`Template → ast（抽象语法树） → render → virtual dom（虚拟 DOM） → UI`
+
+2. **Runtime-only**
+   - 特点：比 Runtime+Compiler 轻约 6KB（min+gzip），但模板仅允许在 `.vue` 文件中使用，其他场景需用 `render` 函数；
+   - 优势：结合 `vue-loader`/`vueify` 时，`.vue` 文件的模板会在**构建时预编译为 JavaScript**，最终打包无需编译器，因此可直接用 Runtime-only。
+   - 运行过程：`render → virtual dom（虚拟 DOM） → UI`
+
+:::
+
+```js
+// 需要编译器（compiler）：直接使用 template 字符串
+new Vue({
+  template: "<div>{{ hi }}</div>",
+});
+
+// 不需要编译器：直接使用 render 函数
+new Vue({
+  render(h) {
+    return h("div", this.hi);
+  },
+});
+```
+
+::: info `render` 函数的使用
+
+通过 `createElement`（可简写为 `h`）创建虚拟 DOM
+
+```js
+// 1. 基础用法：创建标签 + 数据 + 内容
+new Vue({
+  el: "#app",
+  render: (createElement) => {
+    // 方式1：基本使用（标签、数据对象、内容数组）
+    return createElement("div", { class: "box" }, ["cris"]);
+
+    // 方式2：嵌套 render 函数
+    return createElement("div", { class: "box" }, [
+      "cris",
+      createElement("h2", ["标题啊"]),
+    ]);
+  },
+});
+```
+
+```js
+// 2. 传入组件对象
+new Vue({
+  el: "#app",
+  render: (createElement) => {
+    // 直接传入组件对象
+    return createElement(cpn);
+  },
+});
+```
+
+```js
+// 最简写法（箭头函数简写）
+render: (h) => h(cpn);
+```
+
+:::
+
 ## vue-router
 
 ## vuex详解
