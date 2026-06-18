@@ -67,4 +67,72 @@ const obj2 = {
 }; // { prefixname: 'value' }
 ```
 
-## todo
+## 箭头函数
+
+箭头函数使用 `=>` 符号定义，它比传统的 `function` 表达式更简洁。
+
+```js
+// ES5 传统写法
+var add = function (a, b) {
+  return a + b;
+};
+
+// ES6 箭头函数写法
+const add = (a, b) => {
+  return a + b;
+};
+```
+
+::: info 简写规则（语法糖）
+
+- **参数只有一个时**：可以省略小括号 `()`。
+- **函数体只有一条语句时**：可以省略大括号 `{}` 和 `return` 关键字。此时该语句的执行结果就是函数的返回值。
+- **没有参数时**：必须保留空的小括号 `()`。
+
+```js
+// 最简写法（箭头函数简写）
+// const double = n => n * 2;
+// const sum = (a, b) => a + b;
+// const sayHello = () => console.log("Hello");
+```
+
+:::
+
+箭头函数**不会**创建自己的 `this` 上下文。它会捕获其**定义时**所在外层作用域的 `this` 值。
+
+```js
+const obj = {
+  name: "Vue",
+  // 普通函数：this 指向 obj
+  normalFunc: function () {
+    console.log(this.name); // 'Vue'
+  },
+  // 箭头函数：this 指向定义时的外层（这里是 window/global）
+  arrowFunc: () => {
+    console.log(this.name); // undefined (或报错)
+  },
+};
+```
+
+::: warning ⚠️注意
+
+1. **不能作为构造函数**：不能使用 `new` 关键字调用，否则会报错。因为它没有 `prototype` 属性。
+
+   ```js
+   const Foo = () => {};
+   new Foo(); // TypeError: Foo is not a constructor
+   ```
+
+2. **没有 `arguments` 对象**：箭头函数内部不存在 `arguments` 对象。如果需要获取不定参数，请使用 **剩余参数 (`...args`)**。
+
+   ```js
+   const foo = (...args) => {
+     console.log(args); // [1, 2, 3]
+   };
+   foo(1, 2, 3);
+   ```
+
+3. **不能用作 Generator 函数**：不能使用 `yield` 关键字。
+4. 不要在对象字面量中定义方法时使用箭头函数
+
+:::
