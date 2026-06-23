@@ -1238,6 +1238,133 @@ render: (h) => h(cpn);
 
 ## vue-router
 
+### 路由
+
+路由就是通过互联的网络把信息从源地址传输到目的地址的活动。  
+路由器提供了两种机制：路由和转送。**路由**是决定数据包从来源到目的地的路径，**转送**将输入端的数据转移到合适的输出端。  
+概念：**路由表**。路由表本质上就是一个映射表，决定了数据包的指向。
+
+::: info 后端路由阶段（早期）
+
+服务器直接生产渲染好对应的 HTML 页面，返回给客户端进行展示。
+
+一个网站有很多页面，服务器如何处理？
+每个页面有自己对应的网址（URL）。URL 发送到服务器后，服务器通过正则匹配该 URL，交给 Controller 处理。Controller 完成处理后生成 HTML 或数据，返回给前端，完成一次 IO 操作。
+
+当页面需要请求不同路径内容时，由服务器处理并渲染整个页面后返回客户端。这种情况下渲染好的页面无需单独加载 JS 和 CSS，可直接交给浏览器展示，有利于 SEO 优化。
+
+:::
+
+::: info 前端路由阶段（现在）
+
+随着 Ajax 出现，形成前后端分离的开发模式：后端仅提供 API 返回数据，前端通过 Ajax 获取数据并用 JavaScript 渲染到页面。  
+**优点**：前后端责任清晰（后端专注数据，前端专注交互和可视化）；移动端（iOS/Android）出现后，后端无需额外处理，复用原有 API 即可。目前很多网站仍采用这种模式。
+
+**单页面富应用（SPA）阶段**
+
+SPA 的核心特点是在**前后端分离基础上增加前端路由**（由前端维护一套路由规则）。  
+前端路由的核心：**改变 URL，但页面不整体刷新**。
+
+- **实现方式1**：URL 的 hash
+
+URL 的 hash（锚点 `#`）本质是修改 `window.location.href` 属性。通过直接赋值 `location.hash` 可改变 `href`，但页面不刷新。
+
+- **实现方式2**：HTML5 的 history 模式
+
+history 接口是 HTML5 新增的，提供 5 种方法改变 URL 且不刷新页面。
+
+1. **`history.pushState()`**：添加历史记录，支持浏览器前进后退。
+
+2. **`history.replaceState()`**：替换当前历史记录，**无法使用浏览器前进后退按钮**。
+
+3. **`history.go()`**：控制历史记录跳转。
+
+- `history.back()` 等价于 `history.go(-1)`；
+- `history.forward()` 等价于 `history.go(1)`；
+
+:::
+
+### vue-router
+
+Vue.js 官方的路由插件，它和 `vue.js` 是深度集成的，适合用于构建单页面应用。  
+官方网站：https://router.vuejs.org/zh/  
+`vue-router` 是基于路由和组件的，路由用于设定访问路径，将路径和组件映射起来。  
+在 `vue-router` 的单页面应用中，页面的路径的改变就是组件的切换。
+
+::: info 安装及使用
+
+- **步骤一**：安装 `vue-router`
+
+  ```bash
+  npm install vue-router --save
+  ```
+
+- **步骤二**：在模块化工程中使用它（因为是一个插件，所以可以通过 `Vue.use()` 来安装路由功能）
+  1. 导入路由对象，并且调用 `Vue.use(VueRouter)`；
+  2. 创建路由实例，并且传入路由映射配置；
+  3. 在 Vue 实例中挂载创建的路由实例。
+
+:::
+
+::: info 使用 vue-router 的步骤
+
+1. **第一步**：创建路由组件（普通vue组件）
+2. **第二步**：配置路由映射（建立组件和路径的映射关系）
+
+```js
+import VueRouter from "vue-router";
+import Vue from "vue";
+// 1.通过Vue.use(插件), 安装插件
+Vue.use(VueRouter);
+// 2.创建VueRouter对象
+const routes = [
+  {
+    path: "/home",
+    component: Home,
+  },
+  {
+    path: "/about",
+    component: About,
+  },
+];
+const router = new VueRouter({ routes });
+export default router;
+```
+
+3. **第三步**：使用路由（通过 `<router-link>` 和 `<router-view>`）
+
+```js
+import Vue from "vue";
+import App from "./App";
+import router from "./router";
+
+new Vue({
+  el: "#app",
+  router,
+  render: (h) => h(App),
+});
+```
+
+```html
+<router-link to="/home">首页</router-link>
+<router-link to="/about">关于</router-link>
+<router-view></router-view>
+```
+
+- **`<router-link>`**：该标签是 `vue-router` 中已经内置的组件，它会被渲染成一个 `<a>` 标签。
+- **`<router-view>`**：该标签会根据当前的路径，动态渲染出不同的组件。网页的其他内容（比如顶部的标题/导航，或者底部的一些版权信息等）会和 `<router-view>` 处于同一个等级。在路由切换时，切换的是 `<router-view>` 挂载的组件，其他内容不会发生改变。
+
+---
+
+> `<router-link>`补充
+>
+> - **`to`**：用于指定跳转的路径。
+> - **`tag`**：可指定 `<router - link>` 渲染成什么组件（比如渲染成 `<li>`，而不是默认的 `<a>`）。
+> - **`replace`**：开启后不会留下 `history` 记录，因此后退键无法返回到上一个页面。
+> - **`active - class`**：当 `<router - link>` 对应的路由匹配成功时，会自动给当前元素设置一个 `router - link - active` 的 class；通过 `active - class` 可以修改这个默认类名。（常用于高亮显示的导航菜单或底部 tabbar，通常直接使用默认的 `router - link - active` 即可；也可通过 `router` 实例的 `linkActiveClass` 属性全局修改类名。）
+
+:::
+
 ## vuex详解
 
 ## 网络模块封装
