@@ -1284,7 +1284,7 @@ history 接口是 HTML5 新增的，提供 5 种方法改变 URL 且不刷新页
 
 :::
 
-### vue-router
+### vue-router基本使用
 
 Vue.js 官方的路由插件，它和 `vue.js` 是深度集成的，适合用于构建单页面应用。  
 官方网站：https://router.vuejs.org/zh/  
@@ -1364,6 +1364,91 @@ new Vue({
 > - **`active - class`**：当 `<router - link>` 对应的路由匹配成功时，会自动给当前元素设置一个 `router - link - active` 的 class；通过 `active - class` 可以修改这个默认类名。（常用于高亮显示的导航菜单或底部 tabbar，通常直接使用默认的 `router - link - active` 即可；也可通过 `router` 实例的 `linkActiveClass` 属性全局修改类名。）
 
 :::
+
+::: info 路由重定向
+
+在路由的配置文件中添加如下语句即可实现“根路径重定向”：
+
+```js
+const routes = [
+  {
+    path: "/",
+    redirect: "/home",
+  },
+];
+```
+
+- **配置解析**：
+  - `path` 配置的是根路径 `/`；
+  - `redirect` 是“重定向”，即把根路径 `/` 重定向到 `/home` 路径下。
+
+:::
+
+::: info router模式切换
+
+URL 的 hash 和 HTML5 的 history 是两种常见方式：
+
+- 默认情况下，路径的改变使用 URL 的 **hash** 模式；
+- 如果希望使用 HTML5 的 **history** 模式，只需在创建 `router` 实例时配置 `mode` 属性：
+  ```js
+  const router = new VueRouter({
+    routes,
+    mode: "history",
+  });
+  ```
+
+:::
+
+::: info 编程式路由导航
+
+```html
+<button @click="linkToHome">首页</button>
+<button @click="linkToAbout">关于</button>
+
+<script>
+  export default {
+    name: "App",
+    methods: {
+      linkToHome() {
+        this.$router.push("/home");
+      },
+      linkToAbout() {
+        this.$router.push("/about");
+      },
+    },
+  };
+</script>
+```
+
+:::
+
+::: info 动态路由
+
+在某些场景下，页面的 `path` 路径可能不确定（比如用户界面路径为 `/user/aaaa` 或 `/user/bbbb`，除公共前缀 `/user` 外，还跟随用户 ID）。这种 `path` 和 `Component` 的匹配关系称为**动态路由**（也是路由传递数据的一种方式）。
+
+- 路由配置：
+  ```js
+  {
+    path: '/user/:id',
+    component: User
+  }
+  ```
+- 组件内获取参数（如 `User` 组件）：
+  ```html
+  <div>
+    <h2>{{ $route.params.id }}</h2>
+  </div>
+  ```
+
+:::
+
+### 路由懒加载、嵌套路由、传递参数
+
+### 全局导航守卫
+
+### keep-alive的使用
+
+### es6-promise补充
 
 ## vuex详解
 
