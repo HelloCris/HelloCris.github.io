@@ -1444,6 +1444,130 @@ URL 的 hash 和 HTML5 的 history 是两种常见方式：
 
 ### 路由懒加载、嵌套路由、传递参数
 
+::: info 路由懒加载
+
+懒加载即Lazy Load，用到时再加载。可减少项目体积，加快页面加载速度。
+
+```js
+// 方式一：结合Vue异步组件和webpack代码分割功能
+const Home = (resolve) => {
+  require(["@/components/Home.vue"], resolve);
+};
+
+// 方式二：使用import（推荐）
+const Home = () => import("@/components/Home.vue");
+const About = () => import("@/components/About.vue");
+
+// 方式三：统一管理懒加载组件
+const Home = () =>
+  import(/* webpackChunkName: "group-home" */ "@/components/Home.vue");
+const About = () =>
+  import(/* webpackChunkName: "group-about" */ "@/components/About.vue");
+```
+
+:::
+
+::: info 嵌套路由
+
+当路由有子级路由时，使用`children`配置子路由。
+
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: "/home",
+      component: Home,
+      children: [
+        {
+          path: "news", // 注意：子路由path不要加 /
+          component: News,
+        },
+        {
+          path: "message",
+          component: Message,
+        },
+      ],
+    },
+  ],
+});
+```
+
+在`Home`组件中添加`router-view`展示子路由内容：
+
+```html
+<div class="home">
+  <h2>Home组件</h2>
+  <router-link to="/home/news">新闻</router-link>
+  <router-link to="/home/message">消息</router-link>
+  <router-view></router-view>
+</div>
+```
+
+:::
+
+::: info 传递参数`params`和`query`
+
+路由传参有两种方式：`params`和`query`。
+
+**1. params参数**
+
+配置路由时使用占位符接收参数：
+
+```js
+{
+  path: '/user/:id',
+  component: User
+}
+```
+
+跳转时传递参数：
+
+```html
+<!-- 方式一：字符串拼接 -->
+<router-link :to="'/user/' + userId">用户</router-link>
+<!-- 方式二：对象形式 -->
+<router-link :to="{ name: 'User', params: { id: userId } }">用户</router-link>
+```
+
+在组件中获取参数：
+
+```html
+<div>{{ $route.params.id }}</div>
+```
+
+**2. query参数**
+
+query参数不会显示在URL路径中，而是以查询字符串形式拼接在URL后面。
+
+跳转时传递参数：
+
+```html
+<!-- 方式一：字符串拼接 -->
+<router-link :to="'/profile?name=tom&age=18'">档案</router-link>
+<!-- 方式二：对象形式（推荐） -->
+<router-link
+  :to="{
+  path: '/profile',
+  query: { name: 'tom', age: 18 }
+}"
+  >档案</router-link
+>
+```
+
+在组件中获取参数：
+
+```html
+<div>{{ $route.query.name }}</div>
+<div>{{ $route.query.age }}</div>
+```
+
+**3. $router和$route的区别**
+
+- `$router`：路由实例，包含路由跳转方法（`push`、`replace`等）
+- `$route`：当前路由信息对象，包含当前路由的参数（`params`、`query`等）
+
+:::
+
 ### 全局导航守卫
 
 ### keep-alive的使用
