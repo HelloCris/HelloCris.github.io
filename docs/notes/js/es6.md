@@ -114,7 +114,7 @@ const obj = {
 };
 ```
 
-::: warning ⚠️注意
+::: warning ⚠️ 注意
 
 1. **不能作为构造函数**：不能使用 `new` 关键字调用，否则会报错。因为它没有 `prototype` 属性。
 
@@ -134,5 +134,86 @@ const obj = {
 
 3. **不能用作 Generator 函数**：不能使用 `yield` 关键字。
 4. 不要在对象字面量中定义方法时使用箭头函数
+
+:::
+
+## Promise
+
+Promise 是 ES6 提供的异步编程解决方案，用于处理异步操作。
+
+| 状态      | 说明             | 转换                           |
+| --------- | ---------------- | ------------------------------ |
+| pending   | 待定（初始状态） | 可转换为 fulfilled 或 rejected |
+| fulfilled | 已成功           | 不可转换其他状态               |
+| rejected  | 已失败           | 不可转换其他状态               |
+
+### 基本用法
+
+```js
+const promise = new Promise((resolve, reject) => {
+  // 异步操作
+  if (success) {
+    resolve(value); // 成功时调用
+  } else {
+    reject(error); // 失败时调用
+  }
+});
+
+promise
+  .then((value) => {
+    console.log(value); // 处理成功结果
+  })
+  .catch((error) => {
+    console.error(error); // 处理失败结果
+  })
+  .finally(() => {
+    console.log("无论成功或失败都会执行");
+  });
+```
+
+| Promise 实例方法                | 说明                                      |
+| ------------------------------- | ----------------------------------------- |
+| `then(onFulfilled, onRejected)` | 添加成功和失败的回调，返回新的 Promise    |
+| `catch(onRejected)`             | 捕获错误，等同于 `then(null, onRejected)` |
+| `finally(onFinally)`            | 无论成功或失败都会执行                    |
+
+| Promise 静态方法               | 说明                                | 示例                      |
+| ------------------------------ | ----------------------------------- | ------------------------- |
+| `Promise.all(iterable)`        | 等待所有 Promise 完成，返回结果数组 | `Promise.all([p1, p2])`   |
+| `Promise.race(iterable)`       | 返回最快完成或拒绝的 Promise        | `Promise.race([p1, p2])`  |
+| `Promise.resolve(value)`       | 返回一个成功状态的 Promise          | `Promise.resolve(1)`      |
+| `Promise.reject(reason)`       | 返回一个失败状态的 Promise          | `Promise.reject('error')` |
+| `Promise.allSettled(iterable)` | 所有 Promise settled 后返回结果     | ES2020                    |
+
+::: info 链式调用
+
+Promise 支持链式调用，上一个 Promise 的返回值会传递给下一个。
+
+```js
+fetchData()
+  .then((data) => {
+    return processData(data); // 返回值传递给下一个 then
+  })
+  .then((processed) => {
+    console.log(processed);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+```
+
+:::
+
+::: info 错误处理
+
+```js
+// 方式1：catch 捕获
+promise.then((res) => console.log(res)).catch((err) => console.error(err));
+// 方式2：then 的第二个参数
+promise.then(
+  (res) => console.log(res),
+  (err) => console.error(err),
+);
+```
 
 :::

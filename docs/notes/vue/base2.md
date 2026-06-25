@@ -1570,9 +1570,47 @@ query参数不会显示在URL路径中，而是以查询字符串形式拼接在
 
 ### 全局导航守卫
 
+vue-router 提供的导航守卫主要用来监听路由的进入和离开。  
+vue-router 提供了 `beforeEach` 和 `afterEach` 的钩子函数，它们会在路由即将改变前和改变后触发。
+
+- `to`：即将要进入的目标的路由对象；
+- `from`：当前导航即将要离开的路由对象；
+- `next`：调用该方法后，才能进入下一个钩子。
+
+```js
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  console.log("全局前置守卫", to, from);
+  next();
+});
+// 全局后置守卫
+router.afterEach((to, from) => {
+  console.log("全局后置守卫", to, from);
+  next();
+});
+```
+
+::: warning ⚠️ 注意
+
+1. **钩子的 `next()` 调用规则**：
+   - 前置钩子（如 `beforeEach`）**必须主动调用 `next()`**，否则路由无法继续流转；
+   - 后置钩子（如 `afterEach`）**无需主动调用 `next()`**。
+2. **守卫的分类**：文中使用的 `beforeEach`/`afterEach` 属于**全局守卫**；此外还有「路由独享的守卫」「组件内的守卫」等类型，可自行查阅 `vue-router` 官方文档深入学习。
+
+:::
+
 ### keep-alive的使用
 
-### es6-promise补充
+keep-alive 是 Vue 内置的一个组件，可以使被包含的组件保留状态，或避免重新渲染。Keep-alive 是为了防止频繁的创建和销毁组件，从而提高性能。
+
+两个非常重要的属性：
+
+- `include` — 字符串或正则表达式，只有匹配的组件会被缓存
+- `exclude` — 字符串或正则表达式，任何匹配的组件都不会被缓存
+
+使用方法：router-view 也是一个组件，如果直接被包在 keep-alive 里面，所有路径匹配到的视图组件都会被缓存。
+
+当使用 keep-alive 后，相关组件可以调用两个函数：`activated` 和 `deactivated`。
 
 ## vuex详解
 
