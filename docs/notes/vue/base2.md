@@ -1758,43 +1758,34 @@ export default {
 
 ### vuex核心概念
 
-Vuex 主要包含以下核心概念：
+::: info Vuex 架构图
 
-::: info Vuex 核心概念架构
-
-![Vuex架构图](asset/VuexArchitecture.png)
+![Vuex架构图](asset/vuex.png)
 
 :::
 
 #### State
 
-State 是 Vuex 中的基本数据源，相当于 Vue 组件中的 data。
+State 是 Vuex 中的基本数据源，官方命名为“单一状态树”，相当于 Vue 组件中的 data。
 
-```javascript
+```js
 const store = new Vuex.Store({
   state: {
     count: 0,
-    todos: [
-      { id: 1, text: "学习 Vue", done: true },
-      { id: 2, text: "学习 Vuex", done: false },
-    ],
-    user: {
-      name: "张三",
-      age: 25,
-    },
+    todos: [],
   },
 });
 ```
 
 **在组件中访问 State**：
 
-```javascript
+```js
 // 方式一：直接访问
 this.$store.state.count
 
 // 方式二：使用 mapState
 computed: {
-  ...mapState(['count', 'user']),
+  ...mapState(['count', 'todos']),
   ...mapState({
     // 箭头函数可使代码更简练
     todoCount: state => state.todos.length,
@@ -1808,7 +1799,7 @@ computed: {
 
 Getters 相当于 Vue 组件中的 computed 计算属性，对 state 进行加工处理后返回新的数据。
 
-```javascript
+```js
 const store = new Vuex.Store({
   state: {
     todos: [
@@ -1836,7 +1827,7 @@ const store = new Vuex.Store({
 
 **在组件中使用 Getters**：
 
-```javascript
+```js
 // 方式一：直接访问
 this.$store.getters.doneTodos
 this.$store.getters.doneTodosCount
@@ -1854,9 +1845,9 @@ computed: {
 
 #### Mutations
 
-Mutations 是唯一修改 State 的方式，且必须是同步函数。
+Mutations 是唯一修改 State 的方式，且**必须是同步函数**。
 
-```javascript
+```js
 const store = new Vuex.Store({
   state: {
     count: 1,
@@ -1880,7 +1871,7 @@ const store = new Vuex.Store({
 
 **提交 Mutation**：
 
-```javascript
+```js
 // 方式一：对象风格的提交
 this.$store.commit("increment");
 
@@ -1896,7 +1887,7 @@ this.$store.commit({
 
 **使用 mapMutations**：
 
-```javascript
+```js
 import { mapMutations } from "vuex";
 
 export default {
@@ -1921,7 +1912,7 @@ export default {
 
 Actions 类似于 Mutations，但 Actions 可以包含任意异步操作，通过提交 Mutation 来修改状态。
 
-```javascript
+```js
 const store = new Vuex.Store({
   state: {
     count: 0,
@@ -1978,7 +1969,7 @@ const store = new Vuex.Store({
 
 **分发 Action**：
 
-```javascript
+```js
 // 方式一：直接分发
 this.$store.dispatch("incrementAsync");
 this.$store.dispatch("incrementByAsync", { amount: 10 });
@@ -1993,7 +1984,7 @@ this.$store.dispatch({
 
 **使用 mapActions**：
 
-```javascript
+```js
 import { mapActions } from "vuex";
 
 export default {
@@ -2010,56 +2001,55 @@ export default {
 
 由于使用单一状态树，应用的所有状态会集中到一个比较大的对象。当应用变得非常复杂时，store 对象就有可能变得相当臃肿。为了解决以上问题，Vuex 允许我们将 store 分割成模块（module）。
 
-```javascript
+```js
 const moduleA = {
   state: { count: 0 },
-  mutations: { increment(state) { state.count++ } },
-  actions: { incrementIfOddOnRootSum({ state, rootState }) {
-    if ((state.count + rootState.count) % 2 === 1) {
-      commit('increment')
-    }
-  }},
-  getters: { doubleCount(state) { return state.count * 2 } }
-}
+  mutations: {
+    increment(state) {
+      state.count++;
+    },
+  },
+  actions: {
+    incrementIfOddOnRootSum({ state, rootState }) {
+      if ((state.count + rootState.count) % 2 === 1) {
+        commit("increment");
+      }
+    },
+  },
+  getters: {
+    doubleCount(state) {
+      return state.count * 2;
+    },
+  },
+};
 
 const moduleB = {
-  state: { text: 'hello' },
-  mutations: { },
-  actions: { },
-  getters: { }
-}
+  state: { text: "hello" },
+  mutations: {},
+  actions: {},
+  getters: {},
+};
 
 const store = new Vuex.Store({
   modules: {
     a: moduleA,
-    b: moduleB
-  }
-})
+    b: moduleB,
+  },
+});
 
 // 访问模块 state
-this.$store.state.a.count // -> moduleA 的状态
-this.$store.state.b.text  // -> moduleB 的状态
+this.$store.state.a.count; // -> moduleA 的状态
+this.$store.state.b.text; // -> moduleB 的状态
 
 // 访问模块 getters
-this.$store.getters['a/doubleCount']
-
-// 在模块中调用根级别的 mutation 和 action
-actions: {
-  someAction({ dispatch, commit, getters, rootGetters }) {
-    dispatch('someOtherAction') // -> 'someOtherAction'
-    dispatch('someOtherAction', null, { root: true }) // -> 根级别的 'someOtherAction'
-
-    commit('someMutation') // -> 'someMutation'
-    commit('someMutation', null, { root: true }) // -> 根级别的 'someMutation'
-  }
-}
+this.$store.getters["a/doubleCount"];
 ```
 
 **模块的命名空间**：
 
 默认情况下，模块内部的 action、mutation 和 getter 是注册在全局命名空间的。如果希望模块具有更高的封装度和复用性，可以通过添加 `namespaced: true` 的方式使其成为命名空间模块。
 
-```javascript
+```js
 const store = new Vuex.Store({
   modules: {
     account: {
@@ -2077,20 +2067,6 @@ const store = new Vuex.Store({
       // 嵌套模块
       modules: {
         // 继承父模块的命名空间
-        myPage: {
-          state: {},
-          getters: {
-            profile() {}, // -> getters['account/profile']
-          },
-        },
-        // 进一步嵌套命名空间
-        posts: {
-          namespaced: true,
-          state: {},
-          getters: {
-            popular() {}, // -> getters['account/posts/popular']
-          },
-        },
       },
     },
   },
@@ -2099,7 +2075,7 @@ const store = new Vuex.Store({
 
 **在命名空间模块中访问全局内容**：
 
-```javascript
+```js
 modules: {
   foo: {
     namespaced: true,
@@ -2115,7 +2091,10 @@ modules: {
     actions: {
       // 在这个模块中， dispatch 和 commit 也被局部化
       // 他们可以接受 `root` 属性以访问根 dispatch 或 commit
-      someAction ({ dispatch, commit, getters, rootGetters }) {
+      someAction ({ state, dispatch, rootState, commit, getters, rootGetters }) {
+        state.count // -> 'foo/count'
+        rootState.count // -> 'count'
+
         getters.someGetter // -> 'foo/someGetter'
         rootGetters.someGetter // -> 'someGetter'
 
@@ -2131,20 +2110,8 @@ modules: {
 }
 ```
 
-::: info Vuex 严格模式
-
-在严格模式下，无论何时发生了状态变更且不是由 mutation 函数引起的，将会抛出错误。这能保证所有的状态变更都能被调试工具跟踪。
-
-```javascript
-const store = new Vuex.Store({
-  // ...
-  strict: process.env.NODE_ENV !== "production",
-});
-```
-
-**不要在发布环境下启用严格模式**：严格模式会对状态树进行深度监测来检测不合规的状态变更，这可能会带来性能损耗。
-:::
-
 ## 网络模块封装
+
+### 111
 
 ## 项目部署

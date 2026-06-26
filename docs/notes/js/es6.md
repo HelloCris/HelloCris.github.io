@@ -217,3 +217,57 @@ promise.then(
 ```
 
 :::
+
+## 解构赋值
+
+解构赋值允许从对象或数组中提取值，赋值给变量。
+
+| 类型       | 语法                         | 说明                   |
+| ---------- | ---------------------------- | ---------------------- |
+| 对象解构   | `const { a, b } = obj`       | 提取对象属性           |
+| 对象重命名 | `const { a: aa } = obj`      | 重命名变量             |
+| 对象默认值 | `const { a = 1 } = obj`      | 属性不存在时使用默认值 |
+| 对象剩余   | `const { a, ...rest } = obj` | 收集剩余属性           |
+| 数组解构   | `const [a, b] = arr`         | 提取数组元素           |
+| 数组跳过   | `const [a, , c] = arr`       | 跳过某些元素           |
+| 数组剩余   | `const [a, ...rest] = arr`   | 收集剩余元素           |
+| 嵌套解构   | `const { a: { b } } = obj`   | 解构嵌套对象/数组      |
+
+```js
+// 对象解构
+const obj = { name: "张三", age: 25, city: "北京" };
+const { name, age, city = "上海" } = obj;
+const { name: userName, ...rest } = obj;
+
+// 数组解构
+const arr = ["张三", 25, "北京"];
+const [first, second, third] = arr;
+const [, , last] = arr;
+const [head, ...tail] = arr;
+
+// 嵌套解构
+const data = { user: { name: "张三", address: { city: "北京" } } };
+const {
+  user: {
+    name,
+    address: { city },
+  },
+} = data;
+
+// 函数参数解构
+function greet({ name, age = 20 }) {
+  console.log(`${name}, ${age}`);
+}
+
+// 交换变量
+let a = 1,
+  b = 2;
+[a, b] = [b, a];
+```
+
+::: info 常见应用
+
+- 函数返回值解构：`const { data, code } = api()`
+- 模块导入：`import { useState, useEffect } from 'react'`
+- 交换变量：`[a, b] = [b, a]`
+  :::
