@@ -1614,6 +1614,551 @@ keep-alive 是 Vue 内置的一个组件，可以使被包含的组件保留状�
 
 ## vuex详解
 
+### vuex简介
+
+Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
+
+::: info 什么是状态管理？
+
+**状态管理核心概念**：
+
+- **state**：驱动应用的数据源
+- **view**：以声明方式将 state 映射到视图
+- **actions**：响应在 view 上的用户输入导致的状态变化
+
+**为什么需要 Vuex**：
+
+- **状态共享**：多个组件需要访问和修改同一个状态
+- **状态追踪**：调试时可以跟踪状态的变化
+- **代码规范**：统一的状态管理方式，代码更易维护
+
+**适用场景**：
+
+- 多个视图依赖于同一状态
+- 来自不同视图的行为需要变更同一状态
+
+**不适合使用的场景**：
+
+- 小型简单的应用
+- 组件间的简单通信
+- 状态不会在多个组件间共享的场景
+  :::
+
+### vuex基本使用
+
+**安装 Vuex**：
+
+```bash
+npm install vuex --save
+```
+
+**基础配置和使用**：
+
+```javascript
+// store.js
+import Vue from "vue";
+import Vuex from "vuex";
+
+Vue.use(Vuex);
+
+const store = new Vuex.Store({
+  state: {
+    count: 0,
+    message: "Hello Vuex",
+  },
+  mutations: {
+    increment(state) {
+      state.count++;
+    },
+    decrement(state) {
+      state.count--;
+    },
+  },
+  actions: {
+    incrementAsync({ commit }) {
+      setTimeout(() => {
+        commit("increment");
+      }, 1000);
+    },
+  },
+  getters: {
+    doubleCount: (state) => state.count * 2,
+    greeting: (state) => `Hello ${state.message}`,
+  },
+});
+
+export default store;
+
+// main.js
+import Vue from "vue";
+import App from "./App.vue";
+import store from "./store";
+
+new Vue({
+  store,
+  render: (h) => h(App),
+}).$mount("#app");
+```
+
+**在组件中使用 Vuex**：
+
+```vue
+<template>
+  <div>
+    <h1>{{ count }}</h1>
+    <h2>{{ doubleCount }}</h2>
+    <p>{{ greeting }}</p>
+    <button @click="increment">增加</button>
+    <button @click="decrement">减少</button>
+    <button @click="incrementAsync">异步增加</button>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    count() {
+      return this.$store.state.count;
+    },
+    doubleCount() {
+      return this.$store.getters.doubleCount;
+    },
+    greeting() {
+      return this.$store.getters.greeting;
+    },
+  },
+  methods: {
+    increment() {
+      this.$store.commit("increment");
+    },
+    decrement() {
+      this.$store.commit("decrement");
+    },
+    incrementAsync() {
+      this.$store.dispatch("incrementAsync");
+    },
+  },
+};
+</script>
+```
+
+**使用 mapState、mapGetters、mapMutations、mapActions 辅助函数**：
+
+```vue
+<template>
+  <div>
+    <h1>{{ count }}</h1>
+    <h2>{{ doubleCount }}</h2>
+    <button @click="increment">增加</button>
+    <button @click="incrementAsync">异步增加</button>
+  </div>
+</template>
+
+<script>
+import { mapState, mapGetters, mapMutations, mapActions } from "vuex";
+
+export default {
+  computed: {
+    ...mapState(["count"]),
+    ...mapGetters(["doubleCount"]),
+  },
+  methods: {
+    ...mapMutations(["increment", "decrement"]),
+    ...mapActions(["incrementAsync"]),
+  },
+};
+</script>
+```
+
+### vuex核心概念
+
+Vuex 主要包含以下核心概念：
+
+::: info Vuex 核心概念架构
+
+![Vuex架构图](asset/VuexArchitecture.png)
+
+:::
+
+#### State
+
+State 是 Vuex 中的基本数据源，相当于 Vue 组件中的 data。
+
+```javascript
+const store = new Vuex.Store({
+  state: {
+    count: 0,
+    todos: [
+      { id: 1, text: "学习 Vue", done: true },
+      { id: 2, text: "学习 Vuex", done: false },
+    ],
+    user: {
+      name: "张三",
+      age: 25,
+    },
+  },
+});
+```
+
+**在组件中访问 State**：
+
+```javascript
+// 方式一：直接访问
+this.$store.state.count
+
+// 方式二：使用 mapState
+computed: {
+  ...mapState(['count', 'user']),
+  ...mapState({
+    // 箭头函数可使代码更简练
+    todoCount: state => state.todos.length,
+    // 传字符串参数 'count' 等同于 `state => state.count`
+    countAlias: 'count'
+  })
+}
+```
+
+#### Getters
+
+Getters 相当于 Vue 组件中的 computed 计算属性，对 state 进行加工处理后返回新的数据。
+
+```javascript
+const store = new Vuex.Store({
+  state: {
+    todos: [
+      { id: 1, text: "学习 Vue", done: true },
+      { id: 2, text: "学习 Vuex", done: false },
+      { id: 3, text: "学习 React", done: true },
+    ],
+  },
+  getters: {
+    // 基础 getter
+    doneTodos: (state) => {
+      return state.todos.filter((todo) => todo.done);
+    },
+    // getter 可以接收其他 getter 作为第二个参数
+    doneTodosCount: (state, getters) => {
+      return getters.doneTodos.length;
+    },
+    // getter 可以返回一个函数，实现传参
+    getTodoById: (state) => (id) => {
+      return state.todos.find((todo) => todo.id === id);
+    },
+  },
+});
+```
+
+**在组件中使用 Getters**：
+
+```javascript
+// 方式一：直接访问
+this.$store.getters.doneTodos
+this.$store.getters.doneTodosCount
+this.$store.getters.getTodoById(2)
+
+// 方式二：使用 mapGetters
+computed: {
+  ...mapGetters(['doneTodos', 'doneTodosCount']),
+  ...mapGetters({
+    // 把 `this.doneCount` 映射为 `this.$store.getters.doneTodosCount`
+    doneCount: 'doneTodosCount'
+  })
+}
+```
+
+#### Mutations
+
+Mutations 是唯一修改 State 的方式，且必须是同步函数。
+
+```javascript
+const store = new Vuex.Store({
+  state: {
+    count: 1,
+  },
+  mutations: {
+    // 简单的 mutation
+    increment(state) {
+      state.count++;
+    },
+    // 带 payload 的 mutation
+    incrementBy(state, payload) {
+      state.count += payload.amount;
+    },
+    // 对象风格的提交方式
+    incrementByObject(state, payload) {
+      state.count += payload.amount;
+    },
+  },
+});
+```
+
+**提交 Mutation**：
+
+```javascript
+// 方式一：对象风格的提交
+this.$store.commit("increment");
+
+// 方式二：payload 载荷提交
+this.$store.commit("incrementBy", { amount: 10 });
+
+// 方式三：对象风格的提交
+this.$store.commit({
+  type: "incrementByObject",
+  amount: 10,
+});
+```
+
+**使用 mapMutations**：
+
+```javascript
+import { mapMutations } from "vuex";
+
+export default {
+  methods: {
+    ...mapMutations(["increment", "incrementBy"]),
+    ...mapMutations({
+      add: "increment", // 将 `this.add()` 映射为 `this.$store.commit('increment')`
+    }),
+  },
+};
+```
+
+::: warning ⚠️ 注意
+
+- **Mutation 必须是同步函数**：异步操作会导致状态追踪困难
+- **不要在 mutation 中直接修改 props**：应该通过提交 mutation 来修改 state
+- **遵循 Vue 的响应式规则**：新增属性时使用 `Vue.set()`
+
+:::
+
+#### Actions
+
+Actions 类似于 Mutations，但 Actions 可以包含任意异步操作，通过提交 Mutation 来修改状态。
+
+```javascript
+const store = new Vuex.Store({
+  state: {
+    count: 0,
+    user: null,
+  },
+  mutations: {
+    increment(state) {
+      state.count++;
+    },
+    setUser(state, user) {
+      state.user = user;
+    },
+  },
+  actions: {
+    // 简单的 action
+    incrementAsync({ commit }) {
+      setTimeout(() => {
+        commit("increment");
+      }, 1000);
+    },
+    // 带参数的 action
+    incrementByAsync({ commit }, payload) {
+      setTimeout(() => {
+        commit("incrementBy", payload);
+      }, 1000);
+    },
+    // 异步获取数据
+    fetchUser({ commit }, userId) {
+      return new Promise((resolve, reject) => {
+        // 模拟 API 请求
+        setTimeout(() => {
+          const user = { id: userId, name: "张三" };
+          commit("setUser", user);
+          resolve(user);
+        }, 1000);
+      });
+    },
+    // 组合多个 action
+    async actionA({ commit, dispatch }) {
+      commit("increment");
+      await dispatch("actionB");
+    },
+    actionB({ commit }) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          commit("increment");
+          resolve();
+        }, 1000);
+      });
+    },
+  },
+});
+```
+
+**分发 Action**：
+
+```javascript
+// 方式一：直接分发
+this.$store.dispatch("incrementAsync");
+this.$store.dispatch("incrementByAsync", { amount: 10 });
+this.$store.dispatch("fetchUser", 123);
+
+// 方式二：对象风格的分发
+this.$store.dispatch({
+  type: "incrementByAsync",
+  amount: 10,
+});
+```
+
+**使用 mapActions**：
+
+```javascript
+import { mapActions } from "vuex";
+
+export default {
+  methods: {
+    ...mapActions(["incrementAsync", "fetchUser"]),
+    ...mapActions({
+      addAsync: "incrementAsync", // 将 `this.addAsync()` 映射为 `this.$store.dispatch('incrementAsync')`
+    }),
+  },
+};
+```
+
+#### Modules
+
+由于使用单一状态树，应用的所有状态会集中到一个比较大的对象。当应用变得非常复杂时，store 对象就有可能变得相当臃肿。为了解决以上问题，Vuex 允许我们将 store 分割成模块（module）。
+
+```javascript
+const moduleA = {
+  state: { count: 0 },
+  mutations: { increment(state) { state.count++ } },
+  actions: { incrementIfOddOnRootSum({ state, rootState }) {
+    if ((state.count + rootState.count) % 2 === 1) {
+      commit('increment')
+    }
+  }},
+  getters: { doubleCount(state) { return state.count * 2 } }
+}
+
+const moduleB = {
+  state: { text: 'hello' },
+  mutations: { },
+  actions: { },
+  getters: { }
+}
+
+const store = new Vuex.Store({
+  modules: {
+    a: moduleA,
+    b: moduleB
+  }
+})
+
+// 访问模块 state
+this.$store.state.a.count // -> moduleA 的状态
+this.$store.state.b.text  // -> moduleB 的状态
+
+// 访问模块 getters
+this.$store.getters['a/doubleCount']
+
+// 在模块中调用根级别的 mutation 和 action
+actions: {
+  someAction({ dispatch, commit, getters, rootGetters }) {
+    dispatch('someOtherAction') // -> 'someOtherAction'
+    dispatch('someOtherAction', null, { root: true }) // -> 根级别的 'someOtherAction'
+
+    commit('someMutation') // -> 'someMutation'
+    commit('someMutation', null, { root: true }) // -> 根级别的 'someMutation'
+  }
+}
+```
+
+**模块的命名空间**：
+
+默认情况下，模块内部的 action、mutation 和 getter 是注册在全局命名空间的。如果希望模块具有更高的封装度和复用性，可以通过添加 `namespaced: true` 的方式使其成为命名空间模块。
+
+```javascript
+const store = new Vuex.Store({
+  modules: {
+    account: {
+      namespaced: true,
+      state: {},
+      getters: {
+        isAdmin() {}, // -> getters['account/isAdmin']
+      },
+      actions: {
+        login() {}, // -> dispatch('account/login')
+      },
+      mutations: {
+        login() {}, // -> commit('account/login')
+      },
+      // 嵌套模块
+      modules: {
+        // 继承父模块的命名空间
+        myPage: {
+          state: {},
+          getters: {
+            profile() {}, // -> getters['account/profile']
+          },
+        },
+        // 进一步嵌套命名空间
+        posts: {
+          namespaced: true,
+          state: {},
+          getters: {
+            popular() {}, // -> getters['account/posts/popular']
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+**在命名空间模块中访问全局内容**：
+
+```javascript
+modules: {
+  foo: {
+    namespaced: true,
+    getters: {
+      // 在这个模块的 getter 中，`getters` 被局部化
+      // 你可以使用 getter 的第四个参数来调用根级的 getter
+      someGetter (state, getters, rootState, rootGetters) {
+        getters.someOtherGetter // -> 'foo/someOtherGetter'
+        rootGetters.someOtherGetter // -> 'someOtherGetter'
+      },
+      someOtherGetter: state => { }
+    },
+    actions: {
+      // 在这个模块中， dispatch 和 commit 也被局部化
+      // 他们可以接受 `root` 属性以访问根 dispatch 或 commit
+      someAction ({ dispatch, commit, getters, rootGetters }) {
+        getters.someGetter // -> 'foo/someGetter'
+        rootGetters.someGetter // -> 'someGetter'
+
+        dispatch('someOtherAction') // -> 'foo/someOtherAction'
+        dispatch('someOtherAction', null, { root: true }) // -> 'someOtherAction'
+
+        commit('someMutation') // -> 'foo/someMutation'
+        commit('someMutation', null, { root: true }) // -> 'someMutation'
+      },
+      someOtherAction (ctx, payload) { }
+    }
+  }
+}
+```
+
+::: info Vuex 严格模式
+
+在严格模式下，无论何时发生了状态变更且不是由 mutation 函数引起的，将会抛出错误。这能保证所有的状态变更都能被调试工具跟踪。
+
+```javascript
+const store = new Vuex.Store({
+  // ...
+  strict: process.env.NODE_ENV !== "production",
+});
+```
+
+**不要在发布环境下启用严格模式**：严格模式会对状态树进行深度监测来检测不合规的状态变更，这可能会带来性能损耗。
+:::
+
 ## 网络模块封装
 
 ## 项目部署
