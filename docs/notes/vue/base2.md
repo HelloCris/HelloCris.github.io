@@ -1616,7 +1616,7 @@ keep-alive 是 Vue 内置的一个组件，可以使被包含的组件保留状�
 
 ### vuex简介
 
-Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
+Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用集中式存储管理应用的所有组件的状态。
 
 ::: info 什么是状态管理？
 
@@ -1642,7 +1642,8 @@ Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用�
 - 小型简单的应用
 - 组件间的简单通信
 - 状态不会在多个组件间共享的场景
-  :::
+
+:::
 
 ### vuex基本使用
 
@@ -1654,24 +1655,19 @@ npm install vuex --save
 
 **基础配置和使用**：
 
-```javascript
+```js
 // store.js
 import Vue from "vue";
 import Vuex from "vuex";
 
 Vue.use(Vuex);
-
 const store = new Vuex.Store({
   state: {
     count: 0,
-    message: "Hello Vuex",
   },
   mutations: {
     increment(state) {
       state.count++;
-    },
-    decrement(state) {
-      state.count--;
     },
   },
   actions: {
@@ -1683,10 +1679,8 @@ const store = new Vuex.Store({
   },
   getters: {
     doubleCount: (state) => state.count * 2,
-    greeting: (state) => `Hello ${state.message}`,
   },
 });
-
 export default store;
 
 // main.js
@@ -1707,9 +1701,7 @@ new Vue({
   <div>
     <h1>{{ count }}</h1>
     <h2>{{ doubleCount }}</h2>
-    <p>{{ greeting }}</p>
     <button @click="increment">增加</button>
-    <button @click="decrement">减少</button>
     <button @click="incrementAsync">异步增加</button>
   </div>
 </template>
@@ -1723,16 +1715,10 @@ export default {
     doubleCount() {
       return this.$store.getters.doubleCount;
     },
-    greeting() {
-      return this.$store.getters.greeting;
-    },
   },
   methods: {
     increment() {
       this.$store.commit("increment");
-    },
-    decrement() {
-      this.$store.commit("decrement");
     },
     incrementAsync() {
       this.$store.dispatch("incrementAsync");
@@ -1763,7 +1749,7 @@ export default {
     ...mapGetters(["doubleCount"]),
   },
   methods: {
-    ...mapMutations(["increment", "decrement"]),
+    ...mapMutations(["increment"]),
     ...mapActions(["incrementAsync"]),
   },
 };
