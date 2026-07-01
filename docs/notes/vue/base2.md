@@ -2112,6 +2112,223 @@ modules: {
 
 ## 网络模块封装
 
-### 111
+### 网络模块的发展
+
+1. 传统的 Ajax 是基于 XMLHttpRequest(XHR)
+   - 弃用原因：配置和调用方式等非常混乱，编码可读性差，所以真实开发中很少直接使用，而是使用 jQuery-Ajax。
+
+2. 选择二：jQuery-Ajax（较于传统 Ajax 好用）
+   - 弃用原因：在三大框架的项目开发中不需要 jQuery。为了网络请求这部分，要想使用 jQuery-Ajax 需要引入完整的 jQuery，完全没必要。
+
+3. 选择三：Vue-resource
+   - 弃用原因：官方在 Vue1.x 的时候，推出了 Vue-resource。Vue-resource 的体积相对于 jQuery 小很多。但在 Vue2.0 推出后，官方永久停更 vue-resource。
+
+4. 选择四：axios
+   - 目前主流，优势众多。
+
+### JSONP
+
+JSONP（JSON with Padding）是一种跨域解决方案，利用 `<script>` 标签不受同源策略限制的特性，通过动态创建 script 标签并指定回调函数来实现跨域数据请求。
+
+**原理：**
+
+1. 客户端动态创建 `<script>` 标签，src 指向服务端接口并携带回调函数名参数（如 `callback=jsonpCallback`）
+2. 服务端接收到请求后，将数据包裹在回调函数中返回（如 `jsonpCallback({data: 'xxx'})`）
+3. 客户端的回调函数被执行，获取到数据
+
+**JSONP 封装函数示例：**
+
+```js
+function jsonp(options) {
+  const { url, params, callback, timeout = 5000 } = options;
+
+  return new Promise((resolve, reject) => {
+    const callbackName = `jsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    window[callbackName] = function (data) {
+      resolve(data);
+      cleanup();
+    };
+
+    const queryParams = new URLSearchParams(params);
+    queryParams.set("callback", callbackName);
+
+    const script = document.createElement("script");
+    script.src = `${url}?${queryParams.toString()}`;
+    script.async = true;
+
+    const timer = setTimeout(() => {
+      reject(new Error("JSONP 请求超时"));
+      cleanup();
+    }, timeout);
+
+    script.onerror = () => {
+      reject(new Error("JSONP 请求失败"));
+      cleanup();
+    };
+
+    document.body.appendChild(script);
+
+    function cleanup() {
+      clearTimeout(timer);
+      document.body.removeChild(script);
+      delete window[callbackName];
+    }
+  });
+}
+```
+
+**JSONP 局限性：**
+
+- 仅支持 GET 请求
+- 存在安全风险（XSS 攻击），因为返回的是可执行的 JavaScript
+- 需要服务端支持 JSONP 格式的响应
+- 无法设置自定义请求头
+
+### axios
+
+axios 是一个基于 Promise 的 HTTP 客户端，支持浏览器和 Node.js。
+
+| 特性        | 说明               |
+| ----------- | ------------------ |
+| Promise API | 支持链式调用       |
+| 拦截器      | 请求/响应拦截      |
+| 取消请求    | 支持请求取消       |
+| 自动转换    | 自动转换 JSON 数据 |
+| 客户端保护  | 防止 XSRF          |
+
+**安装**：
+
+```bash
+npm install axios --save
+```
+
+**请求方法**：
+
+| 方法    | 语法                               | 说明         |
+| ------- | ---------------------------------- | ------------ |
+| GET     | `axios.get(url, [config])`         | 获取数据     |
+| POST    | `axios.post(url, data, [config])`  | 提交数据     |
+| PUT     | `axios.put(url, data, [config])`   | 更新数据     |
+| DELETE  | `axios.delete(url, [config])`      | 删除数据     |
+| PATCH   | `axios.patch(url, data, [config])` | 部分更新     |
+| HEAD    | `axios.head(url, [config])`        | 获取请求头   |
+| OPTIONS | `axios.options(url, [config])`     | 获取可用方法 |
+
+**基本用法**：
+
+```js
+// GET 请求
+axios
+  .get("/api/users", { params: { id: 1 } })
+  .then((res) => console.log(res.data))
+  .catch((err) => console.error(err));
+
+// POST 请求
+axios
+  .post("/api/users", { name: "张三", age: 25 })
+  .then((res) => console.log(res.data));
+
+// 通用请求
+axios({
+  method: "put",
+  url: "/api/users/1",
+  data: { name: "李四" },
+});
+```
+
+**拦截器**：
+
+```js
+// 请求拦截器
+axios.interceptors.request.use(
+  (config) => {
+    config.headers.Authorization = "Bearer " + token;
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+// 响应拦截器
+axios.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    if (error.response.status === 401) {
+      // 处理未授权
+    }
+    return Promise.reject(error);
+  },
+);
+```
+
+**并发请求**：
+
+```js
+axios.all([axios.get("/api/users"), axios.get("/api/posts")]).then(
+  axios.spread((users, posts) => {
+    console.log(users.data, posts.data);
+  }),
+);
+```
+
+#### 实例配置及封装
+
+**常用配置项**：
+
+| 配置项          | 类型    | 说明                                |
+| --------------- | ------- | ----------------------------------- |
+| baseURL         | String  | 请求基础URL                         |
+| timeout         | Number  | 超时时间(ms)                        |
+| headers         | Object  | 请求头                              |
+| params          | Object  | URL查询参数                         |
+| data            | Object  | 请求体数据                          |
+| responseType    | String  | 响应数据类型(json/blob/arraybuffer) |
+| withCredentials | Boolean | 是否携带跨域凭证                    |
+
+**封装实例**：
+
+```js
+// utils/request.js
+import axios from "axios";
+
+const service = axios.create({
+  baseURL: process.env.VUE_APP_BASE_API,
+  timeout: 5000,
+  headers: { "Content-Type": "application/json" },
+});
+
+export default service;
+```
+
+**封装API调用**：
+
+```js
+// api/user.js
+import request from "@/utils/request";
+
+export function getUserList(params) {
+  return request({
+    url: "/users",
+    method: "get",
+    params,
+  });
+}
+
+export function createUser(data) {
+  return request({
+    url: "/users",
+    method: "post",
+    data,
+  });
+}
+```
+
+::: info 为什么要封装axios
+
+1. **统一配置**：一次配置，处处生效（baseURL、timeout 等）
+2. **统一拦截**：自动加 token、统一处理错误，不用重复写
+3. **代码复用**：API 按模块封装，组件只需调用方法
+4. **易于维护**：换库、加功能只需改封装层
+
+:::
 
 ## 项目部署
