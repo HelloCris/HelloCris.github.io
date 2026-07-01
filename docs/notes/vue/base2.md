@@ -2331,4 +2331,75 @@ export function createUser(data) {
 
 :::
 
-## 项目部署
+## 附录
+
+### 附1: CSS变量
+
+1. 全局作用域 `:root`
+
+- `:root` 选择器匹配文档的根元素。在 HTML 中，它等同于 `<html>` 标签。
+
+2. 变量的定义：使用双破折号开头 `--` 加上变量名。
+
+```css
+:root {
+  /* 颜色变量 */
+  --color-text: #666;
+  --color-high-text: #ff5777;
+  --color-tint: #ff8198;
+  --color-background: #fff;
+
+  /* 排版变量 */
+  --font-size: 14px;
+  --line-height: 1.5;
+}
+```
+
+3. 变量的使用
+
+- **语法**：`属性名: var(--变量名);`
+
+  ```css
+  .example-class {
+    color: var(--color-text); /* 将文字颜色设置为 #666 */
+  }
+  ```
+
+### 附2: 路径别名
+
+- **文件**：`vue.config.js`
+- **配置项**：通过 `configureWebpack` 选项修改 Webpack 的 `resolve.alias` 配置。
+
+```js
+module.exports = {
+  configureWebpack: {
+    resolve: {
+      alias: {
+        views: "@/views",
+        components: "@/components",
+        network: "@/network",
+        common: "@/common",
+        assets: "@/assets",
+      },
+    },
+  },
+};
+```
+
+### 附3: 基础防抖函数
+
+- **定义**：在事件触发后，等待一定时间后执行函数，避免频繁触发。
+- **作用**：用于处理输入事件、滚动事件等频繁触发的事件，提高性能。
+
+```js
+// 防抖函数
+function debounce(func, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+```
