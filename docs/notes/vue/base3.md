@@ -203,6 +203,40 @@ function handleClick() {
 </script>
 ```
 
+---
+
+扩展：上述代码，还需要编写一个不写 setup 的 script 标签，去指定组件名字，比较麻烦，我们可以借助 vite 中的插件简化（Vue < 3.3）。**3.3+版本使用原生方法 `defineOptions`**。
+
+::: info vite-plugin-vue-setup-extend 插件
+
+1. 第一步：`npm i vite-plugin-vue-setup-extend -D`
+2. 第二步：`vite.config.ts`
+
+```ts
+import { defineConfig } from "vite";
+import VueSetupExtend from "vite-plugin-vue-setup-extend";
+
+export default defineConfig({
+  plugins: [VueSetupExtend()],
+});
+```
+
+3. 第三步：`<script setup lang="ts" name="Person">`
+
+:::
+
+::: info defineOptions 函数
+
+```vue
+<script setup lang="ts">
+defineOptions({
+  name: "Person",
+});
+</script>
+```
+
+:::
+
 ### ref 函数
 
 ### computed 函数
