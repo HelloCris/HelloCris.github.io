@@ -591,13 +591,235 @@ watch(
 
 ### watchEffect 函数
 
+官网：立即运行一个函数，同时响应式地追踪其依赖，并在依赖更改时重新执行该函数。
+
+watch对比watchEffect：都能监听响应式数据的变化，不同的是监听数据变化的方式不同
+
+- watch：要明确指出监视的数据
+- watchEffect：不用明确指出监视的数据（函数中用到哪些属性，那就监视哪些属性）。
+
+```vue
+<script lang="ts" setup name="Person">
+import { ref, watch, watchEffect } from "vue";
+// 数据
+let temp = ref(0);
+let height = ref(0);
+
+// 用watch实现，需要明确的指出要监视：temp、height
+watch([temp, height], (value) => {
+  // 从value中获取最新的temp值、height值
+  const [newTemp, newHeight] = value;
+  // 室温达到50℃，或水位达到20cm，立刻联系服务器
+  if (newTemp >= 50 || newHeight >= 20) {
+    console.log("联系服务器");
+  }
+});
+
+// 用watchEffect实现，不用
+const stopWtach = watchEffect(() => {
+  // 室温达到50℃，或水位达到20cm，立刻联系服务器
+  if (temp.value >= 50 || height.value >= 20) {
+    console.log(document.getElementById("demo")?.innerText);
+    console.log("联系服务器");
+  }
+  // 水温达到100，或水位达到50，取消监视
+  if (temp.value === 100 || height.value === 50) {
+    console.log("清理了");
+    stopWtach();
+  }
+});
+</script>
+```
+
 ### 标签的 ref 属性
+
+作用：用于注册模板引用。
+
+- 用在普通DOM标签上，获取的是DOM节点。
+- 用在组件标签上，获取的是组件实例对象。
+
+**用在普通DOM标签上：**
+
+```vue
+<template>
+  <div class="person">
+    <h1 ref="title1">尚硅谷</h1>
+    <button @click="showLog">点我打印内容</button>
+  </div>
+</template>
+
+<script lang="ts" setup name="Person">
+import { ref } from "vue";
+
+let title1 = ref();
+
+function showLog() {
+  // 通过ref获取元素
+  console.log(title1.value); // 打印 h1 元素
+}
+</script>
+```
+
+**用在组件标签上：**
+
+```vue
+<!-- 父组件App.vue -->
+<template>
+  <Person ref="ren" />
+  <button @click="test">测试</button>
+</template>
+<script lang="ts" setup name="App">
+import Person from "./components/Person.vue";
+import { ref } from "vue";
+let ren = ref();
+function test() {
+  console.log(ren.value.name);
+  console.log(ren.value.age);
+}
+</script>
+
+<!-- 子组件Person.vue中要使用defineExpose暴露内容 -->
+<script lang="ts" setup name="Person">
+import { ref, defineExpose } from "vue";
+// 数据
+let name = ref("张三");
+let age = ref(18);
+// 使用defineExpose将组件中的数据交给外部
+defineExpose({ name, age });
+</script>
+```
 
 ### props 函数
 
+```vue
+<!-- 父组件中代码： -->
+<Person :list="persons" />
+
+<!-- Person.vue中代码： -->
+<template>
+  <div class="person">
+    <ul>
+      <li v-for="item in list" :key="item.id">
+        {{ item.name }}--{{ item.age }}
+      </li>
+    </ul>
+  </div>
+</template>
+<script lang="ts" setup name="Person">
+import { defineProps } from "vue";
+import { type PersonInter } from "@/types";
+
+// 第一种写法：仅接收
+// const props = defineProps(['list'])
+// 第二种写法：接收+限制类型
+// defineProps<{list:Persons}>()
+// 第三种写法：接收+限制类型+指定默认值+限制必要性
+let props = withDefaults(defineProps<{ list?: Persons }>(), {
+  list: () => [{ id: "asdasg01", name: "小猪佩奇", age: 18 }],
+});
+console.log(props);
+</script>
+```
+
 ### vue3 生命周期
 
+概念：Vue组件实例在创建时要经历一系列的初始化步骤，在此过程中Vue会在合适的时机，调用特定的函数，从而让开发者有机会在特定阶段运行自己的代码，这些特定的函数统称为：**生命周期钩子**。
+
+规律：
+生命周期整体分为四个阶段，分别是：创建、挂载、更新、销毁，每个阶段都有两个钩子，一前一后。
+
+**Vue2的生命周期钩子：**
+
+- 创建阶段：beforeCreate、created
+- 挂载阶段：beforeMount、mounted
+- 更新阶段：beforeUpdate、updated
+- 销毁阶段：beforeDestroy、destroyed
+
+**Vue3的生命周期钩子：**
+
+- 创建阶段：setup
+- 挂载阶段：onBeforeMount、onMounted
+- 更新阶段：onBeforeUpdate、onUpdated
+- 卸载阶段：onBeforeUnmount、onUnmounted
+
 ### 自定义 Hooks
+
+什么是hooks？—— 本质是一个函数，把setup函数中使用的Composition API进行了封装，类似于vue2.x中的mixin。
+自定义hooks的优势：复用代码，让setup中的逻辑更清楚易懂。
+
+```ts
+// useSum.ts中内容如下：
+import { ref, onMounted } from "vue";
+export default function () {
+  let sum = ref(0);
+  const increment = () => {
+    sum.value += 1;
+  };
+  const decrement = () => {
+    sum.value -= 1;
+  };
+  onMounted(() => {
+    increment();
+  });
+  //向外部暴露数据
+  return { sum, increment, decrement };
+}
+```
+
+```ts
+// useDog.ts中内容如下：
+import { reactive, onMounted } from "vue";
+import axios, { AxiosError } from "axios";
+export default function () {
+  let dogList = reactive<string[]>([]);
+  // 方法
+  async function getDog() {
+    try {
+      // 发请求
+      let { data } = await axios.get(
+        "https://dog.ceo/api/breed/pembroke/images/random",
+      );
+      // 维护数据
+      dogList.push(data.message);
+    } catch (error) {
+      // 处理错误
+      const err = <AxiosError>error;
+      console.log(err.message);
+    }
+  }
+  // 挂载钩子
+  onMounted(() => {
+    getDog();
+  });
+  //向外部暴露数据
+  return { dogList, getDog };
+}
+```
+
+```vue
+<!-- 组件中具体使用： -->
+<template>
+  <h2>当前求和为：{{ sum }}</h2>
+  <button @click="increment">点我+1</button>
+  <button @click="decrement">点我-1</button>
+  <hr />
+  <img v-for="(u, index) in dogList.urlList" :key="index" :src="u as string" />
+  <span v-show="dogList.isLoading">加载中......</span><br />
+  <button @click="getDog">再来一只狗</button>
+</template>
+<script lang="ts">
+import { defineComponent } from "vue";
+export default defineComponent({
+  name: "App",
+});
+</script>
+<script setup lang="ts">
+import useSum from "./hooks/useSum";
+import useDog from "./hooks/useDog";
+let { sum, increment, decrement } = useSum();
+let { dogList, getDog } = useDog();
+</script>
+```
 
 ## 路由
 
