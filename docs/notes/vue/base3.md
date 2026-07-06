@@ -391,7 +391,203 @@ let ageRef = toRef(personRef.value, "age");
 
 ### computed 函数
 
+作用：根据已有数据计算出新数据（和Vue2中的computed作用一致）。
+
+```vue
+<template>
+  <div class="person">
+    姓：<input type="text" v-model="firstName" /> <br />
+    名：<input type="text" v-model="lastName" /> <br />
+    全名：<span>{{ fullName }}</span> <br />
+    <button @click="changeFullName">全名改为：li-si</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="App">
+import { ref, computed } from "vue";
+
+let firstName = ref("zhang");
+let lastName = ref("san");
+
+// 计算属性——只读取，不修改
+/* let fullName = computed(()=>{
+    return firstName.value + '-' + lastName.value
+  }) */
+
+// 计算属性——既读取又修改
+let fullName = computed({
+  // 读取
+  get() {
+    return firstName.value + "-" + lastName.value;
+  },
+  // 修改
+  set(val) {
+    console.log("有人修改了fullName", val);
+    firstName.value = val.split("-")[0];
+    lastName.value = val.split("-")[1];
+  },
+});
+
+function changeFullName() {
+  fullName.value = "li-si";
+}
+</script>
+```
+
 ### watch 函数
+
+**作用：** 监视数据的变化（和 Vue2 中的 watch 作用一致）  
+**特点：** Vue3 中的 watch 只能监视以下四种数据：1. ref 定义的数据；2. reactive 定义的数据；3. 函数返回一个值（getter 函数）；4. 一个包含上述内容的数组。
+
+我们在 Vue3 中使用 watch 的时候，通常会遇到以下 5 种情况：
+
+::: info 1.监视ref定义的基本数据类型
+监视ref定义的【基本类型】数据：直接写数据名即可，监视的是其value值的改变。
+
+```vue
+<script lang="ts" setup name="Person">
+import { ref, watch } from "vue";
+// 数据
+let sum = ref(0);
+// 监视，情况一：监视【ref】定义的【基本类型】数据
+const stopWatch = watch(sum, (newValue, oldValue) => {
+  console.log("sum变化了", newValue, oldValue);
+  if (newValue >= 10) {
+    stopWatch();
+  }
+});
+</script>
+```
+
+:::
+
+::: info 2.监视ref定义的对象数据类型
+
+监视ref定义的【对象类型】数据：直接写数据名，监视的是对象的【地址值】，若想监视对象内部的数据，要手动开启深度监视。
+
+```vue
+<script lang="ts" setup name="Person">
+import { ref, watch } from "vue";
+// 数据
+let person = ref({
+  name: "张三",
+  age: 18,
+});
+/* 
+    监视，情况一：监视【ref】定义的【对象类型】数据，监视的是对象的地址值，若想监视对象内部属性的变化，需要手动开启深度监视
+    watch的第一个参数是：被监视的数据
+    watch的第二个参数是：监视的回调
+    watch的第三个参数是：配置对象（deep、immediate等等.....） 
+  */
+watch(
+  person,
+  (newValue, oldValue) => {
+    console.log("person变化了", newValue, oldValue);
+  },
+  { deep: true },
+);
+</script>
+```
+
+::: warning ⚠️ 注意
+
+1. 若修改的是ref定义的对象中的属性，newValue 和 oldValue 都是新值，因为它们是同一个对象。
+2. 若修改整个ref定义的对象，newValue 是新值， oldValue 是旧值，因为不是同一个对象了。
+
+:::
+
+::: info 3.监视reactive定义的对象数据类型
+
+监视reactive定义的【对象类型】数据，且默认开启了深度监视。
+
+```vue
+<script lang="ts" setup name="Person">
+import { reactive, watch } from "vue";
+// 数据
+let person = reactive({
+  name: "张三",
+  age: 18,
+});
+// 监视，情况三：监视【reactive】定义的【对象类型】数据，且默认是开启深度监视的
+watch(person, (newValue, oldValue) => {
+  console.log("person变化了", newValue, oldValue);
+});
+</script>
+```
+
+:::
+
+::: info 4.监视ref或reactive定义的对象类型数据中的某个属性
+
+监视ref或reactive定义的【对象类型】数据中的某个属性，注意点如下：
+
+1. 若该属性值不是【对象类型】，需要写成函数形式。
+2. 若该属性值是依然是【对象类型】，可直接编，也可写成函数，建议写成函数。
+
+结论：监视的要是对象里的属性，那么最好写函数式，注意点：若是对象监视的是地址值，需要关注对象内部，需要手动开启深度监视。
+
+```vue
+<script lang="ts" setup name="Person">
+import { reactive, watch } from "vue";
+
+// 数据
+let person = reactive({
+  name: "张三",
+  age: 18,
+  car: {
+    c1: "奔驰",
+    c2: "宝马",
+  },
+});
+
+// 监视，情况四：监视响应式对象中的某个属性，且该属性是基本类型的，要写成函数式
+/* watch(()=> person.name,(newValue,oldValue)=>{
+    console.log('person.name变化了',newValue,oldValue)
+  }) */
+
+// 监视，情况四：监视响应式对象中的某个属性，且该属性是对象类型的，可以直接写，也能写函数，更推荐写函数
+watch(
+  () => person.car,
+  (newValue, oldValue) => {
+    console.log("person.car变化了", newValue, oldValue);
+  },
+  { deep: true },
+);
+</script>
+```
+
+:::
+
+::: info 5.监视上述的多个数据
+
+```vue
+<template>
+  <script lang="ts" setup name="Person">
+    import { reactive, watch } from "vue";
+
+    // 数据
+    let person = reactive({
+      name: "张三",
+      age: 18,
+      car: {
+        c1: "奔驰",
+        c2: "宝马",
+      },
+    });
+
+    // 监视，情况五：监视上述的多个数据
+    watch(
+      [() => person.name, person.car],
+      (newValue, oldValue) => {
+        console.log("person.car变化了", newValue, oldValue);
+      },
+      { deep: true },
+    );
+  </script>
+</template>
+```
+
+:::
 
 ### watchEffect 函数
 
