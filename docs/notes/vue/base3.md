@@ -1016,13 +1016,122 @@ export default router;
 
 ::: info query 参数
 
+**传递参数：**
+
+```vue
+<!-- 跳转并携带query参数（to的字符串写法） -->
+<router-link to="/news/detail?a=1&b=2&content=欢迎你">
+	跳转
+</router-link>
+<!-- 跳转并携带query参数（to的对象写法） -->
+<RouterLink
+  :to="{
+    //name:'xiang', //用name也可以跳转
+    path: '/news/detail',
+    query: {
+      id: news.id,
+      title: news.title,
+      content: news.content,
+    },
+  }"
+>
+  {{news.title}}
+</RouterLink>
+```
+
+**接收参数：**
+
+```ts
+import { useRoute } from "vue-router";
+const route = useRoute();
+// 打印query参数
+console.log(route.query);
+```
+
 :::
 
 ::: info params 参数
 
+**传递参数：**
+
+```vue
+<!-- 跳转并携带params参数（to的字符串写法） -->
+<RouterLink :to="`/news/detail/001/新闻001/内容001`">{{news.title}}</RouterLink>
+<!-- 跳转并携带params参数（to的对象写法） -->
+<RouterLink
+  :to="{
+    name: 'xiang', //用name跳转
+    params: {
+      id: news.id,
+      title: news.title,
+      content: news.title,
+    },
+  }"
+>
+  {{news.title}}
+</RouterLink>
+```
+
+**接收参数：**
+
+```ts
+import { useRoute } from "vue-router";
+const route = useRoute();
+// 打印params参数
+console.log(route.params);
+```
+
+::: warning ⚠️ 注意
+
+- **1**：传递 `params` 参数时，若使用 `to` 的对象写法，必须使用 `name` 配置项，不能用 `path`。
+- **2**：传递 `params` 参数时，需要提前在规则中占位。
+  ```js
+  {
+      name: 'xiang',
+      path: 'detail/:id/:title/:content', // 绿色框选部分
+      component: Detail
+  }
+  ```
+- **3**：传递 `params` 参数时，如果参数是可选的，需要在占位时标注 `?`。
+  ```js
+  {
+      name: 'xiang',
+      path: 'detail/:id/:title/:content?', // 蓝色高亮部分
+      component: Detail
+  }
+  ```
+
 :::
 
 ### 路由规则的 props 配置
+
+作用：让路由组件更方便的收到参数（可以将路由参数作为props传给组件）
+
+```js
+{
+  name:'xiang',
+  path:'detail/:id/:title/:content',
+  component:Detail,
+  // props的对象写法，作用：把对象中的每一组key-value作为props传给Detail组件
+  props:{a:1,b:2,c:3},
+
+  // props的布尔值写法，作用：把收到了每一组params参数，作为props传给Detail组件
+  props:true,
+
+  // props的函数写法，作用：把返回的对象中每一组key-value作为props传给Detail组件
+  props(route){
+    return route.query
+  }
+}
+```
+
+组件中的写法：
+
+```vue
+<script setup lang="ts" name="About">
+defineProps(["a", "b", "c"]);
+</script>
+```
 
 ## pinia 状态管理库
 
