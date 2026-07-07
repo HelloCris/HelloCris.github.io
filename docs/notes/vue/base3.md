@@ -1179,7 +1179,11 @@ export const useCountStore = defineStore("count", {
     };
   },
   // 计算
-  getters: {},
+  getters: {
+    doubleSum(state) {
+      return state.sum * 2;
+    },
+  },
 });
 ```
 
@@ -1282,13 +1286,94 @@ const countStore = useCountStore();
 countStore.increment(n.value);
 ```
 
-### storeToRefs
+### pinia API
 
-### getters
+#### storeToRefs
 
-### $subscribe
+1. **storeToRefs 的作用**：将 store 中的 state 和 getters 转换为 ref 对象。这样做是为了在解构（Destructuring）后，变量依然保持响应式。如果直接使用 ES6 解构（如 `const { sum } = store`），变量会失去响应式连接，变成普通的静态值。
+2. **与 Vue 原生 toRefs 的区别**：
+   - **Pinia 的 storeToRefs**：智能过滤。它只会转换 state 和 getters，自动跳过 actions（方法）。因为方法不需要被转换为 ref，直接调用即可。
+   - **Vue 的 toRefs**：无差别转换。它会将对象上的所有属性（包括 actions 方法）都转换为 ref，这通常不是我们想要的结果。
+
+```html
+<template>
+  <div class="count">
+    <h2>当前求和为：{{ sum }}</h2>
+  </div>
+</template>
+
+<script setup lang="ts" name="Count">
+  import { useCountStore } from "@/store/count";
+  /* 引入storeToRefs */
+  import { storeToRefs } from "pinia";
+
+  /* 得到countStore */
+  const countStore = useCountStore();
+  /* 使用storeToRefs转换countStore，随后解构 */
+  const { sum } = storeToRefs(countStore);
+</script>
+```
+
+#### $subscribe
+
+**概念**：通过 store 的 `$subscribe()` 方法侦听 state 及其变化。
+
+```js
+talkStore.$subscribe((mutate, state) => {
+  console.log("LoveTalk", mutate, state);
+  localStorage.setItem("talk", JSON.stringify(talkList.value));
+});
+```
 
 ### store 组合式写法
+
+组合式写法使用 `defineStore` 的第二个参数为函数（类似 `setup()`），内部使用 `ref`/`reactive` 定义 state、`computed` 定义 getters、普通函数定义 actions，最后通过 `return` 暴露。
+
+**countStore 组合式写法：**
+
+```js
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+
+export const useCountStore = defineStore('count', () => {
+  // state：用 ref/reactive 定义
+  const sum = ref(0)
+  const school = ref('bilibili')
+
+  // getters：用 computed 定义
+  const bigSum = computed(() => sum.value * 10)
+
+  // actions：用普通函数定义
+  const increment = (value: number) => {
+    if (sum.value < 10) {
+      sum.value += value
+    }
+  }
+  const decrement = (value: number) => {
+    if (sum.value > 1) {
+      sum.value -= value
+    }
+  }
+
+  // 暴露给外部使用
+  return { sum, school, bigSum, increment, decrement }
+})
+```
+
+**选项式写法 vs 组合式写法对比：**
+
+| 特性     | 选项式写法          | 组合式写法              |
+| -------- | ------------------- | ----------------------- |
+| state    | `state: () => ({})` | `ref()` / `reactive()`  |
+| getters  | `getters: {}`       | `computed()`            |
+| actions  | `actions: {}`       | 普通函数                |
+| 代码组织 | 按选项分类          | 按逻辑分组              |
+| 适用场景 | 简单 store          | 复杂逻辑、跨 store 调用 |
+
+**选择建议：**
+
+- 简单场景：选项式写法更直观，结构清晰
+- 复杂场景：组合式写法更灵活，支持逻辑复用、条件定义
 
 ## 组件通信
 
