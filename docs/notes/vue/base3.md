@@ -823,6 +823,207 @@ let { dogList, getDog } = useDog();
 
 ## 路由
 
+### 基本使用
+
+```ts
+// router/index.ts
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "@/pages/Home.vue";
+import About from "@/pages/About.vue";
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: "/home",
+      component: Home,
+    },
+    {
+      path: "/about",
+      component: About,
+    },
+  ],
+});
+export default router;
+```
+
+```ts
+// main.ts
+import router from "./router/index";
+
+app.use(router);
+app.mount("#app");
+```
+
+```vue
+<!-- App.vue -->
+<template>
+  <div class="app">
+    <h2 class="title">Vue路由测试</h2>
+    <div class="navigate">
+      <RouterLink to="/home" active-class="active">首页</RouterLink>
+      <RouterLink to="/about" active-class="active">关于</RouterLink>
+    </div>
+    <div class="main-content">
+      <RouterView></RouterView>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup name="App">
+import { RouterLink, RouterView } from "vue-router";
+</script>
+```
+
+::: warning ⚠️ 注意
+
+1. 路由组件通常存放在pages 或 views文件夹，一般组件通常存放在components文件夹。（如何区分路由组件和一般组件：路由组件没有`<demoComponent>`这种一般组件形式的使用方式）
+2. 通过点击导航，视觉效果上“消失” 了的路由组件，默认是被卸载掉的，需要的时候再去挂载。
+
+:::
+
+::: info 路由器工作模式
+
+1. history模式
+   - 优点：URL更加美观，不带有#，更接近传统的网站URL。
+   - 缺点：后期项目上线，需要服务端配合处理路径问题，否则刷新会有404错误。
+
+2. hash模式
+   - 优点：兼容性更好，因为不需要服务器端处理路径。
+   - 缺点：URL带有#不太美观，且在SEO优化方面相对较差。
+
+```ts
+const router = createRouter({
+  history: createWebHistory(), //history模式
+});
+const router = createRouter({
+  history: createWebHashHistory(), //hash模式
+});
+```
+
+:::
+
+::: info `router-link`组件
+`to` 的两种写法
+
+```vue
+<!-- 第一种：to的字符串写法 -->
+<router-link active-class="active" to="/home">主页</router-link>
+
+<!-- 第二种：to的对象写法(path形式,name形式) -->
+<router-link active-class="active" :to="{ path: '/home' }">Home</router-link>
+<router-link active-class="active" :to="{ name: 'home' }">Home</router-link>
+```
+
+浏览器的历史记录有两种写入方式：分别为push和replace。
+
+- push是追加历史记录（默认值）。
+- replace是替换当前记录。
+
+```vue
+<RouterLink replace .......>News</RouterLink>
+```
+
+:::
+
+::: info 编程式导航
+解释：脱离`<RouterLink>`标签实现路由跳转
+路由组件的两个重要的属性：`$route`和`$router`变成了两个hooks
+
+```ts
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
+
+console.log(route.query);
+console.log(route.params);
+console.log(router.push);
+console.log(router.replace);
+```
+
+:::
+
+### 命名、嵌套、重定向
+
+::: info 命名路由
+
+作用：可以简化路由跳转及传参。
+
+给路由规则命名：
+
+```ts
+routes: [
+  { name: "zhuye", path: "/home", component: Home },
+  { name: "xinwen", path: "/news", component: News },
+  { name: "guanyu", path: "/about", component: About },
+];
+```
+
+跳转路由：
+
+```vue
+<!--简化前：需要写完整的路径（to的字符串写法） -->
+<router-link to="/news/detail">跳转</router-link>
+<!--简化后：直接通过名字跳转（to的对象写法配合name属性） -->
+<router-link :to="{ name: 'guanyu' }">跳转</router-link>
+```
+
+:::
+
+::: info 嵌套路由
+
+1. 配置路由规则，使用children配置项
+
+```ts
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      name: "xinwen",
+      path: "/news",
+      component: News,
+      children: [{ name: "xiang", path: "detail", component: Detail }],
+    },
+  ],
+});
+export default router;
+```
+
+2. 跳转路由（记得要加完整路径）：
+
+```vue
+<router-link to="/news/detail">xxxx</router-link>
+<router-link :to="{ path: '/news/detail' }">xxxx</router-link>
+```
+
+:::
+
+::: info 重定向
+
+作用：将特定的路径，重新定向到已有路由。
+
+```ts
+{
+    path:'/',
+    redirect:'/about'
+}
+```
+
+:::
+
+### 路由传参
+
+::: info query 参数
+
+:::
+
+::: info params 参数
+
+:::
+
+### 路由规则的 props 配置
+
 ## pinia 状态管理库
 
 ## 组件通信
