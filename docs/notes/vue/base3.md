@@ -1135,6 +1135,161 @@ defineProps(["a", "b", "c"]);
 
 ## pinia 状态管理库
 
+### 搭建 pinia 环境
+
+第一步：安装 `npm install pinia`
+
+第二步：操作src/main.ts
+
+```ts
+import { createApp } from "vue";
+import App from "./App.vue";
+
+// 引入createPinia，用于创建pinia
+import { createPinia } from "pinia";
+
+// 创建pinia
+const pinia = createPinia();
+const app = createApp(App);
+
+// 使用插件
+app.use(pinia);
+app.mount("#app");
+```
+
+### 存储+读取数据
+
+Store是一个保存`状态和业务逻辑`的实体，每个组件都可以读取、写入它。
+它有三个概念：`state`、`getter`、`action`，相当于组件中的： `data`、 `computed` 和 `methods`。
+
+- 具体编码：src/store/count.ts
+
+```ts
+// 引入defineStore用于创建store
+import { defineStore } from "pinia";
+
+// 定义并暴露一个store
+export const useCountStore = defineStore("count", {
+  // 动作
+  actions: {},
+  // 状态
+  state() {
+    return {
+      sum: 6,
+    };
+  },
+  // 计算
+  getters: {},
+});
+```
+
+- 具体编码：src/store/talk.ts
+
+```ts
+// 引入defineStore用于创建store
+import { defineStore } from "pinia";
+
+// 定义并暴露一个store
+export const useTalkStore = defineStore("talk", {
+  // 动作
+  actions: {},
+  // 状态
+  state() {
+    return {
+      talkList: [
+        { id: "yuysada01", content: "你今天有点怪，哪里怪？怪好看的！" },
+      ],
+    };
+  },
+  // 计算
+  getters: {},
+});
+```
+
+- 组件中使用state中的数据
+
+```vue
+<template>
+  <h2>当前求和为: {{ sumStore.sum }}</h2>
+  <ul>
+    <li v-for="talk in talkStore.talkList" :key="talk.id">
+      {{ talk.content }}
+    </li>
+  </ul>
+</template>
+
+<script setup lang="ts" name="Count">
+// 引入对应的useXxxxxStore
+import { useSumStore } from "@/store/sum";
+import { useTalkStore } from "@/store/talk";
+
+// 调用useXxxxxStore得到对应的store
+const sumStore = useSumStore();
+const talkStore = useTalkStore();
+</script>
+```
+
+### 修改数据的三种方式
+
+- 第一种修改方式：直接修改
+
+```js
+countStore.sum = 666;
+```
+
+- 第二种修改方式：批量修改
+
+```js
+countStore.$patch({
+  sum: 999,
+  school: "atguigu",
+});
+```
+
+- 第三种修改方式：借助 action 修改（action 中可以编写一些业务逻辑）
+
+**Store 定义部分：**
+
+```js
+import { defineStore } from 'pinia'
+
+export const useCountStore = defineStore('count', {
+  actions: {
+    //加
+    increment(value: number) {
+      if (this.sum < 10) {
+        //操作countStore中的sum
+        this.sum += value
+      }
+    },
+    //减
+    decrement(value: number) {
+      if (this.sum > 1) {
+        this.sum -= value
+      }
+    }
+  }
+})
+```
+
+**组件中调用 action 即可：**
+
+```js
+// 使用countStore
+const countStore = useCountStore();
+
+// 调用对应action
+countStore.increment(n.value);
+```
+
+### storeToRefs
+
+### getters
+
+### $subscribe
+
+### store 组合式写法
+
 ## 组件通信
 
 ## 插槽
