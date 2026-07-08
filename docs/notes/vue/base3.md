@@ -1377,8 +1377,44 @@ export const useCountStore = defineStore('count', () => {
 
 ## 组件通信
 
+### props
+
+### 自定义事件
+
+### mitt
+
+### v-model
+
+### $attrs
+
+### $refs、$parent
+
+### provide、inject
+
 ## 插槽
+
+### 默认插槽
+
+### 具名插槽
+
+### 作用域插槽
 
 ## 其他 API
 
+### shallowRef 与 shallowReactive
+
+### readonly 与 shallowReadonly
+
+### toRaw 与 markRaw
+
+### customRef
+
 ## Vue3 新组件
+
+### 【Teleport】
+
+### 【Suspense】
+
+### 【全局 API 转移到应用对象】
+
+### 【其他】
