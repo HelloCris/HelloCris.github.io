@@ -1377,19 +1377,376 @@ export const useCountStore = defineStore('count', () => {
 
 ## 组件通信
 
+| 组件关系               | 传递方式                                                     |
+| :--------------------- | :----------------------------------------------------------- |
+| **父传子**             | 1. `props`2. `v-model`3. `$refs`4. 默认插槽、具名插槽        |
+| **子传父**             | 1. `props`2. 自定义事件3. `v-model`4. `$parent`5. 作用域插槽 |
+| **祖传孙、孙传祖**     | 1. `$attrs`2. `provide`、`inject`                            |
+| **兄弟间、任意组件间** | 1. `mitt`2. `pinia`                                          |
+
 ### props
+
+**概述：** props 是使用频率最高的一种通信方式，常用与：父 ↔ 子。
+
+- 若 **父传子**：属性值是**非函数**。
+- 若 **子传父**：属性值是**函数**。
+
+**父组件编码：**
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件，</h3>
+    <h4>我的车：{{ car }}</h4>
+    <h4>儿子给的玩具：{{ toy }}</h4>
+    <Child :car="car" :getToy="getToy" />
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+import Child from "./Child.vue";
+import { ref } from "vue";
+// 数据
+const car = ref("奔驰");
+const toy = ref();
+// 方法
+function getToy(value: string) {
+  toy.value = value;
+}
+</script>
+```
+
+**子组件编码：**
+
+```vue
+<template>
+  <div class="child">
+    <h3>子组件</h3>
+    <h4>我的玩具：{{ toy }}</h4>
+    <h4>父给我的车：{{ car }}</h4>
+    <button @click="getToy(toy)">玩具给父亲</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child">
+import { ref } from "vue";
+const toy = ref("奥特曼");
+
+defineProps(["car", "getToy"]);
+</script>
+```
 
 ### 自定义事件
 
+**概述：** 自定义事件常用于：子 => 父。  
+注意区分：原生事件、自定义事件。
+
+**原生事件：**
+
+- 事件名是特定的（click、mosueenter 等等）
+- 事件对象 $event: 是包含事件相关信息的对象（pageX、pageY、target、keyCode）
+
+**自定义事件：**
+
+- 事件名是任意名称，推荐写法：xxx-xxx
+- 事件对象 $event: 是调用 emit 时所提供的数据，可以是任意类型!!!
+
+**父组件代码示例：**
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+    <h4 v-show="toy">子给的玩具：{{ toy }}</h4>
+    <!-- 给子组件Child绑定事件 -->
+    <Child @send-toy="saveToy" />
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+import Child from "./Child.vue";
+import { ref } from "vue";
+// 数据
+let toy = ref("");
+
+function saveToy(value: string) {
+  console.log("saveToy", value);
+  toy.value = value;
+}
+</script>
+```
+
+**子组件代码示例：**
+
+```vue
+<template>
+  <div class="child">
+    <h3>子组件</h3>
+    <h4>玩具：{{ toy }}</h4>
+    <button @click="emit('send-toy', toy)">测试</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child">
+import { ref } from "vue";
+// 数据
+let toy = ref("奥特曼");
+// 声明事件
+const emit = defineEmits(["send-toy"]);
+</script>
+```
+
 ### mitt
+
+**概述：** 与消息订阅与发布（pubsub）功能类似，可以实现任意组件间通信。
+
+**安装mitt**
+
+```bash
+npm i mitt
+```
+
+**使用步骤：**
+
+1. 创建 mitt 实例（单独文件导出，供全局共享）
+
+```js
+// utils/mitt.ts
+import mitt from "mitt";
+const emitter = mitt();
+export default emitter;
+```
+
+2. 发送事件（发布消息）
+
+```vue
+<!-- 发送组件 -->
+<script setup lang="ts">
+import emitter from "@/utils/mitt";
+
+function sendMsg() {
+  emitter.emit("send-toy", { name: "玩具车", price: 100 });
+}
+</script>
+```
+
+3. 接收事件（订阅消息），组件卸载时需清理监听
+
+```vue
+<!-- 接收组件 -->
+<script setup lang="ts">
+import emitter from "@/utils/mitt";
+import { onUnmounted } from "vue";
+
+const handleReceive = (data: { name: string; price: number }) => {
+  console.log("收到玩具:", data);
+};
+
+emitter.on("send-toy", handleReceive);
+
+onUnmounted(() => {
+  emitter.off("send-toy", handleReceive);
+});
+</script>
+```
+
+**常用方法：**
+
+| 方法                           | 说明         |
+| ------------------------------ | ------------ |
+| `emitter.emit('事件名', 数据)` | 发送事件     |
+| `emitter.on('事件名', 回调)`   | 监听事件     |
+| `emitter.off('事件名', 回调)`  | 取消监听     |
+| `emitter.all.clear()`          | 清除所有监听 |
 
 ### v-model
 
+> **概述**：实现 **父 ↔ 子** 之间相互通信。
+
+1. 前序知识 —— v-model 的本质
+
+```html
+<!-- 使用 v-model 指令 -->
+<input type="text" v-model="userName" />
+<!-- v-model 的本质是下面这行代码 -->
+<input
+  type="text"
+  :value="userName"
+  @input="userName = (<HTMLInputElement>$event.target).value"
+/>
+```
+
+---
+
+2. 组件标签上的 v-model 的本质：`:modelValue` ＋ `update:modelValue` 事件
+
+```vue
+<!-- 组件标签上使用 v-model 指令 -->
+<CrisInput v-model="userName" />
+<!-- 组件标签上 v-model 的本质 -->
+<CrisInput :modelValue="userName" @update:model-value="userName = $event" />
+```
+
+CrisInput 组件中：
+
+```vue
+<template>
+  <div class="box">
+    <!-- 将接收的 value 值赋给 input 元素的 value 属性，目的是：为了呈现数据 -->
+    <!-- 给 input 元素绑定原生 input 事件，触发 input 事件时，进而触发 update:model-value 事件 -->
+    <input
+      type="text"
+      :value="modelValue"
+      @input="emit('update:model-value', $event.target.value)"
+    />
+  </div>
+</template>
+
+<script setup lang="ts" name="CrisInput">
+// 接收 props
+defineProps(["modelValue"]);
+// 声明事件
+const emit = defineEmits(["update:model-value"]);
+</script>
+```
+
+---
+
+3. 也可以更换 value，例如改成 abc
+
+```vue
+<!-- 也可以更换 value，例如改成 abc -->
+<CrisInput v-model:abc="userName" />
+<!-- 上面代码的本质如下 -->
+<CrisInput :abc="userName" @update:abc="userName = $event" />
+```
+
+CrisInput 组件中：
+
+```vue
+<template>
+  <div class="box">
+    <input
+      type="text"
+      :value="abc"
+      @input="emit('update:abc', $event.target.value)"
+    />
+  </div>
+</template>
+
+<script setup lang="ts" name="CrisInput">
+// 接收 props
+defineProps(["abc"]);
+// 声明事件
+const emit = defineEmits(["update:abc"]);
+</script>
+```
+
+---
+
+4. 多个 v-model
+
+如果 value 可以更换，那么就可以在组件标签上**多次使用 v-model**：
+
+```vue
+<CrisInput v-model:abc="userName" v-model:xyz="password" />
+```
+
 ### $attrs
+
+- **概述**：`$attrs` 用于实现当前组件的父组件，向当前组件的子组件通信（**祖→孙**）。
+- **具体说明**：`$attrs` 是一个对象，包含所有父组件传入的标签属性。
+- **注意**：`$attrs` 会自动排除 `props` 中声明的属性（可以认为声明过的 `props` 被子组件自己“消费”了）。
+
+::: info 父组件代码
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+    <Child :a="a" v-bind="{ x: 100, y: 200 }" :updateA="updateA" />
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+import Child from "./Child.vue";
+import { ref } from "vue";
+let a = ref(1);
+
+function updateA(value) {
+  a.value = value;
+}
+</script>
+```
+
+:::
+::: info 子组件代码
+
+```vue
+<template>
+  <div class="child">
+    <h3>子组件</h3>
+    <GrandChild v-bind="$attrs" />
+  </div>
+</template>
+
+<script setup lang="ts" name="Child">
+import GrandChild from "./GrandChild.vue";
+</script>
+```
+
+:::
+::: info 孙组件代码
+
+```vue
+<template>
+  <div class="grand-child">
+    <h3>孙组件</h3>
+    <h4>a: {{ a }}</h4>
+    <button @click="updateA(666)">点我更新A</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="GrandChild">
+defineProps(["a", "x", "y", "updateA"]);
+</script>
+```
+
+:::
 
 ### $refs、$parent
 
+1. **概述**：
+   - `$refs` 用于：**父→子**。
+   - `$parent` 用于：**子→父**。
+2. **原理如下**：
+
+| 属性      | 说明                                                       |
+| :-------- | :--------------------------------------------------------- |
+| `$refs`   | 值为对象，包含所有被 `ref` 属性标识的 DOM 元素或组件实例。 |
+| `$parent` | 值为对象，当前组件的父组件实例对象。                       |
+
+vue3 中需要结合宏函数 `defineExpose` 来实现数据的抛出
+
+```html
+<script setup lang="ts" name="Child1">
+  import { ref } from "vue";
+  // 数据
+  let toy = ref("奥特曼");
+  let book = ref(3);
+  // 把数据交给外部
+  defineExpose({ toy, book });
+</script>
+```
+
 ### provide、inject
+
+概述：实现**祖孙组件**（跨层级）直接通信，无需逐层传递 `props`。
+
+具体使用：
+
+1. **祖先组件**：通过 `provide` 配置向后代组件**提供**数据。
+2. **后代组件**：通过 `inject` 配置**声明接收**数据。
 
 ## 插槽
 
