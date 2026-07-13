@@ -1748,6 +1748,67 @@ vue3 中需要结合宏函数 `defineExpose` 来实现数据的抛出
 1. **祖先组件**：通过 `provide` 配置向后代组件**提供**数据。
 2. **后代组件**：通过 `inject` 配置**声明接收**数据。
 
+::: info 编码示例
+
+【第一步】父组件：使用 `provide` 提供数据
+
+> **注意**：子组件（中间层）中**不用编写任何东西**，不会受到任何打扰。
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+    <Child />
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+import Child from "./Child.vue";
+import { ref, reactive, provide } from "vue";
+
+// 数据
+let money = ref(100);
+let car = reactive({
+  brand: "奔驰",
+  price: 100,
+});
+function updateMoney(value: number) {
+  money.value += value;
+}
+
+// 提供数据
+provide("moneyContext", { money, updateMoney });
+provide("car", car);
+</script>
+```
+
+【第二步】孙组件：使用 `inject` 接收数据
+
+```vue
+<template>
+  <div class="grand-child">
+    <h3>我是孙组件</h3>
+    <h4>资产：{{ money }}</h4>
+    <h4>汽车：{{ car }}</h4>
+    <button @click="updateMoney(6)">点我</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="GrandChild">
+import { inject } from "vue";
+
+// 注入数据（带默认值）
+let { money, updateMoney } = inject("moneyContext", {
+  money: 0,
+  updateMoney: (x: number) => {},
+});
+
+let car = inject("car");
+</script>
+```
+
+:::
+
 ## 插槽
 
 ### 默认插槽
