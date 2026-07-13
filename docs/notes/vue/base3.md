@@ -1813,9 +1813,93 @@ let car = inject("car");
 
 ### 默认插槽
 
+子组件预留位置，父组件传入任意内容。
+
+**子组件 Child.vue：**
+
+```vue
+<template>
+  <div class="child">
+    <slot></slot>
+  </div>
+</template>
+```
+
+**父组件 Father.vue：**
+
+```vue
+<template>
+  <Child>
+    <p>我是父组件传入的内容</p>
+  </Child>
+</template>
+```
+
 ### 具名插槽
 
+多个插槽按名称区分，父组件按需填充。
+
+**子组件 Child.vue：**
+
+```vue
+<template>
+  <div class="child">
+    <slot name="header"></slot>
+    <slot></slot>
+    <slot name="footer"></slot>
+  </div>
+</template>
+```
+
+**父组件 Father.vue：**
+
+```vue
+<template>
+  <Child>
+    <template #header>
+      <h1>页头</h1>
+    </template>
+    <p>默认内容</p>
+    <template v-slot:footer>
+      <p>页脚</p>
+    </template>
+  </Child>
+</template>
+```
+
 ### 作用域插槽
+
+子组件向父组件传递数据，父组件决定如何渲染。
+
+**子组件 Child.vue：**
+
+```vue
+<template>
+  <div class="child">
+    <slot :user="user"></slot>
+  </div>
+</template>
+<script setup lang="ts">
+import { reactive } from "vue";
+const user = reactive({ name: "张三", age: 18 });
+</script>
+```
+
+**父组件 Father.vue：**
+
+```vue
+<template>
+  <Child #default="{ user }">
+    <p>{{ user.name }} - {{ user.age }}</p>
+  </Child>
+  <!-- <Child v-slot="params">
+    <p>{{ params.user.name }} - {{ params.user.age }}</p>
+  </Child>
+  <Child v-slot:default="params">
+    <p>{{ params.user.name }} - {{ params.user.age }}</p>
+  </Child> -->
+</template>
+```
 
 ## 其他 API
 
