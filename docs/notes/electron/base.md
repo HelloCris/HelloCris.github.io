@@ -562,13 +562,108 @@ window.addEventListener("DOMContentLoaded", () => {
 
 #### 渲染进程发送消息到主进程
 
+**渲染进程代码 (Renderer Process)**
+
+在渲染进程中，通过 `ipcRenderer` 模块向主进程发送消息，并监听主进程的回复。
+
+```js
+const { ipcRenderer } = require("electron");
+
+window.onload = function () {
+  // 获取元素
+  let abtn = document.getElementsByTagName("button");
+
+  // 01 采用异步的 API 在渲染进程中给主进程发送消息
+  abtn[0].addEventListener("click", () => {
+    ipcRenderer.send("msg1", "当前是来自渲染进程的一条异步消息");
+  });
+
+  // 当前区域是接收消息 (监听主进程的回复)
+  ipcRenderer.on("msg1Re", (ev, data) => {
+    console.log(data);
+  });
+
+  // 02 采用同步的方式完成数据通信
+  abtn[1].addEventListener("click", () => {
+    let val = ipcRenderer.sendSync("msg2", "同步消息");
+    console.log(val);
+  });
+};
+```
+
+---
+
+**主进程代码 (Main Process)**
+
+在主进程中，通过 `ipcMain` 模块监听来自渲染进程的消息，并进行处理或回复。
+
+```js
+const { app, BrowserWindow, ipcMain } = require("electron");
+
+// 主进程接收消息操作 (处理异步消息)
+ipcMain.on("msg1", (ev, data) => {
+  console.log(data);
+  // 向发送消息的渲染进程回复消息
+  ev.sender.send("msg1Re", "这是一条来自于主进程的异步消息");
+});
+
+// 处理同步消息
+ipcMain.on("msg2", (ev, data) => {
+  console.log(data);
+  // 直接通过 returnValue 返回数据给渲染进程
+  ev.returnValue = "来自于主进程的同步消息";
+});
+```
+
 #### 主进程发送消息到渲染进程
+
+**主进程代码 (Main Process)**
+
+在主进程中，通过 `BrowserWindow` 实例获取 `webContents` 对象，然后调用 `.send()` 方法向该窗口发送消息。
+
+```js
+let mainWin = new BrowserWindow({ ... })
+
+// 定义菜单模板，包含一个 "send" 选项
+let temp = [
+    {
+        label: 'send',
+        click() {
+            // 主进程中发送消息到渲染进程
+            // 获取当前聚焦的窗口并向其发送消息 'mtp'
+            BrowserWindow.getFocusedWindow().webContents.send('mtp', '来自于主进程的消息')
+        }
+    }
+]
+
+let menu = Menu.buildFromTemplate(temp)
+Menu.setApplicationMenu(menu)
+
+mainWin.loadFile('index.html')
+mainWin.webContents.openDevTools()
+```
+
+---
+
+**渲染进程代码 (Renderer Process)**
+
+在渲染进程中，使用 `ipcRenderer.on` 监听主进程发来的频道名称（这里是 `'mtp'`），并在回调函数中处理数据。
+
+```js
+// 渲染进程获取父窗口进程
+// parent: remote.getCurrentWindow(),
+
+// 渲染进程监听消息
+ipcRenderer.on("mtp", (ev, data) => {
+  console.log(data); // 输出: '来自于主进程的消息'
+});
+```
 
 ### 渲染进程间通信
 
-#### localStorage 方式
-
 #### 主进程方式
+
+#### localStorage 方式
 
 ## 其他常用功能模块
 
