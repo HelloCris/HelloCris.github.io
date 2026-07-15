@@ -367,11 +367,194 @@ Electron 较新的版本（v14+）中，`remote` 模块已被默认移除。
 
 ### 自定义菜单
 
+```js
+// **导入菜单模块**
+const { app, BrowserWindow, Menu } = require("electron");
+
+// **编写菜单模板**
+let menuTemp = [
+  {
+    label: "文件",
+    submenu: [
+      {
+        label: "打开文件", // 菜单项的事件函数
+        click() {},
+      },
+      {
+        type: "separator", // 菜单分割线
+      },
+      {
+        label: "关闭文件夹",
+      },
+    ],
+  },
+  {
+    label: "关于",
+    role: "about", // 菜单项预制的能力
+  },
+];
+
+// **添加菜单到应用**
+let menu = Menu.buildFromTemplate(menuTemp);
+Menu.setApplicationMenu(menu);
+```
+
+> **补充说明：Role 属性可选值**
+>
+> `role` (String, optional) - 可以是以下值之一：
+> `undo`, `redo`, `cut`, `copy`, `paste`, `pasteAndMatchStyle`, `delete`, `selectAll`, `reload`, `forceReload`, `toggleDevTools`, `resetZoom`, `zoomIn`, `zoomOut`, `togglefullscreen`, `window`, `minimize`, `close`, `help`, `about`, `services`, `hide`, `hideOthers`, `unhide`, `quit`, `startSpeaking`, `stopSpeaking`, `zoom`, `front`, `appMenu`, `fileMenu`, `editMenu`, `viewMenu`, `recentDocuments`, `toggleTabBar`, `selectNextTab`, `selectPreviousTab`, `mergeAllWindows`, `clearRecentDocuments`, `moveTabToNewWindow` or `windowMenu`。
+>
+> _作用：定义菜单项的行为，当指定了 `click` 处理器时会被忽略。_
+
 ### 菜单角色及类型、自定义菜单项
+
+通过 `role` 属性可以直接调用 Electron 内置的预设功能（如复制、剪切等），无需手动编写逻辑。
+
+```js
+{
+    label: '角色',
+    submenu: [
+        { label: '复制', role: 'copy' },
+        { label: '剪切', role: 'cut' },
+        { label: '粘贴', role: 'paste' },
+        { label: '最小化', role: 'minimize' },
+    ]
+}
+```
+
+展示了菜单项的不同交互形态，包括复选框 (`checkbox`)、单选框 (`radio`) 以及子菜单嵌套 (`submenu`)。
+
+```js
+{
+    label: '类型',
+    submenu: [
+        { label: '选项1', type: 'checkbox' },
+        { label: '选项2', type: 'checkbox' },
+        { type: "separator" }, // 分割线
+        { label: 'item1', type: "radio" },
+        { label: 'item2', type: "radio" },
+        { type: "separator" },
+        { label: 'windows', type: 'submenu', role: 'windowMenu' } // 窗口管理子菜单
+    ]
+}
+```
+
+添加图标、设置快捷键 (`accelerator`) 以及绑定点击事件 (`click`)。
+
+```js
+{
+    label: '其它',
+    submenu: [
+        {
+            label: '打开',
+            icon: './open.png',           // 菜单项图标路径
+            accelerator: 'ctrl + o',      // 快捷键设置
+            click() {                     // 点击回调函数
+                console.log('open操作执行了')
+            }
+        }
+    ]
+}
+```
 
 ### 动态创建菜单
 
+1. 初始化与 DOM 获取
+
+首先引入 `remote` 模块中的 `Menu` 和 `MenuItem` 类，并在页面加载完成后获取相关的 DOM 元素。
+
+```js
+const { remote } = require("electron");
+const Menu = remote.Menu;
+const MenuItem = remote.MenuItem;
+
+window.addEventListener("DOMContentLoaded", () => {
+  // 获取要应的元素
+  let addMenu = document.getElementById("addMenu");
+  let menuCon = document.getElementById("menuCon");
+  let addItem = document.getElementById("addItem");
+
+  // ... 后续逻辑 ...
+});
+```
+
+2. 生成自定义菜单
+
+监听“添加菜单”按钮的点击事件，创建两个新的菜单项（“文件”和“编辑”），并将它们组合成一个新的应用菜单设置到应用中。
+
+```js
+// 生成自定义的菜单
+addMenu.addEventListener("click", () => {
+  // 创建菜单项
+  let menuFile = new MenuItem({ label: "文件", type: "normal" });
+  let menuEdit = new MenuItem({ label: "编辑", type: "normal" });
+
+  // 将创建好的自定义菜单添加至 menu
+  let menu = new Menu();
+  menu.append(menuFile);
+  menu.append(menuEdit);
+
+  // 将 menu 放置于 app 中显示
+  Menu.setApplicationMenu(menu);
+});
+```
+
+3. 动态添加菜单项
+
+定义一个全局变量 `menuItem` 存储当前的菜单实例，并监听“添加子项”按钮。当用户输入内容并点击按钮时，会动态向该菜单中追加一个新的 `MenuItem`。
+
+```js
+// 自定义全局变量存放菜单项
+let menuItem = new Menu();
+
+// 动态添加菜单项
+addItem.addEventListener("click", () => {
+  // 获取当前 input 输入框当中的内容
+  let con = menuCon.value.trim();
+  if (con) {
+    menuItem.append(new MenuItem({ label: con, type: "normal" }));
+    menuCon.value = "";
+  }
+});
+```
+
 ### 右键菜单
+
+1. 引入模块与定义模板
+
+```js
+const { remote } = require("electron");
+const Menu = remote.Menu;
+
+let contextTemp = [
+  { label: "Run Code" },
+  { label: "转到定义" },
+  { type: "separator" }, // 分割线
+  {
+    label: "其它功能",
+    click() {
+      console.log("其它功能选项被点击了");
+    },
+  },
+];
+```
+
+2. 生成菜单并绑定事件
+
+使用 `buildFromTemplate` 将数组转换为菜单对象，然后监听窗口的 `contextmenu` 事件。在事件中阻止默认行为，并调用 `popup` 方法显示自定义菜单。
+
+```js
+// 依据上述的内容来创建 menu
+let menu = Menu.buildFromTemplate(contextTemp);
+
+// 给鼠标右击添加监听
+window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("contextmenu", (ev) => {
+    ev.preventDefault(); // 阻止默认的浏览器右键菜单
+    menu.popup({ window: remote.getCurrentWindow() }, false);
+  });
+});
+```
 
 ## 主/渲染进程通信
 
