@@ -665,6 +665,103 @@ ipcRenderer.on("mtp", (ev, data) => {
 
 #### localStorage 方式
 
+**原理：`localStorage` 在主窗口和子窗口之间共享数据**
+
+1. **主窗口逻辑**
+
+在主窗口中，用户点击按钮触发事件：首先通过 IPC 通知主进程打开子窗口，随后将数据存入 `localStorage`。
+
+```js
+const { ipcRenderer } = require("electron");
+
+window.onload = function () {
+  // 获取元素
+  let oBtn = document.getElementById("btn");
+  oBtn.addEventListener("click", () => {
+    // 发送消息给主进程，请求打开窗口2
+    ipcRenderer.send("openWin2");
+    // 打开窗口2之后，保存数据至 localStorage
+    localStorage.setItem("name", "Cris");
+  });
+};
+```
+
+---
+
+2. **主进程逻辑**
+
+初始化与主窗口创建：
+
+```js
+const { app, BrowserWindow, ipcMain } = require("electron");
+
+// 定义全局变量存放主窗口 Id
+let mainWinId = null;
+
+const createWindow = function () {
+  let mainWin = new BrowserWindow({
+    frame: true,
+    show: false,
+    title: "Cris",
+    width: 800,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true, // 允许在渲染进程使用 Node.js API
+      enableRemoteModule: true, // 启用 remote 模块
+    },
+  });
+
+  mainWin.loadFile("index.html");
+  // 记录主窗口 ID，以便后续查找
+  mainWinId = mainWin.id;
+  mainWin.on("ready-to-show", () => {
+    mainWin.show();
+  });
+  mainWin.on("close", () => {
+    mainWin = null;
+  });
+};
+```
+
+处理打开子窗口请求：
+
+```js
+// 接收其它进程发送的数据，然后完成后续的逻辑
+ipcMain.on("openWin2", () => {
+  // 接收到渲染进程中按钮点击信息之后完成窗口2的打开
+  let subWin1 = new BrowserWindow({
+    width: 400,
+    height: 300,
+    // 设置父窗口，使 subWin1 成为 mainWin 的子窗口
+    parent: BrowserWindow.fromId(mainWinId),
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true,
+    },
+  });
+
+  subWin1.loadFile("subWin1.html");
+
+  subWin1.on("close", () => {
+    subWin1 = null;
+  });
+});
+```
+
+---
+
+3. **子窗口逻辑**
+
+```js
+window.onload = function () {
+  let oInput = document.getElementById("txt");
+  // 从 localStorage 获取名为 'name' 的数据
+  let val = localStorage.getItem("name");
+  // 将获取到的值赋给输入框
+  oInput.value = val;
+};
+```
+
 ## 其他常用功能模块
 
 ### dialog 模块
