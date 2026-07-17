@@ -64,6 +64,14 @@
 
 ### [Java基础](java/base.md)
 
+### [对象编程](java/oop.md)
+
+### [常用 API](java/api.md)
+
+### [集合框架](java/collections.md)
+
+### [高级特性](java/advanced.md)
+
 ## 小程序
 
 ### [微信小程序](mini/weixin.md)
