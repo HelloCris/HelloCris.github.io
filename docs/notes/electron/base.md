@@ -170,6 +170,15 @@ function createWindow() {
 }
 ```
 
+::: tip 生命周期事件可以写多个处理函数
+
+```js
+app.on("ready", createWindow);
+app.on("ready", () => {});
+```
+
+:::
+
 ## 窗口
 
 ### 窗口尺寸
@@ -875,13 +884,142 @@ window.onload = function () {
 
 ### dialog 模块
 
+dialog部分的方法使用大致类同，自行查阅官网即可。
+`dialog.showOpenDialog([browserWindow, ]options)`  
+`remote.dialog.showErrorBox('自定义标题', '当前错误内容')`
+
+```js
+const { remote } = require("electron");
+
+window.onload = function () {
+  remote.dialog
+    .showOpenDialog({
+      defaultPath: __dirname,
+      buttonLabel: "请选择",
+      title: "Cris学习测试",
+      properties: ["openFile", "multiSelections"],
+      filters: [
+        { name: "代码文件", extensions: ["js", "json", "html"] },
+        { name: "图片文件", extensions: ["ico", "jpeg", "png"] },
+        { name: "媒体类型", extensions: ["avi", "mp4", "mp3"] },
+      ],
+    })
+    .then((ret) => {
+      console.log(ret);
+    });
+};
+```
+
 ### shell 模块
+
+`shell.openExternal`: 调用默认浏览器打开页面。  
+`shell.showItemInFolder`: 打开目录
+
+```js
+const { shell } = require("electron");
+
+window.onload = function () {
+  // 1 获取元素
+  let oBtn1 = document.getElementById("openUrl");
+  let oBtn2 = document.getElementById("openFolder");
+
+  oBtn1.addEventListener("click", (ev) => {
+    ev.preventDefault();
+
+    let urlPath = oBtn1.getAttribute("href");
+
+    shell.openExternal(urlPath);
+  });
+
+  oBtn2.addEventListener("click", (ev) => {
+    shell.showItemInFolder(path.resolve(__filename));
+  });
+};
+```
 
 ### 消息通知
 
+用window.Notification 是浏览器提供的一个 原生 API，用于在用户的操作系统桌面上弹出通知消息。
+
+```js
+oBtn.addEventListener("click", () => {
+  let option = {
+    title: "CrisWiki",
+    body: "前端打工人的学习旅程",
+    icon: "./msg.png",
+  };
+
+  let myNotification = new window.Notification(option.title, option);
+
+  myNotification.onclick = function () {
+    console.log("点击了消息页卡");
+  };
+});
+```
+
 ### 快捷键注册
 
+快捷键只针对于主进程。
+
+**快捷键注册**
+
+```js
+const { app, BrowserWindow, globalShortcut } = require("electron");
+
+app.on("ready", () => {
+  // 注册
+  let ret = globalShortcut.register("ctrl + q", () => {
+    console.log("快捷键注册成功");
+  });
+});
+```
+
+**取消快捷键**
+
+```js
+app.on("will-quit", () => {
+  globalShortcut.unregister("ctrl + q");
+  globalShortcut.unregisterAll();
+});
+```
+
 ### 剪切板操作
+
+**文本操作**
+
+```js
+const { clipboard } = require("electron");
+
+let ret = null;
+
+aBtn[0].onclick = function () {
+  // 复制内容
+  ret = clipboard.writeText(aInput[0].value);
+};
+
+aBtn[1].onclick = function () {
+  // 粘贴内容
+  aInput[1].value = clipboard.readText(ret);
+};
+```
+
+**图片操作**
+
+```js
+const { clipboard, nativeImage } = require("electron");
+
+oBtn.onclick = function () {
+  // 将图片放置于剪切板当中的时候要求图片类型属于 nativeImage 实例
+  let oImage = nativeImage.createFromPath("./msg.png");
+  clipboard.writeImage(oImage);
+
+  // 将剪切板中的图片做为 DOM 元素显示在界面上
+  let oImg = clipboard.readImage();
+  let oImgDom = new Image();
+  oImgDom.src = oImg.toDataURL();
+  document.body.appendChild(oImgDom);
+};
+```
 
 ## 打包安装包
 
