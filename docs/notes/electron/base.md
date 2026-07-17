@@ -1025,8 +1025,99 @@ oBtn.onclick = function () {
 
 ### electron-builder
 
+`npm install electron-builder -D`  
+在 package.json 中进行相关配置，具体配置如下
+
+```json
+{
+  "name": "video-tools", // 应用程序的名称
+  "version": "1.0.0", // 应用程序的版本
+  "main": "main.js", // 应用程序的入口文件
+  "scripts": {
+    "start": "electron .", // 使用 `electron .` 命令启动应用程序
+    "build": "electron-builder" // 使用 `electron-builder` 打包应用程序，生成安装包
+  },
+  "build": {
+    "appId": "com.criswiki.video", // 应用程序的唯一标识符
+    // 打包windows平台安装包的具体配置
+    "win": {
+      "icon": "./logo.ico", //应用图标
+      "target": [
+        {
+          "target": "nsis", // 指定使用 NSIS 作为安装程序格式
+          "arch": ["x64"] // 生成 64 位安装包
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false, // 设置为 `false` 使安装程序显示安装向导界面，而不是一键安装
+      "perMachine": true, // 允许每台机器安装一次，而不是每个用户都安装
+      "allowToChangeInstallationDirectory": true // 允许用户在安装过程中选择安装目录
+    },
+    "devDependencies": {
+      "electron": "^30.0.0", // 开发依赖中的 Electron 版本
+      "electron-builder": "^24.13.3" // 开发依赖中的 `electron-builder` 版本
+    },
+    "author": "CrisWiki", // 作者信息
+    "license": "ISC", // 许可证信息
+    "description": "A video processing program based on Electron" // 应用程序的描述
+  }
+}
+```
+
+说明：nsis 格式对应的是 window 系统的 exe 安装包文件  
+注意：打包过程中需要访问 github。
+
 ### Electron Forge
 
-## 问题答疑
+```bash
+npm install --save-dev @electron-forge/cli
+npx electron-forge import
+```
 
-### 解决内容安全策略 CSP
+第二句命令执行完成后，会在 package.json 里增加一些配置。
+
+```json
+"author": "CrisWiki",
+"license": "ISC",
+"description": "electron test",
+"devDependencies": {
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
+    "@electron-forge/plugin-fuses": "^7.4.0",
+    "@electron/fuses": "^1.8.0",
+    "electron": "^31.2.0",
+    "nodemon": "^3.1.4"
+},
+```
+
+```bash
+npm run make
+```
+
+打包完成
+
+## 附录
+
+### 附1：解决内容安全策略 CSP
+
+写的内容页面有安全警告。
+
+> Electron Security Warning (Insecure Content-Security-Policy) This renderer process has either no Content Security Policy set or a policy with "unsafe-eval" enabled. This exposes users of this app to unnecessary security risks.
+>
+> For more information and help, consult https://electronjs.org/docs/tutorial/security.
+> This warning will not show up...
+
+在 index.html 里加入，如下代码，内容安全策略警告提示消失。
+
+```html
+// electron 提供的配置 成功运行
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'"
+/>
+```
