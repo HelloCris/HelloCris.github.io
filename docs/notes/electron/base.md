@@ -661,8 +661,6 @@ ipcRenderer.on("mtp", (ev, data) => {
 
 ### 渲染进程间通信
 
-#### 主进程方式
-
 #### localStorage 方式
 
 **原理：`localStorage` 在主窗口和子窗口之间共享数据**
@@ -759,6 +757,117 @@ window.onload = function () {
   let val = localStorage.getItem("name");
   // 将获取到的值赋给输入框
   oInput.value = val;
+};
+```
+
+#### 主进程方式
+
+**原理：渲染进程间不能直接通信，须通过 主进程（Main Process）作为中转站进行消息转发。**
+
+1. 从子窗口 (subwin1) 发送消息到父窗口 (index)
+
+子窗口首先将消息发送给主进程，主进程接收到消息后，通过 `BrowserWindow.fromId()` 找到目标窗口（父窗口），并调用其 `webContents.send` 方法将消息转发过去。
+
+**子窗口 (subwin1) 代码：**
+
+```js
+const { ipcRenderer } = require("electron");
+
+// 在 sub 中发送数据给 index.js
+let oBtn = document.getElementById("btn");
+
+oBtn.addEventListener("click", () => {
+  // 发送消息 'stm' 给主进程
+  ipcRenderer.send("stm", "来自于sub进程");
+});
+```
+
+**主进程 (Main Process) 代码：**
+
+```js
+ipcMain.on("stm", (ev, data) => {
+  // 当前我们需要将 data 经过 main 进程转交给指定的渲染进程
+  // 此时我们可以依据指定的窗口 ID 来获取对应的渲染进程，然后执行消息的发送
+  let mainWin = BrowserWindow.fromId(mainWinId);
+  // 向父窗口发送消息 'mti'
+  mainWin.webContents.send("mti", data);
+});
+```
+
+**父窗口 (index) 代码：**
+
+```js
+// 接收消息
+ipcRenderer.on("mti", (ev, data) => {
+  console.log(data);
+});
+```
+
+---
+
+2. 从父窗口 (index) 发送消息到子窗口 (subwin1)
+
+父窗口发送消息给主进程请求打开子窗口并传递数据。主进程创建子窗口后，**关键点**在于需要监听子窗口的 `did-finish-load` 事件，确保页面加载完成后再发送消息，否则消息可能会丢失。
+
+**父窗口 (index) 代码：**
+
+```js
+const { ipcRenderer } = require("electron");
+
+window.onload = function () {
+  let oBtn = document.getElementById("btn");
+
+  oBtn.addEventListener("click", () => {
+    // 发送消息请求打开窗口2，并携带数据
+    ipcRenderer.send("openWin2", "来自于 index 进程");
+  });
+
+  // 接收来自子窗口的回复消息
+  ipcRenderer.on("mti", (ev, data) => {
+    console.log(data);
+  });
+};
+```
+
+**主进程 (Main Process) 代码：**
+
+```js
+// 接收其它进程发送的数据，然后完成后继的逻辑
+ipcMain.on('openWin2', (ev, data) => {
+    // 接收到渲染进程中按钮点击信息之后完成窗口2 的打开
+    let subWin1 = new BrowserWindow({ ... })
+    subWin1.loadFile('subWin1.html')
+
+    subWin1.on('close', () => { ... })
+
+    // 此时我们是可以直接拿到 sub 进程的窗口对象，因此我们需要考虑的就是等到它里面的所有内容
+    // 加载完成之后再执行数据发送
+    subWin1.webContents.on('did-finish-load', () => {
+        // 页面加载完毕后，向子窗口发送消息 'its'
+        subWin1.webContents.send('its', data)
+    })
+})
+```
+
+**子窗口 (subwin1) 代码：**
+
+```js
+const { ipcRenderer } = require("electron");
+window.onload = function () {
+  let oInput = document.getElementById("txt");
+  let val = localStorage.getItem("name");
+  oInput.value = val;
+
+  // 在 sub 中发送数据给 index.js
+  let oBtn = document.getElementById("btn");
+  oBtn.addEventListener("click", () => {
+    ipcRenderer.send("stm", "来自于sub进程");
+  });
+
+  // 接收数据 (来自主进程转发的父窗口消息)
+  ipcRenderer.on("its", (ev, data) => {
+    console.log(data);
+  });
 };
 ```
 
