@@ -252,14 +252,70 @@ Java 的内存主要分为栈内存和堆内存，它们在数组创建过程中
 
 ## 方法
 
-### 方法在代码中定义
+**概念**：方法是将具有独立功能的代码块组织为一个整体，使其具有特殊功能的代码集。
 
-### 参数的注意事项
+### 方法定义
 
-### 带返回值的方式定义
+::: info 方法定义
 
-### 注意事项
+- **规则**：要与 `main` 方法同级（即在类中，但在其他方法外），定义好后就可以调用了。
+
+```java
+public static void fn(){
+    System.out.println("第一个java方法");
+}
+```
+
+- **定义形参时**：必须带上类型。
+- **调用时**：实参的类型、数量必须与形参一致。
+
+```java
+public static void getMax(int a, int b) {
+}
+
+```
+
+- **返回值规则**：`public static` 后面的类型要与返回值一致。
+
+```java
+public static int getMax(int a, int b) {
+    return a + b;
+}
+```
+
+:::
+
+::: warning ⚠️ 注意
+
+- 方法不能嵌套定义
+- `void` 表示无返回值，可省略 `return`；但是写了 `return` 不能跟数据（只能写 `return;` 用于结束方法）。
+
+- **方法参数类型问题**
+  1.  **基本数据类型**：给方法传入基本类型，在方法中改变基本类型值，**对原值无影响**（值传递）。
+  2.  **引用数据类型**：给方法传入引用类型，方法中修改引用类型值，**原值受到影响**。原因是给方法传入的引用类型实际上是一个地址（地址传递）。
+
+:::
 
 ### 方法重载
 
-### 方法参数类型问题
+**定义**：同一个类中，相同的方法名，**只要参数数量或类型不同就构成重载，与返回值无关**。
+
+```java
+// 重载1：一个int参数
+public static int fn(int a){
+    System.out.println("我是int1函数");
+    return a;
+}
+
+// 重载2：两个int参数（参数数量不同）
+public static int fn(int a, int b){
+    System.out.println("我是int2函数");
+    return 20;
+}
+
+// 重载3：int和String参数（参数类型不同）
+public static double fn(int a, String b){
+    System.out.println("我是int3函数");
+    return 1.1;
+}
+```
