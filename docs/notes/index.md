@@ -68,7 +68,7 @@
 
 ### [常用 API](java/api.md)
 
-### [集合框架](java/collections.md)
+### [集合](java/collections.md)
 
 ### [高级特性](java/advanced.md)
 

@@ -1,6 +1,6 @@
 # 常用 API 与 异常处理
 
-## 六、String
+## String
 
 String 代表字符串类型，java 中所有带双引号的字符串都是 String 类的对象。
 

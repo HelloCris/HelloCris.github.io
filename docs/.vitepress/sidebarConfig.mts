@@ -88,7 +88,7 @@ export const sidebarConfig = [
           { text: "Java基础", link: "/notes/java/base.md" },
           { text: "面向对象", link: "/notes/java/oop.md" },
           { text: "常用 API", link: "/notes/java/api.md" },
-          { text: "集合框架", link: "/notes/java/collections.md" },
+          { text: "集合", link: "/notes/java/collections.md" },
           { text: "高级特性", link: "/notes/java/advanced.md" },
         ],
       },

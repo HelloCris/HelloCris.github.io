@@ -1,4 +1,4 @@
-# Java 集合框架 (Collections)
+# Java 集合 (Collections)
 
 ## ArrayList
 
