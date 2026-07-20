@@ -64,7 +64,7 @@
 
 ### [Java基础](java/base.md)
 
-### [对象编程](java/oop.md)
+### [面向对象](java/oop.md)
 
 ### [常用 API](java/api.md)
 
