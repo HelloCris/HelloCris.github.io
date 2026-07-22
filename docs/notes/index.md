@@ -66,7 +66,7 @@
 
 ### [面向对象](java/oop.md)
 
-### [常用 API](java/api.md)
+### [API与异常](java/api.md)
 
 ### [集合](java/collections.md)
 
