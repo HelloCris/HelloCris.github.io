@@ -35,17 +35,119 @@ System.out.println(arr); // [我是第一个, a, b]
 | `public E get(int index)`            | 返回指定索引处的元素                   |
 | `public int size()`                  | 返回集合中的元素的个数                 |
 
-## 十七、集合
+## 集合
+
+**集合类特点**：提供一种存储空间可变的存储模型，存储数量随时发生改变。
+
+::: info 集合类体系结构
+
+- **集合**
+  - **Collection（单列）**
+    - **List（可重复）**
+      - ArrayList（实现类）
+      - LinkedList（实现类）
+      - ......
+    - **Set（不可重复）**
+      - HashSet（实现类）
+      - TreeSet（实现类）
+      - ......
+  - **Map（双列）**
+    - HashMap（实现类）
+    - ......
+
+:::
 
 ### Collection
 
+**概述**：Collection是单列集合的顶层接口，表示一组对象，这些对象是 Collection 集合的元素。Collection 是一个接口，JDK 不提供此接口的任何直接实现，它提供更具体的子类接口。
+
+**Collection 常用方法**
+
+| 方法名                       | 说明                               |
+| :--------------------------- | :--------------------------------- |
+| `boolean add(E e)`           | 添加元素                           |
+| `boolean remove(Object o)`   | 从集合中移除指定的元素             |
+| `void clear()`               | 清空集合中的元素                   |
+| `boolean contains(Object o)` | 判断集合中是否存在指定的元素       |
+| `boolean isEmpty()`          | 判断集合是否为空                   |
+| `int size()`                 | 集合的长度，也就是集合中元素的个数 |
+
 ### Iterator
+
+**迭代器**：集合的专属遍历方式。
+
+- `Iterator<E> iterator()`：返回此集合中元素的迭代器，通过集合的 `iterator()` 方法得到。
+- 迭代器是通过集合的 `iterator()` 方法得到的，所以我们说它是依赖于集合而存在的。
+
+**Iterator 中的常用方法**
+
+- `E next()`：返回迭代中的下一个元素。
+- `boolean hasNext()`：如果迭代具有更多元素，则返回 true。
+
+```java
+Collection<Integer> c = new ArrayList<>();
+c.add(123);
+c.add(321);
+c.add(333);
+
+Iterator<Integer> i1 = c.iterator(); // 调用方法得到迭代器
+while (i1.hasNext()) {
+    System.out.println(i1.next());
+}
+```
+
+::: info 并发修改异常
+
+迭代器遍历过程中修改了集合的内容长度，会导致 `next()` 获取元素中预期值和实际值不一致，抛出异常。
+
+- **异常名称**：`ConcurrentModificationException`
+- **产生原因**：迭代器遍历的过程中，通过集合对象修改了集合中元素的长度，造成了迭代器获取元素中判断预期修改值和实际修改值不一致。
+- **解决方案**：用 for 循环遍历，然后用集合对象做对应的操作即可。
+
+:::
 
 ### List
 
-- List 集合子类特点
+**概述**：有序集合，用户可控制和集合中每个元素的插入位置，也可通过索引访问元素。可重复。
+
+**List 特有方法**
+
+| 方法名                           | 说明                                   |
+| :------------------------------- | :------------------------------------- |
+| `void add(int index, E element)` | 在此集合中的指定位置插入指定的元素     |
+| `E remove(int index)`            | 删除指定索引处的元素，返回被删除的元素 |
+| `E set(int index, E element)`    | 修改指定索引处的元素，返回被修改的元素 |
+| `E get(int index)`               | 返回指定索引处的元素                   |
+
+**ListIterator**
+
+List 集合特有迭代器，可以任意方向遍历集合，调用 ListIterator 的 add 不会并发修改异常。
+
+**List 集合子类特点**
+
+- **ArrayList**：底层结构是数组，查询快，增删慢。
+- **LinkedList**：底层结构是链表，查询慢，增删快。
 
 ### 增强 for 循环
+
+- **增强 for**：简化数组和 Collection 集合的遍历。
+- 实现 Iterable 接口的类允许其对象成为增强型 for 语句的目标。
+- 它是 JDK5 之后出现的，其内部原理是一个 Iterator 迭代器。
+
+**增强 for 的格式**
+
+```java
+for(元素数据类型 变量名 : 数组或者Collection集合) {
+    //在此处使用变量即可，该变量就是元素
+}
+```
+
+```java
+int[] arr = {1, 2, 3, 4, 5};
+for(int i : arr) {
+    System.out.println(i);
+}
+```
 
 ### 数据结构
 
