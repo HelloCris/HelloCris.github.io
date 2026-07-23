@@ -210,38 +210,203 @@ for(int i : arr) {
 | `public E removeFirst()`    | 从此列表中删除并返回第一个元素   |
 | `public E removeLast()`     | 从此列表中删除并返回最后一个元素 |
 
-## 十八、Set 集合
+## Set 集合
+
+set 集合特点：没有重复元素，没有带索引的方法，遍历不能保证顺序
 
 ### 哈希值
 
-- 对象哈希值特点
+哈希值：是 JDK 根据对象的地址或者字符串或者数字算出来的 int 类型的值  
+Object 类有一个 `hashCode` 方法返回对象的哈希码；String 类型重写了此方法，结果可能和预期不同
+
+**对象哈希值特点**
+
+- 同一个对象哈希值相同
+- 默认情况下不同对象哈希值不同，但可以重写 `hashCode` 方法
 
 ### HashSet
 
+HashSet 是 set 的实现类，基本方法与 set 一致，**底层结构是哈希表**。  
+HashSet保证唯一：添加元素的时候底层先比较 hash 值是否相同，如果相同再调用 equals 比较内容是否相同，都相同则不会添加相同元素，有一个不同会直接添加该元素
+
 ### 哈希表
+
+jdk8 前，**哈希表底层采用数组+链表实现**，可以说元素为链表的数组，默认长度 16  
+jdk8 以后，在长度较长的时候，底层优化过
 
 ### LinkedHashSet 集合
 
+哈希表和链表实现的 Set 接口，有可预测的迭代次序，链表保证了次序，hash 表保证了唯一
+
 ### TreeSet
 
-## 十九、泛型
+概述：TreeSet 是一个有序的集合，提供有序的 Set 集合  
+TreeSet 中的元素支持两种排序方式
 
-### 泛型类
+- 无参构造创建 TreeSet 时会使用自然排序 Comparable，该接口对实现它的每个类的对象添加一个整体排序，就是自然排序，类的 `compareTo` 是自然排序方法
+- 创建 TreeSet 时提供的 Comparator(比较器排序接口) 进行排序
 
-### 泛型方法
+**自然排序（在实现 Comparable 的类中重写 compareTo 方法）：**
 
-### 泛型接口
+```java
+@Override
+public int compareTo(Student o) {
+    int num = this.age - o.age;
+    int num2 = num == 0 ? this.name.compareTo(o.name) : num;
+    return num2;
+}
+```
 
-### 类型通配符
+**比较器排序：**
 
-## 二十、补充内容：可变参数
+```java
+TreeSet<Student> ts = new TreeSet<>(new Comparator<Student>() {
+    @Override
+    public int compare(Student o1, Student o2) {
+        int num = o1.getAge() - o2.getAge();
+        int num2 = num == 0 ? o1.getName().compareTo(o2.getName()) : num;
+        return num2;
+    }
+});
+```
 
-## 二十一、Map
+## 泛型
 
-### 概述
+- **泛型**：提供了编译时类型安全检测机制。
+- **本质**：是参数化类型，操作的数据类型被指定为一个参数。
+- **参数化理解**：
+  - 就是将原来具体的类型参数化，在调用用的时候传入具体类型。
+  - **格式**：
+    - `<类型>`：指定一种类型，这个类型可以看作形参。
+    - `<类型, 类型 1...>`：也可以多个类型。
+  - 将来具体调用的时候给定的类型可以看作是实参。
 
-### 操作方法
+::: info 泛型概述
 
-### 获取方法
+- 泛型：是JDK5中引入的特性，它提供了编译时类型安全检测机制，该机制允许你在编译时检测到非法的类型。
+- 它的本质是参数化类型，也就是说所操作的数据类型被指定为一个参数。
+- 一提到参数，最熟悉的就是定义方法时有形参，然后调用此方法时传递实参。那么参数化类型怎么理解呢？顾名思义，就是将类型由原来的具体的类型参数化，然后在使用/调用时传入具体的类型。
+- 这种参数类型可以用在类、方法和接口中，分别被称为泛型类、泛型方法、泛型接口。
+- **泛型定义格式**：
+  - `<类型>`：指定一种类型的格式。这里的类型可以看成是形参。
+  - `<类型1,类型2...>`：指定多种类型的格式，多种类型之间用逗号隔开。这里的类型可以看成是形参。
+  - 将来具体调用时候给定的类型可以看成是实参，并且实参的类型只能是引用数据类型。
+- **泛型的好处**：
+  - 把运行时期的问题提前到了编译期间。
+  - 避免了强制类型转换。
 
-### Map 的遍历方法
+:::
+
+1. **泛型类**
+
+- **格式**：修饰符 class 类名<类型>{...}
+- 示例：`public class Generic<T> {}` //这里T就是形参可以随意写，调用时候传入类型。
+
+2. **泛型方法**
+
+- **格式**：修饰符 <类型> 返回值 函数名(类型 形参){...}
+- 示例：`public <T> void show(T abc){...}` //调用这个函数时，传什么类型，T就是对应类型。
+
+3. **泛型接口**
+
+- **接口**：
+  ```java
+  public interface Fx<T> {}
+  ```
+- **实现类**：
+  ```java
+  public class Generic<T> implements Fx<T>{}
+  ```
+
+4. **类型通配符**
+
+为了表示各种泛型 List 的父类，可用通配符：
+
+- **类型通配符**：`<?>`
+- `List<?>`：表示元素类型未知的 List。
+- 这种带通配符的 List 仅代表它是各种泛型 List 的父类。
+- **类型通配符上限**：`<? extends 类型>` 表示的类型是该类型及其子类。
+- **类型通配符下限**：`<? super 类型>` 表示的类型是该类型及其父类。
+
+## 补充：可变参数
+
+**可变参数**
+
+- **定义**：可变参数又称参数个数可变，用作方法的形参出现，那么方法参数个数就是可变的了。
+- **格式**：修饰符 返回值类型 方法名(数据类型... 变量名){ }
+- **范例**：`public static int sum(int... a) { }`
+
+**可变参数注意事项**
+
+- 这里的变量其实是一个数组。
+- 如果一个方法有多个参数，包含可变参数，**可变参数要放在最后**。
+
+---
+
+**可变参数的使用**
+
+1. Arrays工具类中有一个静态方法：
+   - `public static <T> List<T> asList(T... a)`：返回由指定数组支持的固定大小的列表。
+   - 返回的集合不能做增删操作，可以做修改操作。
+
+2. List接口中有一个静态方法：
+   - `public static <E> List<E> of(E... elements)`：返回包含任意数量元素的不可变列表。
+   - 返回的集合不能做增删改操作。
+
+3. Set接口中有一个静态方法：
+   - `public static <E> Set<E> of(E... elements)`：返回一个包含任意数量元素的不可变集合。
+   - 在给元素的时候，不能给重复的元素。
+   - 返回的集合不能做增删操作，没有修改的方法。
+
+## Map
+
+**概述：** 键映射到值的对象，不能有重复的键，一个键映射一个值。  
+`Interface Map<K,V>`
+
+**操作方法**
+
+| 方法名                                | 说明                                 |
+| :------------------------------------ | :----------------------------------- |
+| `V put(K key, V value)`               | 添加元素                             |
+| `V remove(Object key)`                | 根据键删除键值对元素                 |
+| `void clear()`                        | 移除所有的键值对元素                 |
+| `boolean containsKey(Object key)`     | 判断集合是否包含指定的键             |
+| `boolean containsValue(Object value)` | 判断集合是否包含指定的值             |
+| `boolean isEmpty()`                   | 判断集合是否为空                     |
+| `int size()`                          | 集合的长度，也就是集合中键值对的个数 |
+
+**获取方法**
+
+| 方法名                           | 说明                     |
+| :------------------------------- | :----------------------- |
+| `V get(Object key)`              | 根据键获取值             |
+| `Set<K> keySet()`                | 获取所有键的集合         |
+| `Collection<V> values()`         | 获取所有值的集合         |
+| `Set<Map.Entry<K,V>> entrySet()` | 获取所有键值对对象的集合 |
+
+**Map 的遍历方法**
+
+1. **获取对象的所有键，再遍历所有键，调用 get 获取对应值**
+
+   ```java
+   Map<String,String> map=new HashMap<String, String>();
+   map.put("cyp","123");
+   map.put("java","头图");
+   map.put("lq","321");
+   Set<String> keys=map.keySet(); //获取所有键
+   for(String k : keys){
+       System.out.println(map.get(k));
+   }
+   ```
+
+2. **直接取得键值对象的集合**
+   ```java
+   Set<Map.Entry<String,String>> dier=map.entrySet();//获取键值对集合
+   for(Map.Entry<String,String> m :dier){
+       System.out.println(m.getKey()+m.getValue());
+   }
+   ```
+
+**补充：**  
+`Collections.shuffle()` 将列表中的内容打乱顺序，相当于洗牌。  
+`Collections.shuffle(arrayList);`
