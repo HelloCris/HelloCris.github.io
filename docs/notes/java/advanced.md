@@ -186,7 +186,78 @@ try {
 
 #### 字节流读数据
 
+**FileInputStream**：从系统文件读取数据。
+
+1. 一次读一个字节
+
+```java
+//这里打开实际文件的连接 创建了字节输入流对象，
+FileInputStream fis = new FileInputStream("idea_test//hello.txt");
+
+//调用字节输入流的read方法 返回1个字节的int值，找不到会返回-1
+int read = fis.read();
+System.out.println(read);
+fis.close();
+```
+
+2. 一次读一个字节方式读文件的标准写法
+
+```java
+int by;
+/*
+    fis.read(): 读数据
+    by=fis.read(): 把读取到的数据赋值给by
+    by != -1: 判断读取到的数据是否是-1
+*/
+while ((by=fis.read())!=-1) {
+    System.out.print((char)by);
+}
+```
+
+3. 一次读取多个字节
+
+**基础示例：**
+
+```java
+FileInputStream fis = new FileInputStream("idea_test//hello.txt");
+//创建字节数组
+byte[] cs = new byte[5];
+//传入数组，数据会进入此数组，并返回实际存入的数量
+int len = fis.read(cs);
+System.out.println(new String(cs));
+```
+
+**标准循环读取示例：**
+
+```java
+byte[] bys = new byte[1024]; //1024及其整数倍
+int len;
+while ((len=fis.read(bys))!=-1) {
+    System.out.print(new String(bys, 0, len));
+}
+```
+
 #### 字节缓冲流
+
+- **BufferedInputStream**：输入缓冲流，内部有缓冲数组。
+- **BufferedOutputStream**：输出缓冲流，这种流可以写入字节，但又不直接调系统底层。
+- **原理说明**：字节缓冲流仅仅提供缓冲区，真正读写数据还是要普通的字节流对象。
+
+```java
+//两种缓冲流都要传入基本的字节流对象
+
+BufferedInputStream fis = new BufferedInputStream(new FileInputStream("C:\\Users\\小陈儿\\Desktop\\aspose\\code.mp4"));
+BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream("idea_test\\code.mp4"));
+
+byte[] bys = new byte[1024];
+int len;
+while ((len = fis.read(bys)) != -1) {
+    fos.write(bys, 0, len);
+}
+
+fis.close();
+fos.close();
+```
 
 ### 字符流
 
