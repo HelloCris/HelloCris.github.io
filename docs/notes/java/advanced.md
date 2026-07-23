@@ -557,16 +557,67 @@ System.out.println(s2.getName());
 | `void store(OutputStream out, String comments)` | 将此属性列表（键和元素对）写入此 Properties表中，以适合于使用 load(InputStream)方法的格式写入输出字节流 |
 | `void store(Writer writer, String comments)`    | 将此属性列表（键和元素对）写入此 Properties表中，以适合于使用 load(Reader)方法的格式写入输出字符流      |
 
-## 二十四、线程
+## 线程
 
-### 概述
+**进程：**
+
+- 正在运行的程序。
+- 是系统进行资源分配和调用的独立单位。
+- 每一个进程都有它自己的内存空间和系统资源。
+
+**线程：**
+
+- 是进程中的单个顺序控制流，是一条执行路径。
 
 ### 多线程实现方式一：继承 Thread 类
 
-- 设置获取线程名称
-- 线程优先级
-- 线程控制
-- 线程生命周期
+**基本步骤：**
+
+- 定义一个类继承 `Thread` 类，重写 `run` 方法。
+- 创建此类对象，启动线程。
+
+**注意：**
+
+- `run` 方法中是封装被线程执行的代码。
+- 对象的 `start()` 方法：启动线程；再直接调用 `run` 是普通调用。
+
+**Thread 类中设置和获取线程名的方法：**
+
+- **设置：** `void setName(String name)`; 也可通过构造函数设置名称。
+- **获取：** `String getName()`;
+- **获取 main() 方法所在的线程：** `public static Thread currentThread()` 返回当前正在执行线程的引用。
+
+::: info 线程优先级
+
+**线程有两种调度模型：**
+
+1.  **分时调度模型：** 所有线程平均使用 CPU 的使用权，平均分配每个线程占用 CPU 时间片。
+2.  **抢占式调度模型：** 让优先级高的线程使用 CPU，优先级相同就随机。
+    - Java 使用的是抢占式模型。
+
+**Thread 类的获取和设置优先级：**
+
+- `public final int getPriority()`
+- `public final void setPriority(int newPriority)`
+
+:::
+
+::: info 线程控制
+
+| 方法名                           | 说明                                                                 |
+| :------------------------------- | :------------------------------------------------------------------- |
+| `static void sleep(long millis)` | 使当前正在执行的线程停留（暂停执行）指定的毫秒数                     |
+| `void join()`                    | 等待这个线程死亡                                                     |
+| `void setDaemon(boolean on)`     | 将此线程标记为守护线程，当运行的线程都是守护线程时，Java虚拟机将退出 |
+
+:::
+
+::: info 线程生命周期
+
+**注意：** 线程在执行过程中会被其他线程抢走执行权。
+![线程生命周期](./asset/ThreadLifeCycle.png)
+
+:::
 
 ### 线程实现方式二 实现 Runnable 接口
 
