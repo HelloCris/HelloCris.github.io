@@ -438,11 +438,124 @@ br.close();
 
 #### 标准输入输出流
 
+System类中有两个静态的成员变量：
+
+- `public static final InputStream in`：标准输入流。通常该流对应于键盘输入或由主机环境或用户指定的另一个输入源。
+- `public static final PrintStream out`：标准输出流。通常该流对应于显示输出或由主机环境或用户指定的另一个输出目标。
+
+**自己实现键盘录入数据：**
+
+- `BufferedReader br = new BufferedReader(new InputStreamReader(System.in));`
+
+写起来太麻烦，Java就提供了一个类实现键盘录入：
+
+- `Scanner sc = new Scanner(System.in);`
+
+**输出语句的本质：** 是一个标准的输出流
+
+- `PrintStream ps = System.out;`
+- PrintStream类有的方法，System.out都可以使用。
+
 #### 打印流
+
+**打印流分类：**
+
+- **字节打印流**：`PrintStream`
+- **字符打印流**：`PrintWriter`
+
+**打印流的特点：**
+
+- 只负责输出数据，不负责读取数据。
+- 有自己的特有方法。
+
+**字节打印流 (`PrintStream`)：**
+
+- `PrintStream(String fileName)`：使用指定的文件名创建新的打印流。
+- 使用继承父类的方法写数据，查看的时候会转码；使用自己的特有方法写数据，查看的数据原样输出。
+
+**字符打印流 (`PrintWriter`) 的构造方法：**
+
+| 方法名                                       | 说明                                                                                                                                            |
+| :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PrintWriter(String fileName)`               | 使用指定的文件名创建一个新的PrintWriter，而不需要自动执行刷新。                                                                                 |
+| `PrintWriter(Writer out, boolean autoFlush)` | 创建一个新的PrintWriter。• **out**：字符输出流• **autoFlush**：一个布尔值，如果为真，则 `println`，`printf`，或 `format` 方法将刷新输出缓冲区。 |
 
 #### 对象序列化流
 
+**对象序列化**：将对象保存到磁盘中，或者在网络中传输对象。  
+这种机制就是用一个字节序列表示一个对象，该字节序列包含对象类型、数据、属性等；字节序列写入文件后，相当于文件中保存的对象信息。  
+反之，可以从文件中读取该字节序列，重构对象，对其进行反序列化。
+
+- **对象序列化流**：`ObjectOutputStream`
+- **对象反序列化**：`ObjectInputStream`
+
+::: info 序列化例子：java 对象 -> 文件
+
+```java
+ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("idea_test/java.txt"));
+//此对象被序列化，需要实现 Serializable 接口
+Ser s1 = new Ser("eve");
+//序列化方法，将对象写入
+oos.writeObject(s1);
+oos.close();
+```
+
+::: warning ⚠️ 注意
+
+- 一个对象要想被序列化，该对象所属的类必须必须实现 **Serializable** 接口。
+- Serializable 是一个**标记接口**，实现该接口不需要重写任何方法。
+
+:::
+
+::: info 反序列化：文件内容 -> java 对象
+
+```java
+ObjectInputStream ois = new ObjectInputStream(new FileInputStream("idea_test/java.txt"));
+Object Obj = ois.readObject();
+Ser s2 = (Ser)Obj;
+System.out.println(s2.getName());
+```
+
+:::
+
+::: tip 常见问题与解决
+
+1.  **用对象序列化流序列化了一个对象后，假如我们修改了对象所属的类文件，读取数据会不会出问题呢？**
+    - 会出问题，抛出 `InvalidClassException` 异常。
+
+2.  **如果出问题了，如何解决呢？**
+    - 给对象所属的类加一个 `serialVersionUID`
+      ```java
+      private static final long serialVersionUID = 42L;
+      ```
+
+3.  **如果一个对象中的某个成员变量的值不想被序列化，又该如何实现呢？**
+    - 给该成员变量加 **transient** 关键字修饰，该关键字标记的成员变量不参与序列化过程。
+
+:::
+
 #### Properties
+
+- 是一个 MAP 体系的集合类。
+- Properties 可以保存到流中或从流中加载。
+- 能用 map 的方法，也有特有的添加获取方法。
+
+**Properties 特有方法**
+
+| 方法名                                         | 说明                                                             |
+| :--------------------------------------------- | :--------------------------------------------------------------- |
+| `Object setProperty(String key, String value)` | 设置集合的键和值，都是String类型，底层调用Hashtable方法 put      |
+| `String getProperty(String key)`               | 使用此属性列表中指定的键搜索属性                                 |
+| `Set<String> stringPropertyNames()`            | 从该属性列表中返回一个不可修改的键集，其中键及其对应的值是字符串 |
+
+**流相关操作方法**
+
+| 方法名                                          | 说明                                                                                                    |
+| :---------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `void load(InputStream inStream)`               | 从输入字节流读取属性列表（键和元素对）                                                                  |
+| `void load(Reader reader)`                      | 从输入字符流读取属性列表（键和元素对）                                                                  |
+| `void store(OutputStream out, String comments)` | 将此属性列表（键和元素对）写入此 Properties表中，以适合于使用 load(InputStream)方法的格式写入输出字节流 |
+| `void store(Writer writer, String comments)`    | 将此属性列表（键和元素对）写入此 Properties表中，以适合于使用 load(Reader)方法的格式写入输出字符流      |
 
 ## 二十四、线程
 
