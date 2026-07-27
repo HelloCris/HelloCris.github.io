@@ -962,19 +962,187 @@ ss.close();
 
 :::
 
-## 二十八、函数式编程
+## 函数式编程
 
 ### 方法引用
 
+**概述：** 使用 Lambda 表达式时，实际上传入的代码是一种解决方案，如果其他地方有相同的方案就可通过方法引用来减少代码。  
+**方法引用符：** `::` 为引用运算符；方法引用是 Lambda 表达式的孪生兄弟。
+
+| 方法引用类型     | 格式               | 注意事项                                                |
+| ---------------- | ------------------ | ------------------------------------------------------- |
+| 引用类方法       | `类名::静态方法名` | Lambda 的形参会全部传入静态方法                         |
+| 引用对象方法     | `对象名::成员方法` | Lambda 的形参会全部传入成员方法                         |
+| 引用类的实例方法 | `类名::成员方法`   | Lambda 形参第一个参数是方法的调用者，后面才是方法的参数 |
+| 引用构造器       | `类名::new`        | Lambda 的形参会全部传给构造器                           |
+
 ### 函数式接口
+
+**概述：** 函数式接口就是只有一个抽象方法的接口，注解 `@FunctionalInterface`。
+
+**函数中出现函数式接口的情况：**
+
+- 方法参数是一个函数式接口，可用 Lambda 表达式。
+- 返回值是一个函数式接口，可用 Lambda 表达式。
+
+---
+
+**常用函数式接口：**
+
+**1. `Supplier<T>`:生产数据**
+
+- 只有一个 `T get()` 方法，返回 Lambda 式中的参数。
+
+```java
+static Integer getMax(Supplier<Integer> sup) {
+    return sup.get(); // 接收 L 表达式中的返回
+}
+```
+
+- **Lambda 表达式中返回整数：**
+  ```java
+  int max = getMax(() -> 111);
+  ```
+
+**2. `Consumer<T>`:消费数据**
+
+- `void accept(<T> t)` 方法：传入参数，由 Lambda 去操作。
+- `andThen` 方法：返回一个组合的 Consumer。
+
+  ```java
+  public static void operatorString(Consumer<String> con) {
+      con.accept("林青霞"); // 调用 accept 传入字符串
+  }
+  ```
+
+- **直接在 Lambda 中使用这个数据：**
+  ```java
+  operatorString(s -> System.out.println(s));
+  ```
+
+**3. `Predicate<T>`:判断功能**
+
+- **`Predicate<T>`:常用的四个方法**
+  - `boolean test(T t)`：对给定的参数进行判断（判断逻辑由 Lambda 表达式实现），返回一个布尔值。
+  - `default Predicate<T> negate()`：返回一个逻辑的否定，对应逻辑非。
+  - `default Predicate<T> and(Predicate other)`：返回一个组合判断，对应短路与。
+  - `default Predicate<T> or(Predicate other)`：返回一个组合判断，对应短路或。
+- `Predicate<T>` 接口通常用于判断参数是否满足指定的条件。
+- **用到 or 方法组合两个判断，再调用 test 获得结果：**
+  ```java
+  public static boolean checkString(Predicate<String> s1, Predicate<String> s2) {
+      return s1.or(s2).test("字母啊");
+  }
+  ```
+- **这里返回两个结果：**
+  ```java
+  System.out.println(checkString(s -> {
+      return true;
+  }, s2 -> {
+      return false;
+  }));
+  ```
+
+**4. `Function<T,R>`:函数接口**
+
+- 接口表示接收一个参数 T 产生结果的函数 R。
+- **`Function<T,R>`:常用的两个方法**
+  - `R apply(T)`：将此函数应用于给定的参数。
+  - `default <V> Function andThen(Function after)`：返回一个组合函数，首先将该函数应用于输入，然后将 after 函数应用于结果。
+- `Function<T,R>` 接口通常用于对参数进行处理，转换（处理逻辑由 Lambda 表达式实现），然后返回一个新的值。
+- **函数接收字符串，返回一个数值：**
+  ```java
+  private static void convert(String str, Function<String, Integer> fn) {
+      int num = fn.apply(str);
+      System.out.println(num);
+  }
+  ```
+- **Lambda 中拿到字符串，返回数值：**
+  ```java
+  convert("345", str -> {
+      return Integer.parseInt(str);
+  });
+  ```
 
 ### Stream 流
 
-- 概述
-- Stream 流生成方式
-- Stream 流常见中间操作方法
-- Stream 流终结方法
-- Stream 收集操作
+**概述：**
+
+- Stream 流把真正的函数式编程，引入到 Java 中。
+- Stream 流不是一种数据结构，不保存数据，它只是在原数据集上定义了一组操作。
+- 直接阅读代码就能展示逻辑。
+- 下列代码就是生成流，过滤两次，再逐一打印：
+  `list.stream().filter(s->s.startsWith("张")).filter(s->s.length()>2).forEach(System.out::println);`
+
+::: info Stream 流生成方式
+
+要使用流就要先通过数据源（集合、数组）生成：
+
+- **Collection体系的集合可以使用默认方法stream()生成流**
+  - `default Stream<E> stream()`
+- **Map体系的集合间接的生成流**
+- **数组可以通过Stream接口的静态方法of(T... values)生成流**
+
+:::
+
+::: info Stream 流常见中间操作方法
+
+生成流后通过中间操作做数据处理，生成新的流，给下一个操作使用：
+
+- `Stream<T> filter(Predicate predicate)`：用于对流中的数据进行过滤
+  - Predicate接口中的方法 `boolean test(T t)`：对给定的参数进行判断，返回一个布尔值
+- `Stream<T> limit(long maxSize)`：返回此流中的元素组成的流，截取前指定参数个数的数据
+- `Stream<T> skip(long n)`：跳过指定参数个数的数据，返回由该流的剩余元素组成的流
+- `static <T> Stream<T> concat(Stream a, Stream b)`：合并a和b两个流为一个流
+- `Stream<T> distinct()`：返回由该流的不同元素（根据Object.equals(Object)）组成的流
+- `Stream<T> sorted()`：返回由此流的元素组成的流，根据自然顺序排序
+- `Stream<T> sorted(Comparator comparator)`：返回由该流的元素组成的流，根据提供的Comparator进行排序
+- `<R> Stream<R> map(Function mapper)`：返回由给定函数应用于此流的元素的结果组成的流
+  - Function接口中的方法 `R apply(T t)`
+- `IntStream mapToInt(ToIntFunction mapper)`：返回一个IntStream其中包含将给定函数应用于此流的元素的结果
+
+:::
+
+::: info Stream 流终结方法
+
+流的最后一个操作：
+
+- `void forEach(Consumer action)`：对此流的每个元素执行操作
+  - Consumer接口中的方法 `void accept(T t)`：对给定的参数执行此操作
+- `long count()`：返回此流中的元素数
+
+:::
+
+::: info Stream 收集操作
+
+**概述：** 可把操作完的流放入集合中。
+**收集操作具体步骤：** 调用流的 collect 方法，传入一个 Collector 接口方法（此接口由工具类提供）。
+
+- `R collect(Collector collector)`
+- 但是这个收集方法的参数是一个Collector 接口
+
+**工具类Collectors提供了具体的收集方式：**
+
+- `public static <T> Collector toList()`：把元素收集到List集合中
+- `public static <T> Collector toSet()`：把元素收集到Set集合中
+- `public static Collector toMap(Function keyMapper, Function valueMapper)`：把元素收集到Map集合中
+
+**流生成 list**
+
+```java
+List<String> strList = Stream.of(str).collect(Collectors.toList());
+System.out.println(strList);
+```
+
+**流生成 map**
+
+```java
+String[] strArr = {"林青霞,30", "张曼玉,35", "王祖贤,33", "刘岩,25"};
+Stream<String> arrayStream = Stream.of(strArr).filter(s -> Integer.parseInt(s.split(",")[1]) > 28);
+Map<String, String> mapString = arrayStream.collect(Collectors.toMap(s -> s.split(",")[0], s2 -> s2.split(",")[1]));
+```
+
+:::
 
 ## 二十九、反射
 
