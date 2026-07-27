@@ -1144,31 +1144,423 @@ Map<String, String> mapString = arrayStream.collect(Collectors.toMap(s -> s.spli
 
 :::
 
-## 二十九、反射
+## 反射
 
 ### 类加载器
 
+**概述：**
+负责将 class 文件加载到内存中，生成 `java.lang.Class` 对象。
+
+**类加载器对象：** `ClassLoader`
+
+**类加载机制：** 全盘负责、父类委托、缓存机制
+
+**Java运行时具有以下内置类加载器：**
+
+- **Bootstrap class loader：** 它是虚拟机的内置类加载器，通常表示为 `null`，并且没有父 `null`。
+- **Platform class loader：** 平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的 Java SE 平台 API，其实现类和 JDK 特定的运行时类。
+- **System class loader：** 它也被称为应用程序类加载器，与平台类加载器不同。系统类加载器通常用于定义应用程序类路径，模块路径和 JDK 特定工具上的类。
+
 ### java 反射操作
 
-- 获取 class 类对象
-- 获取构造并创建对象
-- 反射获取成员变量
-- 反射获取成员方法
-- 反射练习：配置文件调用类方法
+**Java 反射机制：** 指在运行时获取一个类的变量和方法信息，通过获取到的信息创建对象，调用方法的一种机制。由于这种动态特性，可以极大的增强了程序的灵活性。
 
-## 三十、补充知识
+::: info 获取 Class 类对象
+
+通过反射去使用一个类，要获取到该类字节码文件对象，就是类型为 Class 类型的对象。
+有 3 种方式获取类型对象：
+
+- **使用类的 class 属性来获取该类对应的 Class 对象。** 举例：`Student.class` 将会返回 `Student` 类对应的 `Class` 对象。
+- **调用对象的 `getClass()` 方法，返回该对象所属类对应的 Class 对象。**
+  - 该方法是 `Object` 类中的方法，所有的 Java 对象都可以调用该方法。
+- **使用 Class 类中的静态方法 `forName(String className)`，该方法需要传入字符串参数，该字符串参数的值是某个类的全路径，也就是完整包名的路径。**
+
+:::
+
+::: info 获取构造并创建对象
+
+`Constructor` 提供有关类的单个构造函数的信息和访问权限。
+
+**Class 类中用于获取构造方法的方法：**
+
+- `Constructor<?>[] getConstructors()`：返回所有公共构造方法对象的数组。
+- `Constructor<?>[] getDeclaredConstructors()`：返回所有构造方法对象的数组。
+- `Constructor<T> getConstructor(Class<?>... parameterTypes)`：返回单个公共构造方法对象。
+- `Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes)`：返回单个构造方法对象。
+
+**Constructor 类中用于创建对象的方法：**
+
+- `T newInstance(Object... initargs)`：根据指定的构造方法创建对象。
+
+```java
+// 获取类对象
+Class<?> c = Person.class;
+// 获取指定参数构造函数对象
+Constructor<?> con = c.getConstructor(String.class, int.class);
+// 创建对象
+Object obj = con.newInstance("陈彦明", 22);
+```
+
+**注意：** 如果获取的是私有构造函数可通过 Constructor 对象的 `setAccessible` 方法取消检查。
+`con.setAccessible(true);`
+
+:::
+
+::: info 反射获取成员变量
+
+`Field` 提供有关类或接口的单个字段的信息和动态访问。
+
+**Class 类中用于获取成员变量的方法：**
+
+- `Field[] getFields()`：返回所有公共成员变量对象的数组。
+- `Field[] getDeclaredFields()`：返回所有成员变量对象的数组。
+- `Field getField(String name)`：返回单个公共成员变量对象。
+- `Field getDeclaredField(String name)`：返回单个成员变量对象。
+
+**Field 类中用于给成员变量赋值的方法：**
+
+- `void set(Object obj, Object value)`：给 obj 对象的成员变量赋值为 value。
+
+```java
+Class<?> c = Person.class;
+Constructor<?> con = c.getConstructor();
+Object obj = con.newInstance();
+// 通过方法传入名称拿到 Field 对象
+Field fname = c.getDeclaredField("name");
+// 因为是私有，要设置一下
+fname.setAccessible(true);
+// 给 obj 成员变量赋值
+fname.set(obj, "cyp");
+```
+
+:::
+
+::: info 反射获取成员方法
+
+`Method` 提供有关类或接口上的单个方法的信息和访问权限。
+
+**Class 类中用于获取成员方法的方法：**
+
+- `Method[] getMethods()`：返回所有公共成员方法对象的数组，包括继承的。
+- `Method[] getDeclaredMethods()`：返回所有成员方法对象的数组，不包括继承的。
+- `Method getMethod(String name, Class<?>... parameterTypes)`：返回单个公共成员方法对象。
+- `Method getDeclaredMethod(String name, Class<?>... parameterTypes)`：返回单个成员方法对象。
+
+**Method 类中用于调用成员方法的方法：**
+
+- `Object invoke(Object obj, Object... args)`：调用 obj 对象的成员方法，参数是 args，返回值是 Object 类型。
+
+```java
+Class<?> c = Person.class;
+Constructor<?> con = c.getConstructor();
+Object obj = con.newInstance();
+// 获取方法，并设置好参数
+Method m = c.getMethod("sayHi", String.class);
+// 通过 invoke 调用方法，并传入参数，接收返回值（默认为 Obj）
+Object b1 = m.invoke(obj, "我是换行");
+System.out.println(b1);
+```
+
+:::
+
+::: info 反射越过泛型检查
+
+**eg:** 通过反射往一个 `ArrayList<Integer>` 中添加了字符串和数字。
+
+```java
+ArrayList<Integer> array = new ArrayList<>();
+Class<? extends ArrayList> c = array.getClass();
+Method m = c.getMethod("add", Object.class);
+m.invoke(array, "hello");
+m.invoke(array, "world");
+m.invoke(array, 123);
+System.out.println(array);
+```
+
+:::
+
+## 补充知识
 
 ### 模块
 
-- 模块的基本使用
-- 模块服务的应用
+#### 模块的基本使用
+
+**模块的基本使用步骤：**
+
+- 创建模块（按照以前的讲解方式创建模块，创建包，创建类，定义方法）。
+- 为了体现模块的使用，我们创建 2 个模块，一个是 `myOne`，一个是 `myTwo`。
+- 在模块的 `src` 目录下新建一个名为 `module-info.java` 的描述性文件，该文件专门定义模块名，访问权限，模块依赖等信息。
+- 描述性文件中使用模块导出和模块依赖来进行配置并使用。
+- 模块中所有未导出的包都是模块私有的，他们是不能在模块之外被访问的。
+  - 在 `myOne` 这个模块下的描述性文件中配置模块导出。
+  - **模块导出格式：** `exports 包名;`
+- 一个模块要访问其他的模块，必须明确指定依赖哪些模块，未明确指定依赖的模块不能访问。
+  - 在 `myTwo` 这个模块下的描述性文件中配置模块依赖。
+  - **模块依赖格式：** `requires 模块名;`
+  - **注意：** 写模块名报错，需要按下 `Alt + Enter` 提示，然后选择模块依赖。
+- 在 `myTwo` 这个模块的类中使用依赖模块下的内容。
+
+#### 模块服务的应用
+
+**服务：** 从 Java 6 开始，Java 提供了一种服务机制，允许服务提供者和使用者之间完成解耦。简单的说，就是服务使用者只面向接口编程，但不清楚服务提供者的实现类。
+
+Java 9 的模块化系统则进一步的简化了 Java 的服务机制。Java 9 允许将服务接口定义在一个模块中，并使用 `uses` 语句来声明该服务接口，然后针对该服务接口提供不同的服务实现类，这些服务实现类可以分布在不同的模块中，服务实现模块则使用 `provides` 语句为服务接口指定实现类。服务使用者只需要面向接口编程即可。
+
+- 在 `myOne` 模块下创建一个包 `com.it_03`，在该包下提供一个接口，接口中定义一个抽象方法：
+  ```java
+  public interface MyService {
+      void service();
+  }
+  ```
+- 在 `com.it_03` 包下创建一个 `impl`，在该包下提供接口的两个实现类 `Itheima` 和 `Czy`。
+- 在 `myOne` 这个模块下的描述性文件中添加如下配置：
+  - **模块导出：** `exports com.it_03;`
+  - **服务提供：** `provides MyService with Itheima;` （指定 `MyService` 的服务实现类是 `Itheima`）
+- 在 `myTwo` 这个模块下的描述性文件中添加如下配置：
+  - **声明服务接口：** `uses MyService;`
+- 在 `myTwo` 这个模块的类中使用 `MyService` 接口提供的服务：
+  - `ServiceLoader`：一种加载服务实现的工具。
 
 ### 进制
 
+::: info 进制基础知识
+
+**常见进制的数据组成：**
+
+- **二进制：** 由0,1组成。在Java中以 `0b` 开头。
+- **八进制：** 由0,1,2,3,4,5,6,7组成。在Java中以 `0` 开头。
+- **十进制：** 由0,1,2,3,4,5,6,7,8,9组成。**整数默认是十进制的**。
+- **十六进制：** 由0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F（大小写均可）。在Java中以 `0x` 开头。
+
+:::
+
+::: info 进制转换
+
+**Java内置的进制转换：**
+`java.lang.Integer` 类中的静态方法：
+
+- `public static String toBinaryString(int i)`：在基数2中返回整数参数的字符串表示形式为无符号整数。
+- `public static String toOctalString(int i)`：在基数8中返回整数参数的字符串表示形式为无符号整数。
+- `public static String toHexString(int i)`：返回整数参数的字符串表示形式，作为16位中的无符号整数。
+- `public static String toString(int i, int radix)`：返回由第二个参数指定的基数中的第一个参数的字符串表示形式。
+
+:::
+
+::: info 浮点数存储
+
+**十进制浮点数转换为二进制浮点数转换**
+**规则：整数部分重复相除法，小数部分重复相乘法**
+
+- **整数部分重复相除法：** 除基取余，直到商为0，余数反转。
+- **小数部分重复相乘法：** 乘基取整，直到小数为0或者达到指定精度位，整数顺序排列。
+- **举例：** 把十进制浮点数6.625转换为二进制浮点数。
+  - **整数部分（6）：**
+    - 6 / 2 = 3 ... 余 0
+    - 3 / 2 = 1 ... 余 1
+    - 1 / 2 = 0 ... 余 1
+    - （余数从下往上读：110）
+  - **小数部分（0.625）：**
+    - 0.625 \* 2 = 1.25 -> 取整 1
+    - 0.25 \* 2 = 0.5 -> 取整 0
+    - 0.5 \* 2 = 1.0 -> 取整 1
+    - （整数从上往下读：101）
+  - **结果：** 十进制浮点数6.625对应的二进制浮点数是：110.101
+
+根据国际标准 IEEE 754，任意一个二进制浮点数都可以表示为：`V = (-1)^s * M * 2^E`
+
+- **s** 表示符号位，当 s=0，V为正数；当 s=1，V为负数。
+- **M** 表示有效数字。
+- **E** 表示指数位。
+
+**举例：** 十进制的浮点数6.625，写成二进制是110.101，相当于 1.10101 \* 2^2。按照上面V的格式，可以得出 s=0，M=1.10101，E=2。
+
+**IEEE 754 对浮点数存储的规定：**
+
+- 对于 **32位** 的浮点数，也就是 **float** 类型的，最高的 **1位** 是符号位 **s**，接着的 **8位** 是指数 **E**，剩下的 **23位** 为有效数字 **M**。
+- 对于 **64位** 的浮点数，也就是 **double** 类型的，最高的 **1位** 是符号位 **s**，接着的 **11位** 是指数 **E**，剩下的 **52位** 为有效数字 **M**。
+
+:::
+
 ### 注解
 
-- 注解概述
-- 元注解
-- 自定义注解
-- XML
-- CMD
+::: info 注解概述
+
+- **注解（Annotation）：** 也叫元数据，一种代码级别的说明。它是 JDK1.5 及以后版本引入的一个特性。
+- 它可以声明在包、类、字段、方法、局部变量、方法参数等的前面，用来对这些元素进行说明。
+
+- **注解：** 用来说明程序，给计算机看的。
+- **注释：** 用来对程序进行说明的文字，给程序员看的。
+
+**常见注解详解**
+
+1. @Override
+   - 用于指定方法是重写父类的方法，只能修饰方法，不能修饰其他程序元素。
+   - 单独来看，可能丝毫看不出程序中 `@Override` 有何作用，因为它的作用是告诉编译器检查这个方法，保证父类要包含一个被该方法重写的方法。
+
+2. @Deprecated
+   - 用于表示某个程序元素（类、方法等）已过时，当其他程序使用已过时的类、方法时，编译器将会给出警告。
+   - Java 9 为 `@Deprecated` 增加了两个属性：
+     - `since`：该 String 类型的属性指定该 API 从哪个版本被标记为过时。
+     - `forRemoval`：该 boolean 类型的属性指定该 API 在将来是否会被删除。
+
+3. @SuppressWarnings
+   - 指示被该注解修饰的程序元素（以及该程序元素中的所有子元素）取消显示指定的编译器警告。
+   - 使用注解来关闭编译器警告时，一定要在括号里使用 `name = value` 的形式为该注解的成员变量设置值。
+   - 示例：`@SuppressWarnings(value = "all")`
+
+4. @FunctionalInterface
+   - Java 8 新增的，只能用来修饰接口，表示该接口是一个函数式接口。
+   - **函数式接口：** 接口中有且仅有一个抽象方法。
+   - Lambda 表达式的使用前提：接口中有且仅有一个抽象方法。
+
+:::
+
+::: info 元注解
+
+- **定义：** 对注解进行注解的注解。也就是写在注解上面的注解。
+
+- `@Retention`
+- `@Target`
+
+**@Retention**
+
+- **作用：** 只能用于修饰注解定义，用于指定被修饰的注解可以保留多长时间。
+- **属性：** 包含了一个 `RetentionPolicy` 类型的 `value` 成员变量，所以使用的 `@Retention` 时必须为该 `value` 成员变量指定值。
+
+**@Retention 中可使用的值定义在 RetentionPolicy 中，常用值如下：**
+
+- `RetentionPolicy.CLASS`：编译器把注解记录在 class 文件中。当运行 Java 程序时，JVM 不可获取注解信息，这是默认值。
+- `RetentionPolicy.RUNTIME`：编译器把注解记录在 class 文件中。当运行 Java 程序时，JVM 也可获取注解信息，开发中常用（红色高亮部分）。
+- `RetentionPolicy.SOURCE`：注解只保留在源代码中，编译器直接丢弃这种注解。
+
+---
+
+**@Target**
+
+- **作用：** 只能用于修饰注解定义，用于指定被修饰的注解能用于修饰哪些程序单元，包含一个名为 `value` 的成员变量。
+
+**@Target 中可使用的值定义在 ElementType 中，常用值如下：**
+
+- `@Target({ElementType.TYPE})`：可以用于接口、类、枚举、注解。
+- `@Target({ElementType.FIELD})`：可以用于属性字段、枚举的常量。
+- `@Target({ElementType.METHOD})`：可以用于方法。
+- `@Target({ElementType.PARAMETER})`：可以用于方法参数。
+- `@Target({ElementType.CONSTRUCTOR})`：可以用于构造函数。
+- `@Target({ElementType.LOCAL_VARIABLE})`：可以用于局部变量。
+
+:::
+
+::: info 自定义注解
+
+- **元注解**
+  ```java
+  public @interface 注解名称 {
+      属性列表;
+  }
+  ```
+
+**注解的本质**
+
+```java
+public interface MyAnnotation extends Annotation {}
+```
+
+- 是一个接口，该接口默认继承 `Annotation` 接口。
+- 既然是接口，那么内部定义的内容，就是接口中可以定义的内容。
+
+**注解的属性**
+
+- **属性：** 接口中的抽象方法。
+- **格式：** `返回值类型 属性名称() [default 默认值]`
+
+**注解属性类型可以有以下列出的类型：**
+
+- 基本数据类型
+- String
+- 枚举类型
+- 注解类型
+- Class类型
+- 以上类型的一维数组类型
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface MyAnnotation {
+    String name() default "fqy";
+    int age();
+}
+```
+
+---
+
+**注解的使用和解析**
+
+**解析注解：**
+
+1.  **获取字节码文件对象，获取谁的呢？谁使用了注解，就获取谁的。**
+    ```java
+    Class<MyAnnotationTest> c = MyAnnotationTest.class;
+    ```
+2.  **获取字节码对象上的注解信息**
+    ```java
+    MyAnnotation annotation = c.getAnnotation(MyAnnotation.class);
+    ```
+3.  **解析注解**
+    ```java
+    String name = annotation.name();
+    int age = annotation.age();
+    ```
+
+:::
+
+### XML
+
+- XML的全称为（Extensible Markup Language），是一种可扩展的标记语言。
+- 标记语言：通过标签来描述数据的一门语言（标签有时我们也将其称之为元素）。
+- 可扩展：标签的名字是可以自己定义的。
+
+| 语法规则                                                      | 示例代码                                               |
+| :------------------------------------------------------------ | :----------------------------------------------------- |
+| 是由一对尖括号和一组合法标识符组成                            | `<student>`                                            |
+| 在xml标签往往是成对出现，有开始也有结束                       | `<student> </student>`                                 |
+| 在xml有一些特殊的标签也可以不成对出现，但是必须要存在结束标记 | `<student />`                                          |
+| 在xml中标签可以定义属性，但是属性必须通过引号引起来           | `<student id="stu001" ></student>`                     |
+| 标签可以进行正确嵌套                                          | `<student id="stu001" >``<name>fqy</name>``</student>` |
+
+**XML作用**
+
+- 用于进行存储数据和传输数据（把数据按照xml文件的格式存储起来，并且可以把xml文件作为数据的载体在多个系统之间进行传输）。
+- 作为软件的配置文件（可以把软件在运行时所需要的一些信息按照xml文件的格式配置到文件中）。
+
+**XML语法规则**
+
+| 语法规则                                    | 示例代码                                  |
+| :------------------------------------------ | :---------------------------------------- |
+| xml文件的后缀名普遍都是xml                  | `user.xml`, `students.xml`                |
+| xml要有文档声明，文档声明必须是第一行第一列 | `<?xml version="1.0" encoding="utf-8" ?>` |
+| xml必须要存在一个根标签，并且有且仅有一个   | `<students> </students>`                  |
+| xml文件中可以定义注释信息                   | `<!-- 这里是注释信息 -->`                 |
+| xml文件中可以存在以下特殊字符               | `&lt; &gt;`                               |
+| xml文件中可以存在CDATA区                    | `<![CDATA[``a < b``]]>`                   |
+
+**文档声明属性说明：**
+
+- **version：** 必须的，声明当前xml文件的版本。一般我们使用的都是1.0。
+- **encoding：** 不是必须的，字符集。是使用浏览器打开的时候采用的默认的字符集的编码。
+- **standalone：** 不是必须的，描述XML文档是否需要依赖其他的文件。
+
+### CMD
+
+| 功能描述             | 命令格式 / 示例          | 备注                                                       |
+| :------------------- | :----------------------- | :--------------------------------------------------------- |
+| **切换盘符**         | `盘符名称:` (如 `D:`)    | 注意冒号通常是英文半角                                     |
+| **查看当前目录内容** | `dir`                    | 列出当前文件夹下的文件和子文件夹                           |
+| **进入单级文件夹**   | `cd 文件夹名称`          | 例如 `cd Documents`                                        |
+| **回退上一级文件夹** | `cd..`                   | 注意 `cd` 和 `..` 之间通常无空格或有一个空格               |
+| **进入多级文件夹**   | `cd 文件夹1\文件夹2\...` | 使用反斜杠 `\` 分隔路径层级                                |
+| **直接回到根目录**   | `cd\`                    | 例如从 `C:\Windows\System32` 直接回到 `C:\`                |
+| **清屏**             | `cls`                    | Clear Screen 的缩写，清空屏幕显示内容                      |
+| **退出命令行**       | `exit`                   | 关闭当前的命令提示符窗口                                   |
+| **打开文件/程序**    | `文件名.后缀名`          | 例如 `notepad.txt` 或 `calc.exe`                           |
+| **删除文件夹**       | `rd 文件夹名 /s`         | `/s` 表示删除目录及其所有子目录和文件（静默删除可加 `/q`） |
+| **删除文件**         | `del 文件名.后缀名`      | 仅删除指定文件                                             |
