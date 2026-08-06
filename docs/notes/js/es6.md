@@ -270,4 +270,286 @@ let a = 1,
 - 函数返回值解构：`const { data, code } = api()`
 - 模块导入：`import { useState, useEffect } from 'react'`
 - 交换变量：`[a, b] = [b, a]`
-  :::
+
+:::
+
+## 类 (Class)
+
+ES6 引入了 `class` 关键字，提供了一种更清晰、更接近传统面向对象语言的语法来创建对象和处理继承。
+
+**基本用法**
+
+```js
+// 定义一个类
+class Person {
+  // 构造函数
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  // 实例方法
+  sayHello() {
+    console.log(`你好，我是${this.name}`);
+  }
+
+  // 静态方法
+  static greet() {
+    console.log("Hello from Person class!");
+  }
+}
+
+// 使用类
+const p1 = new Person("张三", 25);
+p1.sayHello(); // 输出: 你好，我是张三
+Person.greet(); // 输出: Hello from Person class!
+```
+
+**继承 (extends, super)**
+
+```js
+class Student extends Person {
+  constructor(name, age, grade) {
+    // 调用父类的构造函数
+    super(name, age);
+    this.grade = grade;
+  }
+
+  // 重写父类方法
+  sayHello() {
+    super.sayHello(); // 调用父类的方法
+    console.log(`我上${this.grade}年级`);
+  }
+}
+
+const s1 = new Student("李四", 18, 12);
+s1.sayHello();
+```
+
+## 模块化 (Modules)
+
+ES6 在语言层面实现了模块化，通过 `export` 和 `import` 关键字来导出和导入功能。
+
+**导出 (export)**
+
+```js
+// math.js
+// 命名导出
+export const PI = 3.14159;
+export function add(a, b) {
+  return a + b;
+}
+
+// 默认导出 (一个模块只能有一个)
+export default function multiply(a, b) {
+  return a * b;
+}
+```
+
+**导入 (import)**
+
+```js
+// main.js
+// 导入默认导出
+import multiply from "./math.js";
+
+// 导入命名导出 (需要用花括号)
+import { PI, add } from "./math.js";
+
+// 重命名导入
+import { add as sum } from "./math.js";
+
+// 导入所有
+import * as MathUtils from "./math.js";
+console.log(MathUtils.PI);
+console.log(MathUtils.add(1, 2));
+
+console.log(multiply(PI, 2)); // 使用默认导出和命名导出
+console.log(sum(5, 5)); // 使用重命名导入
+```
+
+## for...of 循环
+
+`for...of` 循环提供了一种更简洁的方式来遍历可迭代对象（如 `Array`, `Map`, `Set`, `String` 等）。
+
+```js
+const arr = ["a", "b", "c"];
+
+// 传统的 for 循环
+for (let i = 0; i < arr.length; i++) {
+  console.log(arr[i]);
+}
+
+// for...in 循环 (遍历的是索引)
+for (let index in arr) {
+  console.log(index); // 输出: 0, 1, 2
+}
+
+// for...of 循环 (遍历的是值)
+for (let value of arr) {
+  console.log(value); // 输出: 'a', 'b', 'c'
+}
+
+const str = "hello";
+for (let char of str) {
+  console.log(char); // 输出: h, e, l, l, o
+}
+```
+
+## 生成器 (Generator)
+
+生成器函数是一种可以暂停和恢复执行的函数，它返回一个迭代器对象。
+
+**基本用法**
+
+```js
+// 定义一个生成器函数
+function* idGenerator() {
+  let id = 1;
+  while (true) {
+    // yield 关键字会暂停函数执行，并返回一个值
+    yield id++;
+  }
+}
+
+const gen = idGenerator();
+console.log(gen.next().value); // 1
+console.log(gen.next().value); // 2
+console.log(gen.next().value); // 3
+```
+
+## Map 和 Set
+
+ES6 引入了两种新的数据结构：`Map` 和 `Set`。
+
+**Map**
+
+`Map` 对象保存键值对，任何值（对象或原始值）都可以作为一个键或一个值。
+
+```js
+const myMap = new Map();
+
+const keyObj = {};
+myMap.set(keyObj, "这是一个对象作为键");
+myMap.set("name", "张三");
+myMap.set(1, "数字键");
+
+console.log(myMap.get("name")); // '张三'
+console.log(myMap.get(keyObj)); // '这是一个对象作为键'
+console.log(myMap.size); // 3
+
+myMap.forEach((value, key) => {
+  console.log(key, value);
+});
+```
+
+**Set**
+
+`Set` 对象允许你存储任何类型的唯一值，无论是原始值还是对象引用。
+
+```js
+const mySet = new Set();
+
+mySet.add(1);
+mySet.add(2);
+mySet.add(2); // 重复的值会被忽略
+mySet.add("hello");
+
+console.log(mySet.has(1)); // true
+console.log(mySet.size); // 3
+
+mySet.delete(2);
+console.log(mySet.size); // 2
+
+// 数组去重
+const arr = [1, 2, 2, 3, 4, 4, 5];
+const uniqueArr = [...new Set(arr)];
+console.log(uniqueArr); // [1, 2, 3, 4, 5]
+```
+
+## Symbol
+
+`Symbol` 是 ES6 引入的一种新的原始数据类型，表示独一无二的值。
+
+```js
+const s1 = Symbol("description");
+const s2 = Symbol("description");
+
+console.log(s1 === s2); // false，每个 Symbol 值都是唯一的
+
+// 用作对象属性名，可以防止属性名冲突
+const obj = {
+  [s1]: "这是一个 symbol 属性",
+};
+console.log(obj[s1]); // '这是一个 symbol 属性'
+```
+
+## 默认参数值
+
+允许在函数定义时为参数指定默认值。
+
+```js
+function greet(name = "游客", age = 18) {
+  console.log(`你好，${name}，你今年${age}岁。`);
+}
+
+greet(); // 你好，游客，你今年18岁。
+greet("小明"); // 你好，小明，你今年18岁。
+greet("小红", 25); // 你好，小红，你今年25岁。
+```
+
+## 剩余参数 (Rest Parameters)
+
+允许我们将不确定数量的参数表示为一个数组。
+
+```js
+function sum(...numbers) {
+  return numbers.reduce((total, num) => total + num, 0);
+}
+
+console.log(sum(1, 2, 3)); // 6
+console.log(sum(1, 2, 3, 4, 5)); // 15
+```
+
+## 展开语法
+
+允许一个表达式在某处展开。常用于函数调用、数组字面量和对象字面量。
+
+```js
+// 1. 在函数调用中展开数组
+const numbers = [1, 2, 3];
+console.log(Math.max(...numbers)); // 3
+
+// 2. 合并数组
+const arr1 = [1, 2];
+const arr2 = [3, 4];
+const combined = [...arr1, ...arr2]; // [1, 2, 3, 4]
+
+// 3. 复制数组
+const arrCopy = [...arr1];
+
+// 4. 合并对象
+const obj1 = { a: 1 };
+const obj2 = { b: 2 };
+const mergedObj = { ...obj1, ...obj2 }; // { a: 1, b: 2 }
+```
+
+## 字符串新方法
+
+ES6 为字符串添加了一些实用的新方法。
+
+```js
+const str = "Hello, World!";
+
+// includes(): 判断字符串是否包含指定的子串
+console.log(str.includes("World")); // true
+
+// startsWith(): 判断字符串是否以指定的子串开头
+console.log(str.startsWith("Hello")); // true
+
+// endsWith(): 判断字符串是否以指定的子串结尾
+console.log(str.endsWith("!")); // true
+
+// repeat(): 将字符串重复指定次数
+console.log("ha".repeat(3)); // 'hahaha'
+```
