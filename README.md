@@ -15,8 +15,8 @@
 │   │   ├── searchConfig.mts   # 搜索配置
 │   │   └── sidebarConfig.mts  # 侧边栏配置
 │   ├── growth/       # 成长相关文档
-│   ├── interview/    # 面试相关文档
-│   ├── notes/        # 技术笔记文档
+│   ├── interview/    # 面试记录
+│   ├── notes/        # 技术笔记
 │   ├── profile/      # 个人信息说明
 │   ├── projects/     # 项目相关文档
 │   ├── public/       # 静态资源
