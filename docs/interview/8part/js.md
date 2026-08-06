@@ -56,4 +56,20 @@ console.log(parseFloat(result) === 0.3); // true
 
 :::
 
+## 各DOM版本的绑定点击事件的方式
 
+1.  **HTML 事件处理程序**
+    - **方式**：直接在标签上使用 `onclick="调用方法"`。
+    - **说明**：在 HTML 标签属性中直接绑定，在 JS 中进行调用方法的书写。
+
+2.  **DOM0 级事件处理程序**
+    - **方式**：获取到需要绑定点击事件的元素节点，`节点.onclick = function(){}`。
+    - **说明**：通过将函数赋值给元素的事件属性来绑定（注意：图片中写的是 `onClick`，但在标准 DOM0 级写法中通常是小写 `onclick`）。
+
+3.  **DOM2 级事件处理程序**
+    - **方式**：获取到需要绑定点击事件的元素节点，`节点.addEventListener("click", function(){})`。
+    - **说明**：使用标准的 `addEventListener` 方法进行绑定，支持事件捕获和冒泡阶段。
+
+4.  **IE 事件处理程序**
+    - **方式**：获取到需要绑定点击事件的元素节点，`节点.attachEvent("onclick", function(){})`。
+    - **说明**：这是旧版本 IE 浏览器特有的绑定方式（对应标准浏览器的 `addEventListener`）。

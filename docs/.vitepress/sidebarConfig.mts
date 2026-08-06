@@ -129,6 +129,8 @@ export const sidebarConfig = [
         items: [
           { text: "HTML/CSS 问题", link: "/interview/8part/html&css.md" },
           { text: "JS 问题", link: "/interview/8part/js.md" },
+          { text: "工程化问题", link: "/interview/8part/engineering.md" },
+          { text: "数据结构", link: "/interview/8part/dataStructure.md" },
         ],
       },
       {
