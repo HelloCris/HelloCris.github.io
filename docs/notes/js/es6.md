@@ -1,4 +1,4 @@
-# ES6 新增特性
+# ES6+ 新增特性
 
 ## 变量声明
 
@@ -217,6 +217,33 @@ promise.then(
 ```
 
 :::
+
+## `async` / `await`
+
+这是对 Promise 的语法糖，让异步代码看起来像同步代码，彻底解决了回调地狱问题，是目前处理异步操作的主流方式。
+
+- **基本用法**
+
+  ```js
+  // 使用 Promise
+  fetchData()
+    .then((data) => processData(data))
+    .then((result) => console.log(result))
+    .catch((err) => console.error(err));
+
+  // 使用 async/await
+  async function handleData() {
+    try {
+      const data = await fetchData();
+      const result = await processData(data);
+      console.log(result);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  ```
+
+- **注意**：`await` 只能在 `async` 函数内部使用。
 
 ## 解构赋值
 
@@ -552,4 +579,107 @@ console.log(str.endsWith("!")); // true
 
 // repeat(): 将字符串重复指定次数
 console.log("ha".repeat(3)); // 'hahaha'
+```
+
+## 数组新方法
+
+- `Array.prototype.includes()`: 判断数组是否包含某个值，比 `indexOf` 更直观。
+  ```js
+  [1, 2, 3].includes(2); // true
+  ```
+- `Array.prototype.flat()`: 将嵌套的数组“拉平”。
+  ```js
+  const arr = [1, [2, [3, 4]]];
+  arr.flat(); // [1, 2, [3, 4]]，默认拉平一层
+  arr.flat(2); // [1, 2, 3, 4]，指定拉平深度
+  arr.flat(Infinity); // 拉平任意深度
+  ```
+- `Array.prototype.flatMap()`: 先 `map` 再 `flat`，一步到位。
+  ```js
+  [1, 2, 3].flatMap((x) => [x, x * 2]); // [1, 2, 2, 4, 3, 6]
+  ```
+
+## 对象新方法
+
+- `Object.values()` / `Object.entries()`: 获取对象的所有值或键值对数组。
+  ```js
+  const obj = { a: 1, b: 2 };
+  Object.values(obj); // [1, 2]
+  Object.entries(obj); // [['a', 1], ['b', 2]]
+  ```
+- `Object.fromEntries()`: `Object.entries` 的逆操作，将键值对数组转换为对象。
+  ```js
+  const entries = [
+    ["a", 1],
+    ["b", 2],
+  ];
+  Object.fromEntries(entries); // { a: 1, b: 2 }
+  ```
+- `Object.hasOwn()`: 作为 `Object.prototype.hasOwnProperty` 的更优替代，用于检查对象是否拥有指定的自有属性。
+  ```js
+  const obj = { name: "Alice" };
+  obj.hasOwnProperty("name"); // true
+  Object.hasOwn(obj, "name"); // true (推荐)注意兼容性
+  ```
+
+## 可选链操作符 `?.`
+
+当你需要访问深层嵌套的对象属性时，可以避免因中间某个属性为 `null` 或 `undefined` 而报错。
+
+```js
+const user = {
+  profile: {
+    name: "Alice",
+  },
+};
+
+// 传统写法
+const name1 = user && user.profile && user.profile.name;
+
+// 使用可选链
+const name2 = user?.profile?.name; // 'Alice'
+const address = user?.profile?.address?.city; // undefined，不会报错
+```
+
+## 空值合并运算符 `??`
+
+当左侧的操作数为 `null` 或 `undefined` 时，返回右侧操作数。它与 `||` 的关键区别在于，`||` 会在左侧为任何“假值”（如 `0`, `''`, `false`）时都返回右侧值，而 `??` 不会。
+
+```js
+const count = 0;
+const defaultCount1 = count || 10; // 10，因为 0 是假值
+const defaultCount2 = count ?? 10; // 0，因为 0 不是 null 或 undefined
+
+const name = "";
+const defaultName1 = name || "匿名"; // '匿名'，因为 '' 是假值
+const defaultName2 = name ?? "匿名"; // ''，因为 '' 不是 null 或 undefined
+```
+
+## 数值分隔符 `_`
+
+为了提高大数字的可读性，可以在数字字面量中使用下划线 `_` 作为分隔符。
+
+```js
+const billion = 1_000_000_000;
+const creditCardNumber = 1234_5678_9012_3456;
+const hex = 0xff_aa_bb;
+```
+
+## 逻辑赋值运算符
+
+将逻辑运算和赋值操作合二为一，让代码更简洁。
+
+- `||=` (逻辑或赋值): `a = a || b` 的简写。
+- `&&=` (逻辑与赋值): `a = a && b` 的简写。
+- `??=` (空值合并赋值): `a = a ?? b` 的简写。
+
+```js
+let x = 0;
+x ||= 10; // x 为假值，所以 x = 10
+
+let y = 5;
+y &&= 20; // y 为真值，所以 y = 20
+
+let z = null;
+z ??= 30; // z 为 null，所以 z = 30
 ```
