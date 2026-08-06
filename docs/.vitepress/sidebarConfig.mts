@@ -120,13 +120,25 @@ export const sidebarConfig = [
     ],
   },
   {
-    text: "🎯 面试（待排期）",
+    text: "🎯 面试",
     collapsed: false,
     items: [
       { text: "目录", link: "/interview/index.md" },
       {
-        text: "课题一",
-        items: [{ text: "第一节", link: "" }],
+        text: "八股文",
+        items: [
+          { text: "HTML/CSS 问题", link: "/interview/8part/html&css.md" },
+          { text: "JS 问题", link: "/interview/8part/js.md" },
+        ],
+      },
+      {
+        text: "面经",
+        items: [
+          { text: "honor", link: "/interview/experience/honor.md" },
+          { text: "baidu", link: "/interview/experience/baidu.md" },
+          { text: "360", link: "/interview/experience/360.md" },
+          { text: "haier", link: "/interview/experience/haier.md" },
+        ],
       },
     ],
   },

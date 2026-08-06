@@ -28,8 +28,8 @@ features:
     details: 分享项目开发中的最佳实践、解决方案和好用的开发工具。
     icon: 🛠️
     link: /projects/index.md
-  - title: 面试被拷打记录
-    details: 整理前端面试常见问题和解答。
+  - title: 面试问题记录
+    details: 整理前端面试常见问题和解答，记录自己的面试经历。
     icon: 🎯
     link: /interview/index.md
   - title: 个人成长日记

@@ -36,3 +36,32 @@ CSS3 是 CSS（层叠样式表）的第三代主要标准，它并不是一个�
 - [grid布局](/notes/css/property.html#grid)：如 `grid` `grid-template-columns` `grid-template-rows` `grid-gap` `grid-area`
 
 - [多列布局（Multi-column Layout）](/notes/css/property.html#多列布局-multi-column-layout)：如 `column-count` `column-gap` `column-rule`
+
+## 媒体查询
+
+CSS3 媒体查询是响应式设计的核心技术，它允许开发者根据设备特性（如屏幕宽度、高度、分辨率、方向等）动态应用不同的样式规则，从而实现“一套代码，多端适配”。
+
+```css
+@media mediatype and|not|only (media feature) {
+  /* CSS 规则 */
+}
+```
+
+- **`@media`**：声明媒体查询的开始。
+- **`mediatype`**：媒体类型，如 `screen`（屏幕）、`print`（打印）、`speech`（屏幕阅读器）等。
+- **`and|not|only`**：逻辑关键字，用于组合或排除条件。
+- **`(media feature)`**：媒体特性，如 `width`、`height`、`orientation`、`resolution` 等，必须用括号包裹。
+
+```css
+/* 1. 基础用法：当屏幕宽度小于 600px 时生效 */
+@media (max-width: 600px) {
+}
+
+/* 2. 逻辑组合 (AND)：屏幕宽度在 600px 到 900px 之间时生效 */
+@media (min-width: 600px) and (max-width: 900px) {
+}
+
+/* 3. 多条件 (OR)：屏幕宽度小于 600px 或者 是打印设备时生效 */
+@media (max-width: 600px), print {
+}
+```
