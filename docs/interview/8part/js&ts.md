@@ -250,3 +250,87 @@ function throttle(fn, interval = 300) {
 ```
 
 :::
+
+## 解决JS对象嵌套函数this指向的几种方法
+
+1. **使用箭头函数**  
+   箭头函数不绑定自己的 `this`，而是继承外层作用域的 `this`，因此在嵌套函数中使用时，`this` 会保持与外层对象一致。
+
+2. **使用 `bind` 显式绑定 `this`**  
+   在函数定义或调用时，使用 `bind(this)` 将 `this` 显式绑定到当前对象，确保嵌套函数中 `this` 指向正确。
+
+3. **将 `this` 保存为变量**  
+   在对象方法中，先保存 `this` 到一个变量（如 `const self = this` 或 `var that = this`），然后在嵌套函数中使用该变量，避免 `this` 指向错误。
+
+## 理解bind()函数
+
+在 JavaScript 中，`bind()` 是 `Function.prototype` 上的一个方法，它的核心作用是**创建一个新函数，该函数的 `this` 值被永久绑定到指定的对象**，即使这个新函数作为回调或在不同上下文中被调用，其 `this` 也不会改变。
+
+**基本语法**
+
+```js
+function.bind(thisArg[, arg1[, arg2[, ...]]])
+```
+
+- `thisArg`：绑定函数执行时的 `this` 值。
+- `arg1, arg2, ...`：可选的预设参数，这些参数会排在调用时传入的参数前面。
+
+::: info 核心特性与用途
+
+1. **固定 `this` 上下文**  
+   常用于解决回调函数中 `this` 丢失的问题。
+
+2. **预设参数（偏函数）**  
+   `bind()` 可以提前传入部分参数，形成“偏函数”，后续调用时再传入剩余参数：
+
+   ```js
+   function add(a, b) {
+     return a + b;
+   }
+
+   const addFive = add.bind(null, 5); // 预设第一个参数为 5
+   console.log(addFive(3)); // 输出 8
+   ```
+
+3. **不可被再次绑定**  
+   一旦通过 `bind()` 创建了绑定函数，再次对其调用 `bind()` 不会改变其 `this`，但会追加参数：
+
+   ```js
+   function log(...args) {
+     console.log(this, ...args);
+   }
+
+   const boundLog = log.bind("this value", 1, 2);
+   const boundLog2 = boundLog.bind("new this", 3, 4);
+   boundLog2(5, 6);
+   // 输出："this value", 1, 2, 3, 4, 5, 6
+   // this 仍然是 "this value"，不是 "new this"
+   ```
+
+4. **可用于构造函数**  
+   绑定函数仍可用 `new` 调用，此时 `this` 会被忽略（由构造函数自身决定），但预设参数仍有效：
+
+   ```js
+   function Person(name) {
+     this.name = name;
+   }
+
+   const BoundPerson = Person.bind(null, "Default");
+   const p = new BoundPerson();
+   console.log(p.name); // 'Default'
+   ```
+
+:::
+
+**与 `call()`、`apply()` 的区别**
+
+- `call()` / `apply()`：**立即执行**函数，并临时指定 `this`。
+- `bind()`：**返回一个新函数**，不立即执行，`this` 被永久绑定。
+
+## 面向对象的理解
+
+1. **核心思想：万物皆对象**
+2. **三大特性: 封装、继承、多态**
+   - 封装：隐藏细节，暴露接口
+   - 继承：代码复用与扩展
+   - 多态：接口重用与解耦

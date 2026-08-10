@@ -137,6 +137,21 @@ const obj = {
 
 :::
 
+### 箭头函数与普通函数的区别
+
+| 对比维度            | 普通函数（function）                         | 箭头函数（=>）                                       |
+| ------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| this 指向           | 动态绑定，取决于**调用方式**                 | 词法绑定，继承**定义时外层**的 this                  |
+| arguments 对象      | 有，自动包含所有传入参数                     | 没有                                                 |
+| 作为构造函数（new） | 可以用 `new` 调用                            | 不能用 `new` 调用，直接报错                          |
+| prototype 属性      | 有，可挂载原型方法                           | 没有                                                 |
+| call / apply / bind | 可以手动改变 this 指向                       | 无效，this 始终不变                                  |
+| yield / yield\*     | 支持（可作为 Generator）                     | 不支持                                               |
+| 作为对象方法        | 适合，this 指向调用对象                      | 不适合，this 不指向对象                              |
+| 嵌套箭头函数的 this | 每层独立绑定                                 | 所有层共享外层 this                                  |
+| 函数声明提升        | 函数声明会被提升                             | 不会被提升（属于变量赋值）                           |
+| 适用场景总结        | 对象方法、构造函数、需要动态 this、Generator | 回调函数、数组高阶方法、定时器、需要固定 this 的场景 |
+
 ## Promise
 
 Promise 是 ES6 提供的异步编程解决方案，用于处理异步操作。
@@ -636,20 +651,58 @@ console.log("ha".repeat(3)); // 'hahaha'
 
 当你需要访问深层嵌套的对象属性时，可以避免因中间某个属性为 `null` 或 `undefined` 而报错。
 
+::: info 访问嵌套属性
+
 ```js
-const user = {
-  profile: {
-    name: "Alice",
-  },
+const user = { profile: { name: "Alice" } };
+
+// 传统写法（冗长）
+const city1 =
+  user && user.profile && user.profile.address && user.profile.address.city;
+
+// 可选链写法（简洁）
+const city2 = user?.profile?.address?.city; // undefined（不报错）
+```
+
+:::
+
+::: info 安全调用方法
+
+```js
+const obj = {
+  log: () => console.log("Hello"),
 };
 
-// 传统写法
-const name1 = user && user.profile && user.profile.name;
-
-// 使用可选链
-const name2 = user?.profile?.name; // 'Alice'
-const address = user?.profile?.address?.city; // undefined，不会报错
+obj.log?.(); // 输出 "Hello"
+obj.print?.(); // print 不存在，静默返回 undefined，不报错
 ```
+
+:::
+
+::: info 访问数组元素
+
+```js
+const arr = [{ id: 1 }, { id: 2 }];
+
+const firstId = arr?.[0]?.id; // 1
+const thirdId = arr?.[2]?.id; // undefined（不报错）
+
+const empty = null;
+const val = empty?.[0]; // undefined
+```
+
+:::
+
+::: info 动态属性名访问
+
+```js
+const user = { name: "Alice", age: 25 };
+const key = "name";
+
+const value = user?.[key]; // "Alice"
+```
+
+:::
 
 ## 空值合并运算符 `??`
 
