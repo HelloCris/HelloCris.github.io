@@ -128,7 +128,15 @@ export const sidebarConfig = [
         text: "八股文",
         items: [
           { text: "HTML/CSS 问题", link: "/interview/8part/html&css.md" },
-          { text: "JS 问题", link: "/interview/8part/js.md" },
+          { text: "JS/TS 问题", link: "/interview/8part/js&ts.md" },
+          { text: "前端框架问题", link: "/interview/8part/framework.md" },
+          { text: "工程化问题", link: "/interview/8part/engineering.md" },
+          { text: "性能问题", link: "/interview/8part/performance.md" },
+          {
+            text: "浏览器/网络问题",
+            link: "/interview/8part/browser&network.md",
+          },
+          { text: "数据结构问题", link: "/interview/8part/dataStructure.md" },
         ],
       },
       {
