@@ -136,6 +136,10 @@ export const sidebarConfig = [
             text: "浏览器/网络问题",
             link: "/interview/8part/browser&network.md",
           },
+          {
+            text: "前端安全问题",
+            link: "/interview/8part/security.md",
+          },
           { text: "数据结构问题", link: "/interview/8part/dataStructure.md" },
         ],
       },
