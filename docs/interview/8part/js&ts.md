@@ -334,3 +334,74 @@ function.bind(thisArg[, arg1[, arg2[, ...]]])
    - 封装：隐藏细节，暴露接口
    - 继承：代码复用与扩展
    - 多态：接口重用与解耦
+
+## 排序算法
+
+::: info 冒泡排序
+
+冒泡排序的核心思路很直观：相邻元素两两比较，把较大的元素往后"冒泡"。每一轮遍历都会把当前未排序部分的最大值推到末尾。
+
+```js
+function bubbleSort(arr) {
+  const len = arr.length;
+  for (let i = 0; i < len - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < len - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        swapped = true;
+      }
+    }
+    // 如果这一轮没有发生交换，说明已经有序，提前退出
+    if (!swapped) break;
+  }
+  return arr;
+}
+```
+
+- **时间复杂度**：最好 O(n)（已有序时一轮遍历即可），最坏和平均 O(n²)。
+- **空间复杂度**：O(1)，原地排序。
+- **稳定性**：稳定。相等元素不会交换位置，这在需要对多字段排序时很重要（比如先按年龄排，再按姓名排）。
+- **`swapped` 优化**：实际面试中加上这个标志位，能体现你对边界情况的考虑。
+
+:::
+
+::: info 快速排序
+
+快排是前端面试的高频考点，也是 `Array.prototype.sort()` 在多数引擎中的核心算法（V8 对较大数组使用 TimSort，但快排思想是基础）。
+
+**核心思想**：选一个基准值（pivot），把数组分成"小于基准"和"大于基准"两部分，递归处理。
+
+```js
+function quickSort(arr, left = 0, right = arr.length - 1) {
+  if (left < right) {
+    const pivotIndex = partition(arr, left, right);
+    quickSort(arr, left, pivotIndex - 1);
+    quickSort(arr, pivotIndex + 1, right);
+  }
+  return arr;
+}
+
+function partition(arr, left, right) {
+  const pivot = arr[right]; // 取最后一个元素作为基准
+  let i = left - 1;
+
+  for (let j = left; j < right; j++) {
+    if (arr[j] <= pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  [arr[i + 1], arr[right]] = [arr[right], arr[i + 1]];
+  return i + 1;
+}
+```
+
+- **时间复杂度**：平均 O(n log n)，最坏 O(n²)（每次选到最大/最小值时退化）。
+- **空间复杂度**：原地版 O(log n)（递归栈）。
+- **稳定性**：不稳定。分区过程中相等元素的相对顺序可能被打乱。
+- **pivot 选择**：取中间值、随机值或三数取中，都能有效避免最坏情况。
+
+:::
+
+> 解构赋值原理： `[arr[j], arr[j+1]] = [arr[j+1], arr[j]]` 就是把 `arr[j+1]` 赋给 `arr[j]`，把 `arr[j]` 赋给 `arr[j+1]`，完成交换。
