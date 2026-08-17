@@ -615,3 +615,47 @@ Array.prototype.reduce = function (fn, init) {
   return total;
 };
 ```
+
+## 跳出多层循环
+
+相关笔记链接：[循环控制关键字](/notes/js/base.html#循环控制关键字)
+
+JS 跳出 `for` 循环主要靠 **`break`** 和 **`return`**，多层循环多一个 **带标签的 `break`**。
+
+| 场景             | 写法           | 效果                     |
+| ---------------- | -------------- | ------------------------ |
+| 单层退出循环     | `break`        | 结束本循环               |
+| 函数里立即结束   | `return`       | 结束整个函数（两层都停） |
+| 多层只跳内层     | `break`        | 只停当前层               |
+| 多层跳出指定外层 | `break 标签名` | 停到标签所在层（推荐）   |
+| 仅跳过当次迭代   | `continue`     | 进入下一次循环           |
+
+::: warning ⚠️ 注意
+`for...of` / `for...in` 同样适用 `break` / `continue` / `return`；  
+只有 `forEach` **不能用 `break`** 跳出（它本质是函数回调，需用 `return` 跳到下一次迭代，或用 `some`/`every` 替代）。
+:::
+
+**用「标签 + break」跳出指定外层**
+
+```js
+// 给外层起个标签
+outer: for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    if (i === 1 && j === 1) break outer; // 跳出到 outer 标签处，两层全停
+    console.log(i, j);
+  }
+}
+// 输出：(0,0)(0,1)(0,2)(1,0)
+```
+
+**函数里一次性跳出所有层（return）**
+
+```js
+function search() {
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (i === 1 && j === 1) return; // 直接结束整个函数，两层全停
+    }
+  }
+}
+```
