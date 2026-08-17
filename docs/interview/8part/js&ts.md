@@ -334,3 +334,328 @@ function.bind(thisArg[, arg1[, arg2[, ...]]])
    - 封装：隐藏细节，暴露接口
    - 继承：代码复用与扩展
    - 多态：接口重用与解耦
+
+## 排序算法
+
+::: info 冒泡排序
+
+冒泡排序的核心思路很直观：相邻元素两两比较，把较大的元素往后"冒泡"。每一轮遍历都会把当前未排序部分的最大值推到末尾。
+
+```js
+function bubbleSort(arr) {
+  const len = arr.length;
+  for (let i = 0; i < len - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < len - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        swapped = true;
+      }
+    }
+    // 如果这一轮没有发生交换，说明已经有序，提前退出
+    if (!swapped) break;
+  }
+  return arr;
+}
+```
+
+- **时间复杂度**：最好 O(n)（已有序时一轮遍历即可），最坏和平均 O(n²)。
+- **空间复杂度**：O(1)，原地排序。
+- **稳定性**：稳定。相等元素不会交换位置，这在需要对多字段排序时很重要（比如先按年龄排，再按姓名排）。
+- **`swapped` 优化**：实际面试中加上这个标志位，能体现你对边界情况的考虑。
+
+:::
+
+::: info 快速排序
+
+快排是前端面试的高频考点，也是 `Array.prototype.sort()` 在多数引擎中的核心算法（V8 对较大数组使用 TimSort，但快排思想是基础）。
+
+**核心思想**：选一个基准值（pivot），把数组分成"小于基准"和"大于基准"两部分，递归处理。
+
+```js
+function quickSort(arr, left = 0, right = arr.length - 1) {
+  if (left < right) {
+    const pivotIndex = partition(arr, left, right);
+    quickSort(arr, left, pivotIndex - 1);
+    quickSort(arr, pivotIndex + 1, right);
+  }
+  return arr;
+}
+
+function partition(arr, left, right) {
+  const pivot = arr[right]; // 取最后一个元素作为基准
+  let i = left - 1;
+
+  for (let j = left; j < right; j++) {
+    if (arr[j] <= pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  [arr[i + 1], arr[right]] = [arr[right], arr[i + 1]];
+  return i + 1;
+}
+```
+
+- **时间复杂度**：平均 O(n log n)，最坏 O(n²)（每次选到最大/最小值时退化）。
+- **空间复杂度**：原地版 O(log n)（递归栈）。
+- **稳定性**：不稳定。分区过程中相等元素的相对顺序可能被打乱。
+- **pivot 选择**：取中间值、随机值或三数取中，都能有效避免最坏情况。
+
+:::
+
+> 解构赋值原理： `[arr[j], arr[j+1]] = [arr[j+1], arr[j]]` 就是把 `arr[j+1]` 赋给 `arr[j]`，把 `arr[j]` 赋给 `arr[j+1]`，完成交换。
+
+## 事件冒泡与事件委托
+
+事件用于监听浏览器的操作行为，浏览器触发动作时被捕捉到而调用相应的函数。
+
+::: info 事件传播的三个阶段
+
+1. **捕获阶段**：事件从 `window` 向下传播到目标元素
+2. **目标阶段**：事件到达实际触发元素
+3. **冒泡阶段**：事件从目标元素向上传播回 `window`
+
+`addEventListener` 的第三个参数设为 `true` 时，监听器在捕获阶段触发：
+
+```js
+element.addEventListener("click", handler, true); // 捕获阶段
+element.addEventListener("click", handler); // 冒泡阶段（默认）
+```
+
+:::
+
+### 事件冒泡
+
+事件冒泡是 DOM 事件传播机制的一部分。当一个元素上触发了某个事件（如点击），该事件会**从目标元素开始，逐级向上传播**到父元素、祖父元素，直到 `document` 和 `window`。
+
+```html
+<div id="grandpa">
+  <div id="parent">
+    <button id="child">点我</button>
+  </div>
+</div>
+```
+
+```js
+document.getElementById("child").addEventListener("click", () => {
+  console.log("child 被点击");
+});
+document.getElementById("parent").addEventListener("click", () => {
+  console.log("parent 被点击");
+});
+document.getElementById("grandpa").addEventListener("click", () => {
+  console.log("grandpa 被点击");
+});
+
+// child 被点击
+// parent 被点击
+// grandpa 被点击
+```
+
+::: info 阻止冒泡
+
+使用 `event.stopPropagation()` 可以阻止事件继续向上传播：
+
+```js
+document.getElementById("child").addEventListener("click", (e) => {
+  e.stopPropagation();
+  console.log("child 被点击，事件不会继续冒泡");
+});
+```
+
+此时点击按钮，只会输出 `child 被点击`，父级和祖父级的监听器不会被触发。
+
+:::
+
+### 事件委托
+
+事件委托是利用事件冒泡机制，**把子元素的事件监听器绑定到父元素上**，通过 `event.target` 判断实际触发事件的元素，从而统一处理。
+
+**适用场景：**
+
+- 列表中有大量子元素（如 `<li>`），逐个绑定监听器性能差
+- 子元素是动态添加的，无法提前绑定事件
+
+**示例：**
+
+```html
+<ul id="list">
+  <li>苹果</li>
+  <li>香蕉</li>
+  <li>橘子</li>
+</ul>
+```
+
+```js
+document.getElementById("list").addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    console.log("点击了：", e.target.textContent);
+  }
+});
+```
+
+只需在 `<ul>` 上绑定一次监听器，所有 `<li>` 的点击都能被捕获。后续动态新增的 `<li>` 也自动生效，无需重新绑定。
+
+## 手写简易 Promise
+
+```js
+class SimplePromise {
+  constructor(executor) {
+    this.state = "pending";
+    this.value = undefined;
+    this.callbacks = []; // 存 { onFulfilled, onRejected }
+
+    const resolve = (value) => {
+      if (this.state !== "pending") return;
+      this.state = "fulfilled";
+      this.value = value;
+      this.callbacks.forEach((cb) => cb.onFulfilled(value));
+    };
+
+    const reject = (reason) => {
+      if (this.state !== "pending") return;
+      this.state = "rejected";
+      this.value = reason;
+      this.callbacks.forEach((cb) => cb.onRejected(reason));
+    };
+
+    try {
+      executor(resolve, reject);
+    } catch (err) {
+      reject(err);
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    if (this.state === "fulfilled") {
+      onFulfilled(this.value);
+    } else if (this.state === "rejected") {
+      onRejected(this.value);
+    } else {
+      // pending 状态，先存起来
+      this.callbacks.push({ onFulfilled, onRejected });
+    }
+  }
+}
+```
+
+```js
+// 用法
+const p = new SimplePromise((resolve, reject) => {
+  setTimeout(() => resolve("成功了！"), 1000);
+});
+
+p.then(
+  (value) => console.log(value), // 1秒后打印：成功了！
+  (err) => console.error(err),
+);
+```
+
+> **核心逻辑就三步**
+>
+> 1. **constructor** 里定义 `resolve` / `reject`，调用时把 `pending` 改成 `fulfilled` / `rejected`，然后执行已存的回调
+> 2. **then** 里判断当前状态：如果已经 settled 就直接执行回调；如果还是 `pending` 就先存到 `callbacks` 数组里
+> 3. 状态**只能变一次**，`if (this.state !== 'pending') return` 保证不可逆
+
+## 手写 promise.all
+
+```js
+// 手写Promise.all()
+Promise.prototype.all = function (iterators) {
+  const promises = Array.from(iterators);
+  const len = promises.length;
+  let count = 0;
+  let resultList = [];
+  return new Promise((resolve, reject) => {
+    promises.forEach((p, index) => {
+      Promise.resolve(p)
+        .then((result) => {
+          count++;
+          resultList[index] = result;
+          if (count === len) {
+            resolve(resultList);
+          }
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+  });
+};
+```
+
+## 手写 reduce() 方法
+
+::: info `reduce()`用法
+`reduce` 是数组的"累加器"方法，遍历数组把每个元素**聚合成一个最终结果**。
+
+```js
+arr.reduce((accumulator, current, index, array) => {
+  // 返回的值会作为下一次的 accumulator
+}, initialValue);
+```
+
+- `accumulator`：上一次回调的返回值（累加器）
+- `current`：当前元素
+- `initialValue`：初始值（**强烈建议 always 传**，否则空数组会报错）
+
+:::
+
+```js
+Array.prototype.reduce = function (fn, init) {
+  var arr = this; // this就是调用reduce方法的数组
+  var total = init || arr[0]; // 有初始值使用初始值
+  // 有初始值的话从0遍历，否则从1遍历
+
+  for (var i = init ? 0 : 1; i < arr.length; i++) {
+    total = fn(total, arr[i], i, arr);
+  }
+
+  return total;
+};
+```
+
+## 跳出多层循环
+
+相关笔记链接：[循环控制关键字](/notes/js/base.html#循环控制关键字)
+
+JS 跳出 `for` 循环主要靠 **`break`** 和 **`return`**，多层循环多一个 **带标签的 `break`**。
+
+| 场景             | 写法           | 效果                     |
+| ---------------- | -------------- | ------------------------ |
+| 单层退出循环     | `break`        | 结束本循环               |
+| 函数里立即结束   | `return`       | 结束整个函数（两层都停） |
+| 多层只跳内层     | `break`        | 只停当前层               |
+| 多层跳出指定外层 | `break 标签名` | 停到标签所在层（推荐）   |
+| 仅跳过当次迭代   | `continue`     | 进入下一次循环           |
+
+::: warning ⚠️ 注意
+`for...of` / `for...in` 同样适用 `break` / `continue` / `return`；  
+只有 `forEach` **不能用 `break`** 跳出（它本质是函数回调，需用 `return` 跳到下一次迭代，或用 `some`/`every` 替代）。
+:::
+
+**用「标签 + break」跳出指定外层**
+
+```js
+// 给外层起个标签
+outer: for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    if (i === 1 && j === 1) break outer; // 跳出到 outer 标签处，两层全停
+    console.log(i, j);
+  }
+}
+// 输出：(0,0)(0,1)(0,2)(1,0)
+```
+
+**函数里一次性跳出所有层（return）**
+
+```js
+function search() {
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (i === 1 && j === 1) return; // 直接结束整个函数，两层全停
+    }
+  }
+}
+```

@@ -2,6 +2,8 @@
 
 ## XSS（跨站脚本攻击）
 
+相关笔记链接：[xss攻击](/notes/others/network.html#xss攻击)
+
 XSS（Cross-Site Scripting，跨站脚本攻击）是指攻击者将恶意脚本（通常是 JavaScript）注入到正常网页中，当其他用户浏览该页面时，浏览器无法区分脚本的可信度，从而执行恶意代码。
 
 **本质**：用户输入未经过滤/转义，被当作可执行代码运行。
@@ -43,6 +45,8 @@ document.getElementById("output").innerHTML = userInput;
 :::
 
 ## CSRF（跨站请求伪造）
+
+相关笔记链接：[csrf攻击](/notes/others/network.html#csrf攻击)
 
 CSRF（Cross-Site Request Forgery，跨站请求伪造）是指攻击者诱导已登录用户在不知情的情况下，以该用户的身份向目标网站发送非本意的请求。
 

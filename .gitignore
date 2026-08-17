@@ -12,6 +12,9 @@ docs/.vitepress/cache
 !.vscode/extensions.json
 !.vscode/settings.json
 
+# Workbuddy
+.workbuddy/
+
 
 # Temporary files
 temp
