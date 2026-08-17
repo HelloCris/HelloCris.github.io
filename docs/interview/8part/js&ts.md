@@ -405,3 +405,213 @@ function partition(arr, left, right) {
 :::
 
 > 解构赋值原理： `[arr[j], arr[j+1]] = [arr[j+1], arr[j]]` 就是把 `arr[j+1]` 赋给 `arr[j]`，把 `arr[j]` 赋给 `arr[j+1]`，完成交换。
+
+## 事件冒泡与事件委托
+
+事件用于监听浏览器的操作行为，浏览器触发动作时被捕捉到而调用相应的函数。
+
+::: info 事件传播的三个阶段
+
+1. **捕获阶段**：事件从 `window` 向下传播到目标元素
+2. **目标阶段**：事件到达实际触发元素
+3. **冒泡阶段**：事件从目标元素向上传播回 `window`
+
+`addEventListener` 的第三个参数设为 `true` 时，监听器在捕获阶段触发：
+
+```js
+element.addEventListener("click", handler, true); // 捕获阶段
+element.addEventListener("click", handler); // 冒泡阶段（默认）
+```
+
+:::
+
+### 事件冒泡
+
+事件冒泡是 DOM 事件传播机制的一部分。当一个元素上触发了某个事件（如点击），该事件会**从目标元素开始，逐级向上传播**到父元素、祖父元素，直到 `document` 和 `window`。
+
+```html
+<div id="grandpa">
+  <div id="parent">
+    <button id="child">点我</button>
+  </div>
+</div>
+```
+
+```js
+document.getElementById("child").addEventListener("click", () => {
+  console.log("child 被点击");
+});
+document.getElementById("parent").addEventListener("click", () => {
+  console.log("parent 被点击");
+});
+document.getElementById("grandpa").addEventListener("click", () => {
+  console.log("grandpa 被点击");
+});
+
+// child 被点击
+// parent 被点击
+// grandpa 被点击
+```
+
+::: info 阻止冒泡
+
+使用 `event.stopPropagation()` 可以阻止事件继续向上传播：
+
+```js
+document.getElementById("child").addEventListener("click", (e) => {
+  e.stopPropagation();
+  console.log("child 被点击，事件不会继续冒泡");
+});
+```
+
+此时点击按钮，只会输出 `child 被点击`，父级和祖父级的监听器不会被触发。
+
+:::
+
+### 事件委托
+
+事件委托是利用事件冒泡机制，**把子元素的事件监听器绑定到父元素上**，通过 `event.target` 判断实际触发事件的元素，从而统一处理。
+
+**适用场景：**
+
+- 列表中有大量子元素（如 `<li>`），逐个绑定监听器性能差
+- 子元素是动态添加的，无法提前绑定事件
+
+**示例：**
+
+```html
+<ul id="list">
+  <li>苹果</li>
+  <li>香蕉</li>
+  <li>橘子</li>
+</ul>
+```
+
+```js
+document.getElementById("list").addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    console.log("点击了：", e.target.textContent);
+  }
+});
+```
+
+只需在 `<ul>` 上绑定一次监听器，所有 `<li>` 的点击都能被捕获。后续动态新增的 `<li>` 也自动生效，无需重新绑定。
+
+## 手写简易 Promise
+
+```js
+class SimplePromise {
+  constructor(executor) {
+    this.state = "pending";
+    this.value = undefined;
+    this.callbacks = []; // 存 { onFulfilled, onRejected }
+
+    const resolve = (value) => {
+      if (this.state !== "pending") return;
+      this.state = "fulfilled";
+      this.value = value;
+      this.callbacks.forEach((cb) => cb.onFulfilled(value));
+    };
+
+    const reject = (reason) => {
+      if (this.state !== "pending") return;
+      this.state = "rejected";
+      this.value = reason;
+      this.callbacks.forEach((cb) => cb.onRejected(reason));
+    };
+
+    try {
+      executor(resolve, reject);
+    } catch (err) {
+      reject(err);
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    if (this.state === "fulfilled") {
+      onFulfilled(this.value);
+    } else if (this.state === "rejected") {
+      onRejected(this.value);
+    } else {
+      // pending 状态，先存起来
+      this.callbacks.push({ onFulfilled, onRejected });
+    }
+  }
+}
+```
+
+```js
+// 用法
+const p = new SimplePromise((resolve, reject) => {
+  setTimeout(() => resolve("成功了！"), 1000);
+});
+
+p.then(
+  (value) => console.log(value), // 1秒后打印：成功了！
+  (err) => console.error(err),
+);
+```
+
+> **核心逻辑就三步**
+>
+> 1. **constructor** 里定义 `resolve` / `reject`，调用时把 `pending` 改成 `fulfilled` / `rejected`，然后执行已存的回调
+> 2. **then** 里判断当前状态：如果已经 settled 就直接执行回调；如果还是 `pending` 就先存到 `callbacks` 数组里
+> 3. 状态**只能变一次**，`if (this.state !== 'pending') return` 保证不可逆
+
+## 手写 promise.all
+
+```js
+// 手写Promise.all()
+Promise.prototype.all = function (iterators) {
+  const promises = Array.from(iterators);
+  const len = promises.length;
+  let count = 0;
+  let resultList = [];
+  return new Promise((resolve, reject) => {
+    promises.forEach((p, index) => {
+      Promise.resolve(p)
+        .then((result) => {
+          count++;
+          resultList[index] = result;
+          if (count === len) {
+            resolve(resultList);
+          }
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+  });
+};
+```
+
+## 手写 reduce() 方法
+
+::: info `reduce()`用法
+`reduce` 是数组的"累加器"方法，遍历数组把每个元素**聚合成一个最终结果**。
+
+```js
+arr.reduce((accumulator, current, index, array) => {
+  // 返回的值会作为下一次的 accumulator
+}, initialValue);
+```
+
+- `accumulator`：上一次回调的返回值（累加器）
+- `current`：当前元素
+- `initialValue`：初始值（**强烈建议 always 传**，否则空数组会报错）
+
+:::
+
+```js
+Array.prototype.reduce = function (fn, init) {
+  var arr = this; // this就是调用reduce方法的数组
+  var total = init || arr[0]; // 有初始值使用初始值
+  // 有初始值的话从0遍历，否则从1遍历
+
+  for (var i = init ? 0 : 1; i < arr.length; i++) {
+    total = fn(total, arr[i], i, arr);
+  }
+
+  return total;
+};
+```
