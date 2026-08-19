@@ -655,3 +655,38 @@ Client → Server: ACK (ack=y+1) 第三次握手：证明客户端能接收
     connect-src 'self';                     /* AJAX/fetch 仅限同源 */
     frame-ancestors 'none';                 /* 禁止被嵌入 iframe（防点击劫持） */
   ```
+
+## robot.txt详解
+
+`robots.txt` 是放在网站**根目录**下的一个纯文本文件（`https://example.com/robots.txt`），用于告诉搜索引擎/爬虫**哪些页面可以抓、哪些不能抓、抓多快**。它的正式规范叫 **Robots Exclusion Protocol（REP）**，2022 年已被 IETF 定为标准（RFC 9309）。
+
+关键点：它是**君子协定**，不是安全技术。遵守规则的爬虫（Googlebot、Bingbot 等）会听，但恶意爬虫可以完全无视它——所以**别用它来藏隐私数据或做访问控制**。
+
+![爬虫决策流程图](asset/RobotsFlow.svg)
+
+| 指令          | 作用                     | 说明                                                  |
+| ------------- | ------------------------ | ----------------------------------------------------- |
+| `User-agent:` | 指定规则适用哪类爬虫     | `*` 代表所有；也可写 `Googlebot`、`Bingbot` 等        |
+| `Disallow:`   | 禁止抓取的路径           | 值为**路径前缀**；`Disallow:` 后留空 = 不禁止任何路径 |
+| `Allow:`      | 在禁止范围内**例外放行** | 通常比同组 Disallow 更具体才生效                      |
+| `Sitemap:`    | 指定 sitemap 地址        | 帮爬虫更快发现页面，强烈建议配                        |
+
+::: info 匹配规则与通配符
+
+- `Disallow: /admin` → 禁止所有以 `/admin` 开头的路径（`/admin`、`/admin/login`、`/admin/settings`）。
+- `Disallow: /private/` → 注意末尾斜杠，只禁目录；`/private` 不会匹配 `/privatepage`。
+- 通配符 `*` 和结尾 `$`：
+  - `Disallow: /*.pdf$` → 禁止所有以 `.pdf` 结尾的 URL（`$` 表示结尾）。
+  - `Disallow: /*?*` → 禁止带查询参数的 URL。
+- 路径**区分大小写**，且是前缀匹配（不是正则）。
+
+**Allow vs Disallow 优先级**：当两者都命中时，取**更长（更具体）的那条规则**胜出。例如：
+
+```
+Disallow: /img/
+Allow:   /img/public/
+```
+
+则 `/img/public/logo.png` 被放行，`/img/secret.png` 被禁。
+
+:::
