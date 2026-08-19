@@ -659,3 +659,61 @@ function search() {
   }
 }
 ```
+
+## `beforeunload` 事件
+
+`beforeunload` 是 `window` 对象上的一个事件，在浏览器窗口/标签页即将被卸载（关闭、刷新、跳转到其他页面）时触发。它的核心作用是**弹出一个确认对话框**，让用户决定是否真的要离开当前页面，常用于防止用户误操作导致未保存的数据丢失。
+
+::: info 基本用法
+
+```js
+window.addEventListener("beforeunload", function (event) {
+  event.preventDefault();
+  event.returnValue = "确认要离开？未保存的内容将丢失。";
+});
+```
+
+:::
+
+::: warning ⚠️ 注意
+
+- **自定义文案已被屏蔽**：现代浏览器（Chrome 60+、Firefox 80+、Edge 79+）已不再显示你设置的自定义文案，统一显示类似"离开此页面？更改可能不会被保存。"的默认提示。
+- **需要用户交互**：如果页面没有经过用户的任何交互（点击、输入等），浏览器会直接忽略 `beforeunload` 事件，不弹窗。
+- **不能异步设置**
+- **不能主动触发**
+- **SPA 路由跳转不触发**
+- **移动端 Safari 支持极差**：基本不触发，不能依赖它做关键数据保护。
+
+:::
+
+## 避免Promise.all一个失败，所有值丢失
+
+```js
+// 包裹函数，避免 promise 抛出 reject
+const wrapPromise = (promise) => {
+  return new Promise((resolve, reject) => {
+    promise
+      .then((info) => resolve({ isok: true, info }))
+      .catch((err) => resolve({ isok: false, err }));
+  });
+};
+
+// Promise.all 调用
+const resArr = await Promise.all([
+  // 全部使用 wrapPromise 包裹
+  wrapPromise(somePromise1),
+  wrapPromise(somePromise2),
+  wrapPromise(somePromise3),
+]);
+
+const [res1, res2, res3] = resArr.map((res) => {
+  if (res.isok) {
+    // 处理 fulfilled promise 结果的逻辑
+    return res.info;
+  } else {
+    // 处理 rejected promise 结果的逻辑
+    console.error(res.err);
+    return {};
+  }
+});
+```
