@@ -168,3 +168,35 @@ document.head.appendChild(meta);
 - **缺点**：会影响整个页面的布局，需配合 `rem` 或 `vw` 单位，可能破坏第三方组件
 
 :::
+
+## BFC（块级格式化上下文）
+
+**BFC（Block Formatting Context，块级格式化上下文）** 是 CSS 视觉格式化模型中的一个核心概念，可以理解为一个**独立的渲染区域**——内部的元素布局不会影响外部，外部的布局也不会干扰内部，类似于编程中的"隔离作用域"。
+
+---
+
+::: info 核心特性
+
+- **阻止外边距合并（Margin Collapse）**：属于同一个 BFC 的相邻块级元素，垂直方向的外边距会发生合并（取较大值）；而不同 BFC 中的元素外边距则互不影响。
+- **包含浮动元素**：BFC 会计算内部浮动元素的高度，防止父容器出现"高度塌陷"问题。
+- **阻止文本环绕浮动元素**：BFC 区域内的元素不会与外部浮动元素发生文字环绕，保持布局稳定。
+- **float 和 clear 仅在同一 BFC 内生效**：浮动和清除浮动规则只作用于同一个格式化上下文中的元素。
+
+:::
+
+::: info 如何触发 BFC
+
+满足以下**任一条件**即可创建一个新的 BFC：
+
+- **根元素**：`<html>` 天然就是一个 BFC
+- **浮动元素**：`float` 不为 `none`（如 `left` / `right`）
+- **绝对定位**：`position` 为 `absolute` 或 `fixed`
+- **行内块**：`display: inline-block`
+- **表格相关**：`display: table-cell`、`table-caption`、`inline-table` 等
+- **overflow 非 visible**：`overflow` 设为 `hidden`、`auto` 或 `scroll`（最常用的方式）
+- **弹性/网格容器**：`display: flex`、`inline-flex`、`grid`、`inline-grid`
+- **显式创建**：`display: flow-root`（推荐，无副作用）
+- **contain 属性**：`contain: layout`、`content` 或 `strict`
+- **多列容器**：`column-count` 或 `column-width` 不为 `auto`
+
+:::

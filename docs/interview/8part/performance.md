@@ -71,3 +71,127 @@
 8. **减少 DOM 操作**：批量修改用 `DocumentFragment` 或切换 `className`，减少重排。
 
 :::
+
+## 重排(回流)和重绘
+
+::: info 浏览器渲染流程
+
+浏览器将 HTML + CSS 渲染到屏幕上，大致经历以下步骤：
+
+1. **解析 HTML** → 构建 DOM 树
+2. **解析 CSS** → 构建 CSSOM 树
+3. DOM + CSSOM 合并 → **渲染树（Render Tree）**
+4. **布局（Layout / Reflow）** → 计算每个节点的几何信息（位置、大小）
+5. **绘制（Paint / Repaint）** → 将节点绘制到屏幕上
+6. **合成（Composite）** → 将各图层合成为最终画面
+
+:::
+
+::: info 重排与重绘的关系
+
+- 重排 → 必然触发重绘
+- 重绘 → 不一定触发重排
+
+:::
+
+### 重排（Reflow）
+
+重排也叫**回流**，是指浏览器需要**重新计算元素的几何属性**（如宽高、位置、偏移量等），并重新构建渲染树的过程。
+
+**触发重排的常见操作：**
+
+- 改变元素的宽高、内外边距、边框
+- 添加或删除可见的 DOM 元素
+- 改变窗口大小（resize）
+- 读取某些几何属性（如 `offsetHeight`、`scrollTop`、`getBoundingClientRect()`）
+- 改变字体大小
+- 页面首次渲染
+
+> 重排的代价较高，因为它涉及布局的重新计算。
+
+### 重绘（Repaint）
+
+重绘是指元素的**外观发生变化**，但几何属性不变，浏览器只需重新绘制该元素即可。
+
+**触发重绘的常见操作：**
+
+- 改变 `color`、`background-color`
+- 改变 `visibility`
+- 改变 `box-shadow`
+- 改变 `outline`
+- 改变 `border-radius`（不影响布局时）
+
+> 重绘的代价比重排低，但仍会消耗 GPU/CPU 资源。
+
+### 如何减少重排和重绘
+
+**1. 批量修改 DOM**
+
+避免逐条修改样式，推荐使用 `cssText` 或 `class` 一次性修改：
+
+```js
+//  不推荐：多次触发重排
+el.style.width = "100px";
+el.style.height = "100px";
+el.style.margin = "10px";
+
+//  推荐：一次性修改
+el.style.cssText += "width:100px;height:100px;margin:10px;";
+
+//  或者切换 class
+el.classList.add("new-style");
+```
+
+**2. 离线操作 DOM**
+
+使用 `DocumentFragment` 或克隆节点后操作，再一次性插入：
+
+```js
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 100; i++) {
+  const li = document.createElement("li");
+  li.textContent = `Item ${i}`;
+  fragment.appendChild(li);
+}
+list.appendChild(fragment); // 只触发一次重排
+```
+
+**3. 避免频繁读取几何属性**
+
+读取 `offsetHeight` 等属性会强制浏览器刷新布局队列，导致**强制同步布局**：
+
+```js
+//  在循环中交替读写，会反复触发重排
+for (let i = 0; i < 100; i++) {
+  el.style.top = el.offsetTop + 1 + "px"; // 读 offsetTop 触发重排
+}
+```
+
+**4. 使用 `transform` 和 `opacity` 做动画**
+
+这两个属性可以由 GPU 加速，且**不触发重排和重绘**（走合成层）：
+
+```css
+/*  推荐 */
+.box {
+  transition: transform 0.3s ease;
+}
+.box:hover {
+  transform: translateX(100px);
+}
+
+/*  不推荐 */
+.box:hover {
+  left: 100px; /* 触发重排 */
+}
+```
+
+**5. 将频繁变化的元素提升为合成层**
+
+```css
+.box {
+  will-change: transform;
+}
+```
+
+> 注意：不要滥用 `will-change`，过多合成层反而增加内存开销。
