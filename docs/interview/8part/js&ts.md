@@ -746,3 +746,130 @@ Cookie 由服务器通过响应头 `Set-Cookie` 下发，或客户端通过 `doc
 | `HttpOnly`   | 禁止 JS 读取     | 标记后无法通过 `document.cookie` 访问，**只能随 HTTP 请求自动发送**，可防 XSS 窃取                              |
 | `SameSite`   | 跨站发送限制     | 防 CSRF：`Strict`（完全同站才发）/ `Lax`（默认，允许安全的顶级导航 GET）/ `None`（允许跨站，但必须配 `Secure`） |
 | `Priority`   | 优先级（非标准） | Chrome 私有属性（`Low`/`Medium`/`High`），Cookie 数量超上限时优先丢弃低优先级                                   |
+
+## `getBoundingClientRect()`
+
+`Element.getBoundingClientRect()` 返回元素在 **视口（viewport）** 中的大小与位置，结果是一个 `DOMRect` 对象。
+
+```js
+const rect = el.getBoundingClientRect();
+// rect: { x, y, top, left, right, bottom, width, height, toJSON() }
+```
+
+| 属性               | 含义                     | 等价关系       |
+| ------------------ | ------------------------ | -------------- |
+| `top`              | 元素上边到视口顶部的距离 | 同 `y`         |
+| `left`             | 元素左边到视口左边的距离 | 同 `x`         |
+| `right`            | 元素右边到视口左边的距离 | `left + width` |
+| `bottom`           | 元素下边到视口顶部的距离 | `top + height` |
+| `width` / `height` | 元素实际渲染的宽高       | —              |
+
+::: warning ⚠️ 注意
+
+1. 坐标系是「**视口**」，不是文档也不是页面。
+2. 数值是**浮点型**（HiDPI 屏下会有小数，如 `12.5`），不是整数。
+3. 反映的是**渲染后的几何**——**包含 CSS `transform` 后的位置**（与 `offsetTop` 关键区别）。
+
+:::
+
+## Js 局部错误处理与全局错误处理
+
+- **局部错误处理**：`try...catch` / `async/await` + `try...catch` / `.catch()` 处理**可预期、局部**的错误
+- **全局错误处理**：`window.onerror` / `addEventListener('error')` / `unhandledrejection` 做**兜底与监控上报**，捕获所有未被局部捕获的错误
+
+| 处理方式                          | 捕获范围            | 能捕获异步     | 典型用途          |
+| --------------------------------- | ------------------- | -------------- | ----------------- |
+| `try...catch`                     | 同步代码块          | ❌ 仅同步      | 局部、可预期错误  |
+| `.catch()`                        | Promise 链          | ✅             | Promise 异步错误  |
+| `async/await` + `try...catch`     | async 函数内部      | ✅             | async 异步错误    |
+| `window.onerror`                  | 全局运行时错误      | 部分（仅同步） | 兜底 + 上报       |
+| `addEventListener('error', true)` | 全局 + 资源加载错误 | ✅             | 图片/脚本加载失败 |
+| `unhandledrejection`              | 未处理的 Promise    | ✅             | Promise 兜底      |
+
+### 局部错误处理
+
+1. try...catch（同步代码）
+
+```js
+try {
+  JSON.parse("{bad json}"); // 会抛 SyntaxError
+} catch (err) {
+  console.error("解析失败:", err.message);
+} finally {
+  console.log("无论成功失败都会执行");
+}
+```
+
+::: warning ⚠️ 注意
+`try...catch` **只能捕获同步错误**，无法捕获 `setTimeout` 回调、`Promise` 内部、事件回调里的异步错误——这些会冒泡到全局。
+:::
+
+---
+
+2. async/await + try...catch（异步）
+
+```js
+async function fetchData() {
+  try {
+    const res = await fetch("/api");
+    return await res.json();
+  } catch (err) {
+    console.error("请求失败:", err);
+  }
+}
+```
+
+---
+
+3. Promise .catch()
+
+```js
+fetch("/api")
+  .then((res) => res.json())
+  .catch((err) => console.error("请求失败:", err));
+```
+
+### 全局错误处理
+
+1.  window.onerror（运行时 JS 错误）
+
+```js
+window.onerror = function (message, source, lineno, colno, error) {
+  console.error("全局错误:", message, source, lineno, colno);
+  reportError({ message, source, lineno, colno, stack: error?.stack });
+  return true; // 返回 true 可阻止默认的错误提示（如某些浏览器控制台报错）
+};
+```
+
+> 捕获：同步运行时错误。**注意**：默认**捕获不到资源加载错误**（如图片 404）。
+
+---
+
+2. addEventListener('error', ..., true)（含资源加载错误）
+
+```js
+// 第三个参数 true = 捕获阶段，才能拿到资源加载错误
+window.addEventListener(
+  "error",
+  (event) => {
+    const el = event.target;
+    if (el && (el.src || el.href)) {
+      console.error("资源加载失败:", el.src || el.href);
+    }
+  },
+  true,
+);
+```
+
+---
+
+3. unhandledrejection（未处理的 Promise 拒绝）
+
+```js
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("未处理的 Promise 拒绝:", event.reason);
+  event.preventDefault(); // 阻止浏览器在控制台打印该错误
+});
+```
+
+> Promise 链中没有 `.catch()` 的 rejection **不会触发 `onerror`**，只会触发 `unhandledrejection`。

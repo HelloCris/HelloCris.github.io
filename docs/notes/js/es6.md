@@ -623,6 +623,12 @@ console.log("ha".repeat(3)); // 'hahaha'
   ```js
   [1, 2, 3].flatMap((x) => [x, x * 2]); // [1, 2, 2, 4, 3, 6]
   ```
+- `Array.from()`: 从类数组对象或可迭代对象创建一个新的数组实例。
+  ```js
+  Array.from("hello"); // ['h', 'e', 'l', 'l', 'o']
+  Array.from(new Set([1, 2, 2, 3])); // [1,2,3]  （去重常用）
+  Array.from({ length: 3 }); // [undefined, undefined, undefined]
+  ```
 
 ## 对象新方法
 
