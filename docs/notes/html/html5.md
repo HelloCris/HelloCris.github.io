@@ -205,7 +205,7 @@ HTML5 是 超文本标记语言（HTML）的第五个主要版本，由 W3C（�
 - mark：标注；
 - time：数据标签，给搜索引擎使用；
   发布日期 `<time datetime="2014-12-25T09:00">9：00</time>`
-  更新日期 `<time datetime="2015-01-23T04:00" pubdate>4:00</time>`
+  更新日期 `<time datetime="2015-01-23T04:00">4:00</time>`
 - ruby和rt：对某一个字进行注释；
   `<ruby><rt>注释内容</rt><rp>浏览器不支持时如何显示</rp></ruby>`
 - wbr：软换行，页面宽度到需要换行时换行；
