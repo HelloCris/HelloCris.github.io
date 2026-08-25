@@ -717,3 +717,159 @@ const [res1, res2, res3] = resArr.map((res) => {
   }
 });
 ```
+
+## console.log 打印对象时的坑
+
+在 Chrome DevTools 等浏览器控制台中，`console.log(obj)` 打印对象时，保存的是对象的**引用**，而不是那一刻的**值快照**。控制台只在你手动展开对象（点击小三角）时才去读取属性，所以你看到的是"展开那一刻"的值，而不是"打印那一刻"的值。如果对象在打印之后、展开之前被修改，你看到的就是修改后的值。
+
+```js
+const user = { name: "张三", age: 18 };
+console.log(user); // 控制台上显示 user
+user.age = 20; // 打印之后修改了对象
+// 等你点开控制台展开 user，看到的是 { name: "张三", age: 20 }
+```
+
+代码瞬间执行完时，你在控制台看到的是修改后的值，很容易误判"代码没生效"或"执行顺序写错了"。
+
+## Cookie 有哪些属性
+
+Cookie 由服务器通过响应头 `Set-Cookie` 下发，或客户端通过 `document.cookie` 写入。一个完整的 Cookie 由「键值对 + 若干控制属性」组成，属性决定了 Cookie 的**有效期、发送范围、安全性**。
+
+| 属性         | 作用             | 说明                                                                                                            |
+| ------------ | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `name=value` | Cookie 本体      | 实际键值数据，如 `token=abc123`                                                                                 |
+| `Expires`    | 绝对过期时间     | HTTP 日期字符串。不设置则为**会话 Cookie**，关闭浏览器即失效                                                    |
+| `Max-Age`    | 相对过期时间     | 创建后存活的秒数。`Max-Age=0` 表示立即删除；优先级高于 `Expires`（现代浏览器）                                  |
+| `Domain`     | 生效域名         | 指定哪些主机可接收该 Cookie。默认仅当前域（不含子域）；设为 `.example.com` 可覆盖子域。JS 不能设为其他域        |
+| `Path`       | 生效路径         | 请求 URL 路径必须匹配才会带上 Cookie，默认当前路径所在目录                                                      |
+| `Secure`     | 仅 HTTPS 发送    | 标记后只在 HTTPS 加密连接下发送，HTTP 下不发送，防明文泄露                                                      |
+| `HttpOnly`   | 禁止 JS 读取     | 标记后无法通过 `document.cookie` 访问，**只能随 HTTP 请求自动发送**，可防 XSS 窃取                              |
+| `SameSite`   | 跨站发送限制     | 防 CSRF：`Strict`（完全同站才发）/ `Lax`（默认，允许安全的顶级导航 GET）/ `None`（允许跨站，但必须配 `Secure`） |
+| `Priority`   | 优先级（非标准） | Chrome 私有属性（`Low`/`Medium`/`High`），Cookie 数量超上限时优先丢弃低优先级                                   |
+
+## `getBoundingClientRect()`
+
+`Element.getBoundingClientRect()` 返回元素在 **视口（viewport）** 中的大小与位置，结果是一个 `DOMRect` 对象。
+
+```js
+const rect = el.getBoundingClientRect();
+// rect: { x, y, top, left, right, bottom, width, height, toJSON() }
+```
+
+| 属性               | 含义                     | 等价关系       |
+| ------------------ | ------------------------ | -------------- |
+| `top`              | 元素上边到视口顶部的距离 | 同 `y`         |
+| `left`             | 元素左边到视口左边的距离 | 同 `x`         |
+| `right`            | 元素右边到视口左边的距离 | `left + width` |
+| `bottom`           | 元素下边到视口顶部的距离 | `top + height` |
+| `width` / `height` | 元素实际渲染的宽高       | —              |
+
+::: warning ⚠️ 注意
+
+1. 坐标系是「**视口**」，不是文档也不是页面。
+2. 数值是**浮点型**（HiDPI 屏下会有小数，如 `12.5`），不是整数。
+3. 反映的是**渲染后的几何**——**包含 CSS `transform` 后的位置**（与 `offsetTop` 关键区别）。
+
+:::
+
+## Js 局部错误处理与全局错误处理
+
+- **局部错误处理**：`try...catch` / `async/await` + `try...catch` / `.catch()` 处理**可预期、局部**的错误
+- **全局错误处理**：`window.onerror` / `addEventListener('error')` / `unhandledrejection` 做**兜底与监控上报**，捕获所有未被局部捕获的错误
+
+| 处理方式                          | 捕获范围            | 能捕获异步     | 典型用途          |
+| --------------------------------- | ------------------- | -------------- | ----------------- |
+| `try...catch`                     | 同步代码块          | ❌ 仅同步      | 局部、可预期错误  |
+| `.catch()`                        | Promise 链          | ✅             | Promise 异步错误  |
+| `async/await` + `try...catch`     | async 函数内部      | ✅             | async 异步错误    |
+| `window.onerror`                  | 全局运行时错误      | 部分（仅同步） | 兜底 + 上报       |
+| `addEventListener('error', true)` | 全局 + 资源加载错误 | ✅             | 图片/脚本加载失败 |
+| `unhandledrejection`              | 未处理的 Promise    | ✅             | Promise 兜底      |
+
+### 局部错误处理
+
+1. try...catch（同步代码）
+
+```js
+try {
+  JSON.parse("{bad json}"); // 会抛 SyntaxError
+} catch (err) {
+  console.error("解析失败:", err.message);
+} finally {
+  console.log("无论成功失败都会执行");
+}
+```
+
+::: warning ⚠️ 注意
+`try...catch` **只能捕获同步错误**，无法捕获 `setTimeout` 回调、`Promise` 内部、事件回调里的异步错误——这些会冒泡到全局。
+:::
+
+---
+
+2. async/await + try...catch（异步）
+
+```js
+async function fetchData() {
+  try {
+    const res = await fetch("/api");
+    return await res.json();
+  } catch (err) {
+    console.error("请求失败:", err);
+  }
+}
+```
+
+---
+
+3. Promise .catch()
+
+```js
+fetch("/api")
+  .then((res) => res.json())
+  .catch((err) => console.error("请求失败:", err));
+```
+
+### 全局错误处理
+
+1.  window.onerror（运行时 JS 错误）
+
+```js
+window.onerror = function (message, source, lineno, colno, error) {
+  console.error("全局错误:", message, source, lineno, colno);
+  reportError({ message, source, lineno, colno, stack: error?.stack });
+  return true; // 返回 true 可阻止默认的错误提示（如某些浏览器控制台报错）
+};
+```
+
+> 捕获：同步运行时错误。**注意**：默认**捕获不到资源加载错误**（如图片 404）。
+
+---
+
+2. addEventListener('error', ..., true)（含资源加载错误）
+
+```js
+// 第三个参数 true = 捕获阶段，才能拿到资源加载错误
+window.addEventListener(
+  "error",
+  (event) => {
+    const el = event.target;
+    if (el && (el.src || el.href)) {
+      console.error("资源加载失败:", el.src || el.href);
+    }
+  },
+  true,
+);
+```
+
+---
+
+3. unhandledrejection（未处理的 Promise 拒绝）
+
+```js
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("未处理的 Promise 拒绝:", event.reason);
+  event.preventDefault(); // 阻止浏览器在控制台打印该错误
+});
+```
+
+> Promise 链中没有 `.catch()` 的 rejection **不会触发 `onerror`**，只会触发 `unhandledrejection`。
