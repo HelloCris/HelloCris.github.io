@@ -336,7 +336,7 @@ box-shadow: h v blur spread color inset;
 /* v：垂直方向的偏移值（必填）, 正值向下，负值向上 */
 /* blur：模糊半径（可选，默认为 0）, 值越大，阴影越模糊 */
 /* spread：阴影的尺寸，扩展或收缩阴影大小（可选，默认为 0）, 正值扩大阴影范围，负值缩小阴影范围 */
-/* color：阴影颜色（可选，默认为黑色） */
+/* color：阴影颜色（可选，默认为当前元素的文本颜色） */
 /* inset: 内阴影（可选，默认是外阴影） */
 
 /* 外阴影：向右下偏移，模糊，扩展，红色 */
@@ -360,8 +360,8 @@ box-shadow:
 border-image-source: url("./images/border1.png"); /* 默认只填充容器四个角点 */
 border-image-slice: 27 fill; /* 设置四个方向上的裁切距离，fill 表示内部填充 */
 /* border-image-slice 可设置一个值（四边相同），或多个值：
-    - 27 10：左右 27，上下 10
-    - 27 20 15 5 fill：左 27，下 20，右 15，上 5，并填充内部 */
+    - 27 10：上下 27，左右 10
+    - 27 20 15 5 fill：上 27，右 20，下 15，左 5，并填充内部 */
 border-image-width: 27px; /* 边框图片宽度，未设置时默认为元素原始边框宽度 */
 border-image-outset: 0px; /* 扩展边框，但会影响元素大小，box-sizing 不可挽回，建议不使用 */
 border-image-repeat: stretch; /* 图片重复方式 */
@@ -461,7 +461,7 @@ background: [background-color] [background-image] [background-repeat]
 ::: warning ⚠️ 注意
 
 1. `background-size` 必须紧跟在 `background-position` 后面，并用 / 分隔。
-2. `background-origin` 和 `background-clip` 不能直接在标准 `background` 简写中使用（某些浏览器可能支持，但不推荐）。建议单独声明。
+2. `background-origin` 和 `background-clip` 是严格顺序，不能交换。只写一个时，两个属性都设为这个值。
 3. 如果同时设置 `background-color` 和 `background-image`，颜色会作为图片的底层显示（当图片透明或未覆盖全部区域时可见）。
 4. 使用简写属性时，未指定的子属性会被重置为默认值，这可能导致意外覆盖。
 
@@ -604,6 +604,20 @@ selector {
 
 可以连续使用多个变换函数，**从左到右依次应用**（注意顺序会影响结果！）。
 
+::: warning ⚠️ 注意
+
+1. **`transform` 不会脱离文档流**，但视觉位置会变，**不影响其他元素布局**。
+2. **默认变换原点是元素中心**（`transform-origin: center`），可修改：
+   ```css
+   transform-origin: top left; /* 从左上角旋转/缩放 */
+   ```
+3. **与 `transition` 或 `animation` 搭配效果最佳**。
+4. **避免对 `width`/`height`/`left`/`top` 做动画**，优先用 `transform`（性能更高，不会触发重排）。
+
+5. `transform` 和 `opacity` 通常**仅触发合成（composite）** ，极端情况下才会引起paint（重绘），因此**动画更流畅**，适合做高性能交互动画。
+
+:::
+
 #### 2D变换
 
 | 函数                              | 说明               | 示例                                |
@@ -635,18 +649,6 @@ perspective: 800px; /* 父容器设置透视 */
 ```
 
 :::
-
-#### `transform`注意事项
-
-1. **`transform` 不会脱离文档流**，但视觉位置会变，**不影响其他元素布局**。
-2. **默认变换原点是元素中心**（`transform-origin: center`），可修改：
-   ```css
-   transform-origin: top left; /* 从左上角旋转/缩放 */
-   ```
-3. **与 `transition` 或 `animation` 搭配效果最佳**。
-4. **避免对 `width`/`height`/`left`/`top` 做动画**，优先用 `transform`（性能更高，不会触发重排）。
-
-5. `transform` 和 `opacity` 是**仅触发合成（composite）** 的属性，不会引起 layout（重排）或 paint（重绘），因此**动画更流畅**，适合做高性能交互动画。
 
 ### 动画（Animation）
 
