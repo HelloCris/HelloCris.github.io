@@ -2,11 +2,11 @@
 
 ## 变量声明
 
-| 声明方式 | 作用域 | 变量提升 | 重复声明 | 重新赋值 | 必须初始化 |
-| -------- | ------ | -------- | -------- | -------- | ---------- |
-| var      | 函数级 | 有       | 是       | 是       | 否         |
-| let      | 块级   | 无       | 否       | 是       | 否         |
-| const    | 块级   | 无       | 否       | 否       | 是         |
+| 声明方式 | 作用域 | 变量提升      | 重复声明 | 重新赋值 | 必须初始化 |
+| -------- | ------ | ------------- | -------- | -------- | ---------- |
+| var      | 函数级 | 有            | 是       | 是       | 否         |
+| let      | 块级   | 有，但处于TDZ | 否       | 是       | 否         |
+| const    | 块级   | 有，但处于TDZ | 否       | 否       | 是         |
 
 **说明**：
 
@@ -19,10 +19,10 @@
 
 使用反引号 `` 声明，支持插值和多行。
 
-| 特性 | 说明                   | 示例                   |
-| ---- | ---------------------- | ---------------------- |
-| 插值 | `${}` 嵌入变量或表达式 | `` `Hello ${name}` ``  |
-| 多行 | 支持直接换行           | `` `第一行\n第二行` `` |
+| 特性 | 说明                   | 示例                  |
+| ---- | ---------------------- | --------------------- |
+| 插值 | `${}` 嵌入变量或表达式 | `` `Hello ${name}` `` |
+| 多行 | 支持直接换行           |                       |
 
 ```js
 const name = "Tom";
@@ -109,7 +109,7 @@ const obj = {
   },
   // 箭头函数：this 指向定义时的外层（这里是 window/global）
   arrowFunc: () => {
-    console.log(this.name); // undefined (或报错)
+    console.log(this.name); // '' 或 undefined (或报错)
   },
 };
 ```
@@ -167,6 +167,7 @@ Promise 是 ES6 提供的异步编程解决方案，用于处理异步操作。
 ```js
 const promise = new Promise((resolve, reject) => {
   // 异步操作
+  const success = true; // 示意：实际场景替换为真实条件
   if (success) {
     resolve(value); // 成功时调用
   } else {
@@ -235,7 +236,7 @@ promise.then(
 
 ## `async` / `await`
 
-这是对 Promise 的语法糖，让异步代码看起来像同步代码，彻底解决了回调地狱问题，是目前处理异步操作的主流方式。
+这是对 Promise 的语法糖，显著改善了回调地狱，让异步代码读起来像同步代码（底层仍基于 Promise）
 
 - **基本用法**
 
@@ -646,11 +647,11 @@ console.log("ha".repeat(3)); // 'hahaha'
   ];
   Object.fromEntries(entries); // { a: 1, b: 2 }
   ```
-- `Object.hasOwn()`: 作为 `Object.prototype.hasOwnProperty` 的更优替代，用于检查对象是否拥有指定的自有属性。
+- `Object.hasOwn()`: 作为 `Object.prototype.hasOwnProperty` 的更优替代，用于检查对象是否拥有指定的自有属性。ES2022 引入。
   ```js
   const obj = { name: "Alice" };
   obj.hasOwnProperty("name"); // true
-  Object.hasOwn(obj, "name"); // true (推荐)注意兼容性
+  Object.hasOwn(obj, "name"); // true (推荐)
   ```
 
 ## 可选链操作符 `?.`
