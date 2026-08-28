@@ -33,7 +33,7 @@ CSS3 是 CSS（层叠样式表）的第三代主要标准，它并不是一个�
 
 - [flex布局](/notes/css/property.html#flex)：如 `flex` `flex-direction` `flex-wrap` `justify-content` `align-items` `align-content`
 
-- [grid布局](/notes/css/property.html#grid)：如 `grid` `grid-template-columns` `grid-template-rows` `grid-gap` `grid-area`
+- [grid布局](/notes/css/property.html#grid)：如 `grid` `grid-template-columns` `grid-template-rows` `gap` `grid-area`
 
 - [多列布局（Multi-column Layout）](/notes/css/property.html#多列布局-multi-column-layout)：如 `column-count` `column-gap` `column-rule`
 
