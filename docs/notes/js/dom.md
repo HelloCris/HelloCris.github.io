@@ -54,17 +54,15 @@
 - 在 document 中有一个属性 body，它保存的是 body 的引用
 - `document.documentElement` 保存的是 html 根标签
 - `document.all` 代表页面中所有的元素
-- 根据元素的 class 属性值查询一组元素节点对象：`getElementsClassName()` 可以根据 class 属性值获取一组元素节点对象，但是该方法不支持 IE8 及以下的浏览器
-- `document.querySelector()` 需要一个选择器的字符串作为参数，可以根据一个 CSS 选择器来查询一个元素节点对象。虽然 IE8 中没有 `getElementsClassName()` 但是可以使用 `querySelector()` 代替。使用该方法总会返回唯一的一个元素，如果满足条件的元素有多个，那么它只会返回第一个。
-- `document.querySelectorAll()` 该方法和 `querySelector()` 用法类似，不同的是它会将符合条件的元素封装到一个数组中返回，即使符合条件的元素只有一个，它也会返回数组。
+- 根据元素的 class 属性值查询一组元素节点对象：`getElementsByClassName()` 可以根据 class 属性值获取一组元素节点对象，但是该方法不支持 IE8 及以下的浏览器
+- `document.querySelector()` 需要一个选择器的字符串作为参数，可以根据一个 CSS 选择器来查询一个元素节点对象。虽然 IE8 中没有 `getElementsByClassName()` 但是可以使用 `querySelector()` 代替。使用该方法总会返回唯一的一个元素，如果满足条件的元素有多个，那么它只会返回第一个。
+- `document.querySelectorAll()` 该方法和 `querySelector()` 用法类似，不同的是它会将符合条件的元素封装到一个NodeList类数组中返回。
 
 ::: warning ⚠️ 注意
 
 1. documentElement 属性以一个元素对象返回一个文档的文档元素。
 2. HTML 文档返回对象为 HTML 元素。
-3. 注意：如果 HTML 元素缺失，返回值为 null。
-4. chrome 认为浏览器的滚动条是 body 的
-5. 火狐等浏览器认为浏览器的滚动条是 html 的
+3. 现代标准浏览器的滚动条是在html上的。
 
 :::
 
@@ -86,11 +84,11 @@
 
 ::: info
 
-- nodeValue - 文本节点可以通过 nodeValue 属性获取和设置 文本节点的内容
-- innerHTML - 元素节点通过该属性获取和设置标签内部的 html 代码
+- nodeValue - 文本节点可以通过该属性获取和设置 文本节点的内容
+- innerHTML - 获取和设置标签内部的 html 代码
 - children 属性可以获取当前元素的所有子元素
 - firstElementChild 获取当前元素的第一个子元素。firstElementChild 不支持 IE8 及以下的浏览器，如果需要兼容他们尽量不要使用。
-- innerText - 该属性可以获取到元素内部的文本内容。它和 innerHTML 类似，不同的是它会自动将 html 去除。
+- innerText - 获取到元素内部的文本内容。
 - previousElementSibling 获取前一个兄弟元素，IE8 及以下不支持
 - childNodes 属性会获取包括文本节点在内的所有节点，根据 DOM 标签标签间空白也会当成文本节点。注意：在 IE8 及以下的浏览器中，不会将空白文本当成子节点。
 - 文本框的 value 属性值，就是文本框中填写的内容。
@@ -115,7 +113,6 @@
 - `removeChild()`
   - 可以删除一个子节点
   - 语法：父节点.removeChild(子节点);
-  - 或 子节点.parentNode.removeChild(子节点);
 
 ## 样式控制
 
@@ -128,9 +125,8 @@
 
 ::: warning ⚠️ 注意
 
-通过 `style` 属性来修改元素的样式，每修改一个样式，浏览器就需要重新渲染一次页面。  
-这样的执行的性能是比较差的，而且这种形式当我们想要修改多个样式时，也不太方便。我希望一行代码，可以同时修改多个样式。  
-我们可以通过修改元素的 `class` 属性来间接的修改样式，这样一来，我们只需要修改一次，即可以同时修改多个样式；浏览器只需要重新渲染页面一次，性能比较好，并且这种方式，可以使表现和行为进一步的分离。
+- 通过 `style` 属性来修改元素的样式，每修改一个样式，浏览器就需要重新渲染一次页面。（现代浏览器通常会合并处理，不是每行立即重排；多 style 写入通常一次重排）。
+- 性能差，通常通过修改元素的 `class` 属性来间接的修改样式。
 
 :::
 
@@ -189,8 +185,8 @@ function getStyle(obj, name) {
 | scrollLeft   | 获取水平滚动条滚动的距离                                           |
 | scrollTop    | 获取垂直滚动条滚动的距离                                           |
 
-- 当满足 `scrollHeight - scrollTop == clientHeight`，说明垂直滚动条滚动到底了。
-- 当满足 `scrollWidth - scrollLeft == clientWidth`，说明水平滚动条滚动到底。
+- `scrollHeight - scrollTop <= clientHeight`，说明垂直滚动条滚动到底了。
+- `scrollWidth - scrollLeft <= clientWidth`，说明水平滚动条滚动到底。
 - onscroll: 该事件会在元素的滚动条滚动时触发
 - 如果为表单元素添加 `disabled="disabled"` 则表单项将变成不可用的状态。
 - disabled 属性可以设置一个元素是否禁用，如果设置为 true，则元素禁用；如果设置为 false，则元素可用。
@@ -234,7 +230,7 @@ u1.onclick = function(event){
   1.  事件的字符串，要 on
   2.  回调函数
 - 这个方法也可以同时为一个事件绑定多个处理函数，不同的是：它是后绑定的先执行，执行顺序和 `addEventListener()` 相反。
-- `attachEvent()` 中的 this，是绑定事件的对象
+- `attachEvent()` 中的 this，指向的是全局对象 window，而不是绑定事件的元素对象。
 
 :::
 

@@ -27,46 +27,11 @@
 - 一般我们只会使用 `userAgent` 来判断浏览器的信息，  
    `userAgent` 是一个字符串，这个字符串中包含用来描述浏览器信息的内容，不同的浏览器会有不同的 `userAgent`
 
-- 火狐的 `userAgent`  
-   `Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0`
-- Mozilla 的 `userAgent`  
-   `Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)`
-- Chrome 的 `userAgent`  
-   `Chrome/52.0.2743.82 Safari/537.36`
-- IE8  
-   `Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)`
-- IE9  
-   `Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)`
-- IE10  
-   `Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)`
-- IE11  
-   `Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; rv:11.0) like Gecko`
-
-在 IE11 中已经将微软和 IE 相关的标识都已经去除了，所以我们基本已经不能通过 `UserAgent` 来识别一个浏览器是否是 IE 了。  
-如果通过 `UserAgent` 不能判断，还可以通过一些浏览器中特有的对象，来判断浏览器的信息。比如：`ActiveXObject`
-
-```js
-if ("ActiveXObject" in window) {
-  alert("你是 IE");
-} else {
-  alert("你不是 IE");
-}
-```
-
-**判断浏览器型号的代码示例：**
-
-```js
-var ua = navigator.userAgent;
-if (/firefox/i.test(ua)) {
-  alert("你是火狐");
-} else if (/chrome/i.test(ua)) {
-  alert("你是 Chrome");
-} else if (/msie/i.test(ua)) {
-  alert("你是 IE 浏览器");
-} else if ("ActiveXObject" in window) {
-  alert("你是 IE11");
-}
-```
+| 浏览器              | 典型 User-Agent 字符串                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Google Chrome**   | `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36`               |
+| **Mozilla Firefox** | `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0`                                              |
+| **Microsoft Edge**  | `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0` |
 
 ### History
 
@@ -82,12 +47,10 @@ if (/firefox/i.test(ua)) {
 ### Location
 
 - `Location` 对象中封装了浏览器的地址栏的信息
-- 如果直接打印 `location`，则可以获取到地址栏的信息（当前页面的完整路径）。
-- 如果直接将 `location` 属性修改为一个完整的路径或相对路径，则我们页面会自动跳转到该路径，并且会生成相应的历史记录。
+- 如果直接将 `location` 赋值为一个完整的路径或相对路径，则会自动跳转到该路径，并且会生成相应的历史记录。
 - `assign()` - 用来跳转到其他的页面，作用和直接修改 `location` 一样
-- `replace()` - 用于重新加载当前页面，作用和刷新按钮一样
-  - 如果在方法中传递一个 `true`，作为参数，则会强制清空缓存刷新页面
-  - 可以使用一个新的页面替换当前页面，调用完毕也会跳转页面。不会生成历史记录，不能使用回退按钮回退。
+- `replace()` - 使用一个新的页面替换当前页面，调用完毕也会跳转页面。不会生成历史记录，不能使用回退按钮回退。
+- `reload()` - 重新加载当前页面，作用和刷新按钮一样 ，如果在方法中传递一个 `true`，则会强制清空缓存刷新页面。
 
 ### 定（计）时器
 
