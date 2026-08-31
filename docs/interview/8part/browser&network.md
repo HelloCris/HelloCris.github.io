@@ -170,39 +170,6 @@
 
 **结论**：**301永久性重定向**是最安全、最理想的SEO解决方案。
 
-## `fetch` 请求方法
-
-`fetch` 是浏览器原生提供的**网络请求 API**（基于 WHATWG Fetch 标准，ES6 时代正式普及），用来替代老旧的 `XMLHttpRequest`。
-
-```js
-fetch(resource, options?) => Promise<Response>
-```
-
-```js
-// 最简 GET
-const res = await fetch("/api/user");
-const data = await res.json();
-
-// 带配置项的 POST
-const res = await fetch("/api/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "Tom", pwd: "123" }),
-});
-```
-
-::: warning ⚠️ 注意
-`fetch` 返回的是一个 **Promise**，且**只有网络层失败（断网、DNS 失败、跨域被拦）才会 reject**；HTTP 状态码（如 404、500）**不会**触发 reject，需要自己判断 `res.ok` 或 `res.status`。
-:::
-
-| 核心对象            | 关键属性 / 方法                                                                     | 说明                                   |
-| ------------------- | ----------------------------------------------------------------------------------- | -------------------------------------- |
-| `Response`          | `res.ok` / `res.status` / `res.statusText`                                          | `ok` = `status` 在 200–299             |
-|                     | `res.headers`                                                                       | 响应头（Headers 对象）                 |
-|                     | `res.json()` / `res.text()` / `res.blob()` / `res.arrayBuffer()` / `res.formData()` | 都是返回 Promise，用于解析不同格式体   |
-|                     | `res.clone()`                                                                       | 响应体只能读一次，需多次读取时先 clone |
-| `Request`（可省略） | `new Request(url, options)`                                                         | 可单独构造请求对象再传给 fetch         |
-
 ## html网页渲染的基本过程
 
 ```

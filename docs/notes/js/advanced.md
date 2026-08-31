@@ -54,7 +54,7 @@ function Person(name) {
 const person = new Person("Tom");
 
 person instanceof Person; // true
-person instanceof Object; // true （Object 是所有对象的顶层原型）
+person instanceof Object; // true （Object.prototype 是原型链顶端）
 ```
 
 #### 区别
@@ -209,7 +209,7 @@ a();
 
 **1. 创建阶段**
 
-- 创建变量对象（VO/AO）
+- 创建变量对象
 - 建立作用域链
 - 确定 this 指向
 
@@ -365,7 +365,7 @@ fn(); // 输出 'Tom'
 
 ```js
 function outer() {
-  const count = 0; // 外部变量
+  let count = 0; // 外部变量
   return function () {
     count++; // 每次调用都会修改外部变量
     console.log(count);
@@ -657,9 +657,9 @@ Dog.prototype.bark = function () {
 };
 
 const dog = new Dog("旺财", "柯基");
-console.log(dog.name); // '旺财' - 继承自 Animal
+console.log(dog.name); // undefined - 无法向父类构造函数传参
 console.log(dog.breed); // '柯基' - 自身属性
-console.log(dog.getName()); // '旺财' - 继承的方法
+console.log(dog.getName()); // undefined - 无法向父类构造函数传参
 dog.bark(); // '汪汪汪'
 ```
 
@@ -921,7 +921,7 @@ console.log(dog.getName()); // 'Dog: 旺财'
 
 #### 线程
 
-线程是进程内的执行单元，是 CPU 调度的最小单位。同一个进程内的多个线程共享进程的内存空间和资源（堆、方法区等），但每个线程有自己的程序计数器、虚拟机栈和本地方法栈。
+线程是进程内的执行单元，是 CPU 调度的最小单位。每个线程有独立的调用栈和程序计数器，共享进程的堆内存。
 
 **线程的特点**：
 
@@ -951,8 +951,8 @@ console.log(dog.getName()); // 'Dog: 旺财'
 
 - **Trident**：IE 浏览器使用的内核
 - **Gecko**：Firefox 浏览器使用的内核
-- **WebKit**：Safari 浏览器使用的内核，特点是轻量、简洁
-- **Blink**：Chrome、Opera 浏览器使用的内核，是 WebKit 的分支
+- **WebKit**：Safari 浏览器使用的内核
+- **Blink**：Chrome、Edge、Opera 浏览器使用的内核，是 WebKit 的分支
 
 #### 浏览器内核的主要模块
 
@@ -1119,7 +1119,7 @@ Promise.resolve()
     console.log("4");
   });
 
-// 输出：1 3 2 4
+// 输出：1 3 4 2
 // Promise.resolve('2') 会创建一个新的 Promise
 // 相当于多执行一次微任务
 ```
