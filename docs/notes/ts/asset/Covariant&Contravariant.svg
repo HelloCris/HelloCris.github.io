@@ -6,7 +6,7 @@
       <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
-
+  <rect x="0" y="0" width="680" height="585" fill="#ffffff"/>
   <text x="40" y="34" font-size="15" font-weight="500" fill="#1a1a1a">子类型 Dog ⊑ Animal 经类型构造器 F 后的三种关系</text>
 
   <circle cx="46" cy="74" r="5" fill="#3B6D11"/>
