@@ -3,7 +3,7 @@
 ## 简介
 
 Express是基于 Node.js 平台，快速、开放、极简的 Web 开发框架。  
-Express的中文官网：[www.Expressjs.com.cn](http://www.expressjs.com.cn/)
+Express官网：[www.Expressjs.com](http://www.expressjs.com/)
 
 对于前端程序员来说，最常见的两种服务器，分别是：
 
@@ -17,7 +17,7 @@ Express的中文官网：[www.Expressjs.com.cn](http://www.expressjs.com.cn/)
 在项目所处的目录中，运行如下的终端命令，即可将 Express安装到项目中使用：
 
 ```bash
-npm i Express@4.17.1
+npm i express@4
 ```
 
 ---
@@ -26,14 +26,14 @@ npm i Express@4.17.1
 
 ```js
 // 1. 导入 Express
-const Express = require("Express");
+const express = require("express");
 
 // 2. 创建 web 服务器
-const app = Express();
+const app = express();
 
 // 3. 调用 app.listen(端口号, 启动成功后的回调函数)，启动服务器
-app.listen(80, () => {
-  console.log("Expressserver running at http://127.0.0.1");
+app.listen(3000, () => {
+  console.log("Expressserver running at http://127.0.0.1:3000");
 });
 ```
 
@@ -273,11 +273,11 @@ module.exports = router; // 5. 向外导出路由对象
 **2. 注册路由模块**
 
 ```js
-1 // 1. 导入路由模块
-2 const userRouter = require('./router/user.js')
-3
-4 // 2. 使用 app.use() 注册路由模块
-5 app.use(userRouter)
+// 1. 导入路由模块
+const userRouter = require("./router/user.js");
+
+// 2. 使用 app.use() 注册路由模块
+app.use(userRouter);
 ```
 
 ::: warning ⚠️ 注意
@@ -503,7 +503,9 @@ app.use(function (err, req, res, next) {
 ```
 
 ::: warning ⚠️ 注意
-错误级别的中间件，必须注册在所有路由之后！
+
+1. 错误级别的中间件，必须注册在所有路由之后！
+2. Express 4 能自动捕获路由处理函数里的**同步** `throw`，但**异步 / `async` 函数里的错误必须用 `next(err)` 传递**。
 
 :::
 
@@ -566,8 +568,8 @@ const app = express();
 // write your code here...
 
 // 调用 app.listen 方法, 指定端口号并启动web服务器
-app.listen(80, function () {
-  console.log("Express server running at http://127.0.0.1");
+app.listen(3000, function () {
+  console.log("Express server running at http://127.0.0.1:3000");
 });
 ```
 
@@ -724,7 +726,7 @@ res.setHeader("Access-Control-Allow-Methods", "*");
 2. 请求头中包含自定义头部字段
 3. 向服务器发送了 application/json 格式的数据
 
-在浏览器与服务器正式通信之前，浏览器会**先发送 OPTION 请求进行预检**，以获知服务器是否允许该实际请求，所以这一次的 OPTION 请求称为“**预检请求**”。服务器成功响应预检请求后，才会发送真正的请求，并且携带真实数据。
+在浏览器与服务器正式通信之前，浏览器会**先发送 OPTIONS 请求进行预检**，以获知服务器是否允许该实际请求，所以这一次的 OPTIONS 请求称为“**预检请求**”。服务器成功响应预检请求后，才会发送真正的请求，并且携带真实数据。
 
 :::
 

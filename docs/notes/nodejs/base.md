@@ -17,10 +17,10 @@ Node.js官网地址：[https://nodejs.org/en](https://nodejs.org/en)
 
 ::: info 可以做什么
 
-1. 基于 [Express框架](http://www.Expressjs.com.cn/)，可以快速构建 Web 应用
+1. 基于 [Express框架](https://expressjs.com/)，可以快速构建 Web 应用
 2. 基于 [Electron 框架](https://electronjs.org/)，可以构建跨平台的桌面应用
-3. 基于 [restify 框架](http://restify.com/)，可以快速构建 API 接口项目
-4. 读写和操作数据库、创建实用的命令行工具辅助前端开发、etc...
+3. 基于 [restify 框架](https://restify.com/)，可以快速构建 API 接口项目
+4. 读写和操作数据库、创建实用的命令行工具辅助前端开发等
 
 :::
 
@@ -37,7 +37,7 @@ Node.js官网地址：[https://nodejs.org/en](https://nodejs.org/en)
 查看安装的nodejs版本号：node -v  
 运行js代码：node a.js
 
-window终端常用快捷键：
+windows终端常用快捷键：
 
 1. 使用 ↑ 键，可以快速定位到上一次执行的命令
 2. 使用 tab 键，能够快速补全路径
@@ -80,7 +80,7 @@ window终端常用快捷键：
 
 ### 模块的导出
 
-#### module.export对象
+#### module.exports对象
 
 在每个 `.js` 自定义模块中都有一个 `module` 对象，它里面**存储了和当前模块有关的信息**，打印如下：
 
@@ -120,7 +120,7 @@ Module {
 - `filename: '...\\03.module对象.js'` → 当前模块文件的绝对路径。
 - `paths: [...]` → Node.js 查找模块时的搜索路径列表（从当前目录逐级向上查找 `node_modules`）。
 
-#### export对象
+#### exports对象
 
 由于 `module.exports` 单词写起来比较复杂，为了简化向外共享成员的代码，Node 提供了 `exports` 对象。默认情况下，`exports` 和 `module.exports` 指向同一个对象。最终共享的结果，还是以 `module.exports` 指向的对象为准。
 
@@ -191,7 +191,7 @@ exports = {
 
 ```js
 {
-  username: "zs";
+  username: "zs",
 }
 ```
 
@@ -371,7 +371,7 @@ path.join([...paths]);
 
 ```js
 const pathStr = path.join("/a", "/b/c", "..", "./d", "e");
-console.log(pathStr); // 输出 \a\b\d\e
+console.log(pathStr); // 在 Windows 输出 \a\b\d\e，在 Mac/Linux 输出 /a/b/d/e
 
 const pathStr2 = path.join(__dirname, "./files/1.txt");
 console.log(pathStr2); // 输出 当前文件所处目录\files\1.txt
@@ -602,7 +602,7 @@ npm i moment@2.22.2
 
 ### 包管理配置文件
 
-npm 规定，在**项目根目录**中，**必须**提供一个叫做 **package.json** 的包管理配置文件。用来记录与项目有关的一些配置信息。例如：
+npm 规范上应在项目根目录提供 package.json。用来记录与项目有关的一些配置信息。例如：
 
 - 项目的名称、版本号、描述等
 - 项目中都用到了哪些包
@@ -1113,7 +1113,7 @@ Header.Payload.Signature
 JWT 的三个组成部分，从前到后分别是 Header、Payload、Signature。  
 其中:
 
-- **Payload** 部分才是真正的用户信息，它是用户信息经过加密之后生成的字符串。
+- **Payload** 部分才是真正的用户信息，它是用户信息经过base64url编码后生成的字符串。
 - Header 和 Signature 是安全性相关的部分，只是为了保证 Token 的安全性。
 
 ---
@@ -1129,7 +1129,7 @@ JWT 的三个组成部分，从前到后分别是 Header、Payload、Signature�
 **1. 安装 JWT 相关的包**
 
 ```bash
-npm install jsonwebtoken express-jwt
+npm install jsonwebtoken express-jwt@6
 ```
 
 其中:

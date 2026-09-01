@@ -259,7 +259,7 @@ ORDER BY 语句默认按照升序对记录进行排序。
 想要在项目中使用它，需要先运行如下命令，将 `mysql` 安装为项目的依赖包：
 
 ```bash
-npm install mysql
+npm install mysql2
 ```
 
 ---
@@ -270,7 +270,7 @@ npm install mysql
 
 ```js
 // 1. 导入 mysql 模块
-const mysql = require("mysql");
+const mysql = require("mysql2");
 // 2. 建立与 MySQL 数据库的连接
 const db = mysql.createPool({
   host: "127.0.0.1", // 数据库的 IP 地址
@@ -423,10 +423,39 @@ db.query(sqlStr, 7, (err, results) => {
 
 ```js
 // 标记删除：使用 UPDATE 语句替代 DELETE 语句；只更新数据的状态，并没有真正删除
-db.query("UPDATE USERS SET status=1 WHERE id=?", 6, (err, results) => {
+db.query("UPDATE users SET status=1 WHERE id=?", 6, (err, results) => {
   if (err) return console.log(err.message); // 失败
   if (results.affectedRows === 1) {
     console.log("删除数据成功!");
   } // 成功
 });
 ```
+
+## 附录
+
+### 附录1: `mysql2/promise`导入方式
+
+```js
+const mysql = require("mysql2/promise");
+const db = mysql.createPool({
+  host: "127.0.0.1",
+  user: "root",
+  password: "admin123",
+  database: "my_db_01",
+});
+
+// 查询示例
+const [rows] = await db.query("SELECT * FROM users");
+console.log(rows);
+
+db.query("SELECT 1").then(([results]) => {
+  console.log(results); // [ RowDataPacket { '1': 1 } ]
+});
+```
+
+::: warning ⚠️ 注意
+`mysql2` 和 `mysql2/promise` 最核心的区别之一：
+
+- `require("mysql2")`：`query(sql, callback)` 走回调风格，第二个参数是回调函数
+- `require("mysql2/promise")`：`query()` **只返回 Promise，不认回调**
+  :::
