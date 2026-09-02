@@ -21,11 +21,11 @@
 
 **新特性**
 
-| 类别            | 内容                                                       |
-| --------------- | ---------------------------------------------------------- |
-| Composition API | `setup`、`ref`、`reactive`、`computed`、`watch`            |
-| 内置组件        | `Fragment`、`Teleport`、`Suspense`                         |
-| 其他改变        | 新的生命周期钩子、data 必须声明为函数、移除 keyCode 修饰符 |
+| 类别            | 内容                                                      |
+| --------------- | --------------------------------------------------------- |
+| Composition API | `setup`、`ref`、`reactive`、`computed`、`watch`           |
+| 内置组件        | `Fragment`、`Teleport`、`Suspense`                        |
+| 其他改变        | 新的生命周期钩子、data允许声明为对象、移除 keyCode 修饰符 |
 
 :::
 
@@ -561,30 +561,28 @@ watch(
 ::: info 5.监视上述的多个数据
 
 ```vue
-<template>
-  <script lang="ts" setup name="Person">
-    import { reactive, watch } from "vue";
+<script lang="ts" setup name="Person">
+import { reactive, watch } from "vue";
 
-    // 数据
-    let person = reactive({
-      name: "张三",
-      age: 18,
-      car: {
-        c1: "奔驰",
-        c2: "宝马",
-      },
-    });
+// 数据
+let person = reactive({
+  name: "张三",
+  age: 18,
+  car: {
+    c1: "奔驰",
+    c2: "宝马",
+  },
+});
 
-    // 监视，情况五：监视上述的多个数据
-    watch(
-      [() => person.name, person.car],
-      (newValue, oldValue) => {
-        console.log("person.car变化了", newValue, oldValue);
-      },
-      { deep: true },
-    );
-  </script>
-</template>
+// 监视，情况五：监视上述的多个数据
+watch(
+  [() => person.name, person.car],
+  (newValue, oldValue) => {
+    console.log("person.car变化了", newValue, oldValue);
+  },
+  { deep: true },
+);
+</script>
 ```
 
 :::
@@ -616,7 +614,7 @@ watch([temp, height], (value) => {
 });
 
 // 用watchEffect实现，不用
-const stopWtach = watchEffect(() => {
+const stopWatch = watchEffect(() => {
   // 室温达到50℃，或水位达到20cm，立刻联系服务器
   if (temp.value >= 50 || height.value >= 20) {
     console.log(document.getElementById("demo")?.innerText);
@@ -625,7 +623,7 @@ const stopWtach = watchEffect(() => {
   // 水温达到100，或水位达到50，取消监视
   if (temp.value === 100 || height.value === 50) {
     console.log("清理了");
-    stopWtach();
+    stopWatch();
   }
 });
 </script>
@@ -742,6 +740,11 @@ console.log(props);
 - 更新阶段：onBeforeUpdate、onUpdated
 - 卸载阶段：onBeforeUnmount、onUnmounted
 
+> `<KeepAlive>`组件相关的生命周期钩子：
+>
+> - onActivated：组件被激活时调用
+> - onDeactivated：组件被停用时调用
+
 ### 自定义 Hooks
 
 什么是hooks？—— 本质是一个函数，把setup函数中使用的Composition API进行了封装，类似于vue2.x中的mixin。
@@ -849,7 +852,11 @@ export default router;
 
 ```ts
 // main.ts
+import { createApp } from "vue";
+import App from "./App.vue";
 import router from "./router/index";
+
+const app = createApp(App);
 
 app.use(router);
 app.mount("#app");
@@ -1321,7 +1328,7 @@ countStore.increment(n.value);
 ```js
 talkStore.$subscribe((mutate, state) => {
   console.log("LoveTalk", mutate, state);
-  localStorage.setItem("talk", JSON.stringify(talkList.value));
+  localStorage.setItem("talk", JSON.stringify(state.talkList));
 });
 ```
 
@@ -1377,12 +1384,12 @@ export const useCountStore = defineStore('count', () => {
 
 ## 组件通信
 
-| 组件关系               | 传递方式                                                     |
-| :--------------------- | :----------------------------------------------------------- |
-| **父传子**             | 1. `props`2. `v-model`3. `$refs`4. 默认插槽、具名插槽        |
-| **子传父**             | 1. `props`2. 自定义事件3. `v-model`4. `$parent`5. 作用域插槽 |
-| **祖传孙、孙传祖**     | 1. `$attrs`2. `provide`、`inject`                            |
-| **兄弟间、任意组件间** | 1. `mitt`2. `pinia`                                          |
+| 组件关系               | 传递方式                                                       |
+| :--------------------- | :------------------------------------------------------------- |
+| **父传子**             | 1. `props`2. `v-model`3. `$refs`父访问子 4. 默认插槽、具名插槽 |
+| **子传父**             | 1. `props`2. 自定义事件3. `v-model`4. `$parent`5. 作用域插槽   |
+| **祖传孙、孙传祖**     | 1. `$attrs`2. `provide`、`inject`                              |
+| **兄弟间、任意组件间** | 1. `mitt`2. `pinia`                                            |
 
 ### props
 
@@ -2077,7 +2084,7 @@ export default function (initValue: string, delay: number) {
 - 使用 Suspense 包裹组件，并配置好 default 与 fallback
 
 ```ts
-import { defineAsyncComponent, suspense } from "vue";
+import { defineAsyncComponent, Suspense } from "vue";
 const Child = defineAsyncComponent(() => import("./Child.vue"));
 ```
 

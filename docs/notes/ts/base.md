@@ -8,7 +8,7 @@ TypeScript = Type + JavaScript（在 JS 基础之上，为 JS 添加了类型支
 从编程语言的动静态来区分，TypeScript 属于**静态类型的编程语言**，JS 属于**动态类型的编程语言**。
 
 - **静态类型：** 编译期做类型检查
-- **动态类型：** 执行期做类型检查
+- **动态类型：** 运行时做类型检查
 
 **代码编译和代码执行的顺序：1 编译 → 2 执行**
 
@@ -75,7 +75,7 @@ TypeScript 类型系统的主要优势：可以**显示标记出代码中的意�
 可以将 TS 中的常用基础类型细分为两类：1. JS 已有类型; 2. TS 新增类型
 
 - 1.  JS 已有类型
-  - **原始类型**：`number` / `string` / `boolean` / `null` / `undefined` / `symbol`
+  - **原始类型**：`number` / `string` / `boolean` / `null` / `undefined` / `symbol` / `bigint`
   - **对象类型**：`object`（包括：数组、对象、函数等对象）
 
 - 2. TS 新增类型
@@ -124,7 +124,8 @@ let p = { x: 1, y: 2 };
 function formatPoint(point: { x: number; y: number }) {}
 formatPoint(p);
 
-function formatPoint(point: typeof p) {}
+// 等价于
+// function formatPoint(point: typeof p) {}
 ```
 
 **解释：**
@@ -393,8 +394,7 @@ let position: [number, number] = [39.5427, 116.2317];
 
 ### 类型推论
 
-在 TS 中，某些没有明确指出类型的地方，TS 的**类型推论机制**会帮助提供类型。  
-换句话说：由于类型推论的存在，这些地方，**类型注解可以省略不写！**
+在 TS 中，没有明确类型时，TS 的**类型推论机制**会帮助提供类型。
 
 发生类型推论的 2 种常见场景：
 
@@ -402,22 +402,14 @@ let position: [number, number] = [39.5427, 116.2317];
 2. 定义函数返回值时
 
 ```ts
-let age: number; // TS 自动推断出变量 age 为 number 类型
-
-let age = 18; // 鼠标移入变量名称 age
-```
-
-```ts
-function add(num1: number, num2: number): number; // 函数返回值类型可推断
+let age = 18; // TS 自动推断出变量 age 为 number 类型
 
 function add(num1: number, num2: number) {
   return num1 + num2;
 } // 省略返回值类型，鼠标移入函数名称 add，即可查看返回值类型为 number
 ```
 
-**注意：** 这两种情况下，**类型注解可以省略不写！**  
-**推荐：** 能省略类型注解的地方就省略（偷懒），充分利用 TS 类型推论的能力，提升开发效率。  
-**技巧：** 如果不知道类型，可以通过鼠标放在变量名称上，利用 VSCode 的提示来查看类型。
+**注意：** 这两种情况下，**类型注解可以省略不写！**
 
 ### 类型断言
 
@@ -429,11 +421,10 @@ function add(num1: number, num2: number) {
 ```
 
 ```ts
-const aLink: HTMLElement; // 鼠标移入变量名称 aLink，即可查看类型为 HTMLElement
-const aLink = document.getElementById("link");
+const aLink: HTMLElement = document.getElementById("link") as HTMLElement; // 鼠标移入变量名称 aLink，即可查看类型为 HTMLElement
 ```
 
-**注意：** `getElementById` 方法返回值的类型是 `HTMLElement`，该类型只包含所有标签公共的属性或方法，不包含 `a` 标签特有的 `href` 等属性。  
+**注意：** `getElementById` 方法返回值的类型是 `HTMLElement | null`，该类型只包含所有标签公共的属性或方法，不包含 `a` 标签特有的 `href` 等属性。  
 因此，这个类型太宽泛（不具体），无法操作 `href` 等 `a` 标签特有的属性或方法。
 
 **解决方式：** 这种情况下就需要**使用类型断言指定更加具体的类型**。
@@ -441,8 +432,9 @@ const aLink = document.getElementById("link");
 **使用类型断言：**
 
 ```ts
-const aLink: HTMLAnchorElement; // 鼠标移入，显示类型为 HTMLAnchorElement
-const aLink = document.getElementById("link") as HTMLAnchorElement;
+const aLink: HTMLAnchorElement = document.getElementById(
+  "link",
+) as HTMLAnchorElement;
 ```
 
 **解释：**

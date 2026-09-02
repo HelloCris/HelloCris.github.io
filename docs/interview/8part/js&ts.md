@@ -873,3 +873,37 @@ window.addEventListener("unhandledrejection", (event) => {
 ```
 
 > Promise 链中没有 `.catch()` 的 rejection **不会触发 `onerror`**，只会触发 `unhandledrejection`。
+
+## 函数柯里化
+
+```js
+// 实现一个add函数，满足以下条件
+add(1)(2)(3) = 6
+add(1, 2, 3)(4) = 10
+add(1)(2)(3)(4)(5) = 15
+```
+
+```js
+function add(...args) {
+  // 内部函数：收集参数并继续返回自身（支持链式调用）
+  function inner(...innerArgs) {
+    return add(...args, ...innerArgs);
+  }
+
+  // 核心技巧：重写 valueOf / toString，
+  // 让函数在参与数学运算或被转为字符串时自动求和
+  inner.valueOf = () => args.reduce((s, n) => s + n, 0);
+  inner.toString = () => String(args.reduce((s, n) => s + n, 0));
+
+  return inner;
+}
+```
+
+```js
+add(1)(2)(3); // → 6   （隐式调用 valueOf）
+add(1, 2, 3)(4); // → 10
+add(1)(2)(3)(4)(5); // → 15
+add(1, 2)(3, 4)(5, 6); // → 21
+```
+
+![柯里化原理add(1)(2)(3)](asset/Currying.svg)

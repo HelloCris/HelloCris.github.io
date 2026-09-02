@@ -13,8 +13,7 @@ class Person {}
 ```
 
 ```ts
-const p: Person;
-const p = new Person();
+const p: Person = new Person();
 ```
 
 **解释：**
@@ -56,8 +55,7 @@ class Person {
 
 **解释：**
 
-1. 成员初始化（比如，`age: number`）后，才可以通过 `this.age` 来访问实例成员。
-2. 需要为构造函数指定类型注解，否则会被隐式推断为 `any`；构造函数不需要返回值类型。
+1. 需要为构造函数指定类型注解，否则会被隐式推断为 `any`；构造函数不需要返回值类型。
 
 ---
 
@@ -263,7 +261,7 @@ const p: Point = new Point2D();
 
 注意：在结构化类型系统中，如果两个对象具有相同的形状，则认为它们属于同一类型，这种说法并不准确。
 
-**更准确的说法：对于对象类型来说，y 的成员至少与 x 相同，则 x 兼容 y（成员多的可以赋值给少的）。**
+**更准确的说法：源对象成员数 ≥ 目标类型成员数时，源可赋值给目标（如 `Point3D` 实例可赋给 `Point` 变量）**
 
 ```ts
 class Point {
@@ -391,7 +389,7 @@ f2 = f3;
 
 **解释：**
 
-1. 注意：此处与前面讲到的接口兼容性冲突。
+1. 注意：参数类型兼容性，参数少的可以赋值给参数多的，但是反过来不行。【逆变】
 2. 技巧：将对象拆开，把每个属性看做一个参数，则，参数少的（`f2`）可以赋值给参数多的（`f3`）。
    - 因为 `Point3D` 包含了 `Point2D` 的所有成员，所以 `Point3D` 类型可以赋值给 `Point2D` 类型。
    - 但反过来不行：`f3` 是 `(p: Point3D)`，而 `f2` 要求的是 `(p: Point2D)`，不能保证 `z` 被正确处理 → 所以 `f2 = f3` 不合法。
@@ -493,10 +491,13 @@ interface B {
 type C = A & B;
 ```
 
-> ✅ 没有错误。可以理解为：
+> ✅ 没有错误。可以理解为函数重载。
 >
 > ```ts
-> fn: (value: string | number) => string;
+> interface C {
+>   fn(value: number): string;
+>   fn(value: string): string;
+> }
 > ```
 
 ### 泛型
@@ -534,7 +535,7 @@ function id<T>(value: T): T {
 }
 ```
 
-#### 范型的基本使用
+#### 泛型的基本使用
 
 **创建泛型函数：**
 
@@ -563,12 +564,10 @@ function id<Type>(value: Type): Type {
 调用示例：
 
 ```ts
-const num: number;
 const num = id<number>(10);
 ```
 
 ```ts
-const str: string;
 const str = id<string>("a");
 ```
 
@@ -657,10 +656,8 @@ function id<Type extends ILength>(value: Type): Type {
 > ```ts
 > id([1, 2, 3]); // ✅ 可以
 > id({ length: 5 }); // ✅ 可以（只要满足接口）
-> id("hello"); // ❌ 报错！字符串没有 length？不，有！但需要看是否被正确识别。
+> id("hello"); // ✅ 字符串也有length，所以合法
 > ```
->
-> 实际上，字符串也有 `length` 属性，所以 `id('hello')` 是合法的，因为 `'hello'` 兼容 `ILength` 接口。
 
 **泛型的类型变量可以有多个，并且类型变量之间还可以约束**（比如，第二个类型变量受第一个类型变量约束）。
 
@@ -1073,3 +1070,56 @@ type TypeA = Props[keyof Props]; // string | number | boolean
 
 **解释：**  
 使用 `keyof` 操作符获取 `Props` 中所有键对应的类型，结果为：`string | number | boolean`。
+
+## 附录
+
+### 附录1: 协变和逆变
+
+**协变/逆变/不变** 描述的是：当 `A` 是 `B` 的子类型（`A ⊑ B`）时，把它套进某个「类型构造器」`F`（比如 `Array<T>`、`Promise<T>`、`(x: T) => void`）之后，`F<A>` 和 `F<B>` 之间还保不保持子类型关系、方向变不变。
+
+| 关系                   | 已知 `A ⊑ B` 时 | 赋值方向     | 口诀         |
+| ---------------------- | --------------- | ------------ | ------------ |
+| **协变 Covariant**     | `F<A> ⊑ F<B>`   | 同方向       | 子类型跟着走 |
+| **逆变 Contravariant** | `F<B> ⊑ F<A>`   | 反方向       | 子类型反过来 |
+| **不变 Invariant**     | 两者都不是      | 必须完全匹配 | 一丝不能差   |
+
+> 补充：TS 里还有一种 **双变（bivariant）** —— 双向都能赋值，这其实是不安全的，主要出现在「类的方法参数」上（历史兼容原因）。
+
+![协变和逆变](asset/Covariant&Contravariant.svg)
+
+```ts
+interface Animal {
+  name: string;
+}
+interface Dog extends Animal {
+  bark(): void;
+}
+
+// ① 返回值位置 → 协变
+type Producer<T> = () => T;
+let produceDog: Producer<Dog>;
+let produceAnimal: Producer<Animal>;
+// ✅ 协变：Dog ⊑ Animal ⇒ Producer<Dog> ⊑ Producer<Animal>
+produceAnimal = produceDog;
+
+// ② 参数位置 → 逆变（strictFunctionTypes 开启时）
+type Consumer<T> = (x: T) => void;
+let consumeAnimal: Consumer<Animal>;
+let consumeDog: Consumer<Dog>;
+// ✅ 逆变：Dog ⊑ Animal ⇒ Consumer<Animal> ⊑ Consumer<Dog>
+consumeDog = consumeAnimal;
+```
+
+**为什么参数要逆变（安全角度）？**
+
+- `consumeDog` 的调用方只会喂它 `Dog`；`consumeAnimal` 能处理**任意** `Animal`，当然也能处理 `Dog`。
+- 把「更宽泛的消费者」赋给「更严格的位置」是安全的 → 方向反转成逆变。
+- 反过来 `consumeAnimal = consumeDog` 不安全：`consumeAnimal` 可能被喂一只 `Cat`，而 `consumeDog` 只会 `bark`，运行时炸。
+
+::: info 面试 Q&A
+**Q1：什么是协变/逆变？**  
+A：描述「子类型关系」经过类型构造器后，是否保持、反转、或丢失。
+
+**Q2：为什么函数返回值协变、参数逆变？**  
+A：返回值被「往外给」，越具体越好 → 协变；参数被「往里吃」，越宽泛越安全 → 逆变。
+:::

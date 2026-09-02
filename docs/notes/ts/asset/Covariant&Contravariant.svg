@@ -1,0 +1,44 @@
+<svg viewBox="0 0 680 404" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, 'Segoe UI', Roboto, sans-serif" role="img">
+  <title>协变逆变不变关系图</title>
+  <desc>已知 Dog 是 Animal 的子类型，套入类型构造器 F 后，协变保持同向、逆变反转方向、不变则互不匹配。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="585" fill="#ffffff"/>
+  <text x="40" y="34" font-size="15" font-weight="500" fill="#1a1a1a">子类型 Dog ⊑ Animal 经类型构造器 F 后的三种关系</text>
+
+  <circle cx="46" cy="74" r="5" fill="#3B6D11"/>
+  <text x="58" y="78" font-size="14" font-weight="500" fill="#27500A">协变 Covariant</text>
+  <text x="40" y="116" font-size="13" fill="#444441">已知  Dog ⊑ Animal</text>
+  <line x1="205" y1="116" x2="280" y2="116" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="290" y="86" width="150" height="30" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+  <text x="365" y="101" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#27500A">F&lt;Dog&gt;</text>
+  <rect x="290" y="120" width="150" height="30" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+  <text x="365" y="135" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#27500A">F&lt;Animal&gt;</text>
+  <line x1="365" y1="116" x2="365" y2="120" stroke="#3B6D11" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="470" y="116" font-size="13" fill="#27500A">⊑ 同向</text>
+
+  <circle cx="46" cy="198" r="5" fill="#854F0B"/>
+  <text x="58" y="202" font-size="14" font-weight="500" fill="#633806">逆变 Contravariant</text>
+  <text x="40" y="240" font-size="13" fill="#444441">已知  Dog ⊑ Animal</text>
+  <line x1="205" y1="240" x2="280" y2="240" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="290" y="210" width="150" height="30" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text x="365" y="225" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#633806">F&lt;Animal&gt;</text>
+  <rect x="290" y="244" width="150" height="30" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text x="365" y="259" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#633806">F&lt;Dog&gt;</text>
+  <line x1="365" y1="240" x2="365" y2="244" stroke="#854F0B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="470" y="240" font-size="13" fill="#633806">⊑ 反向</text>
+
+  <circle cx="46" cy="322" r="5" fill="#A32D2D"/>
+  <text x="58" y="326" font-size="14" font-weight="500" fill="#791F1F">不变 Invariant</text>
+  <text x="40" y="349" font-size="13" fill="#444441">已知  Dog ⊑ Animal</text>
+  <line x1="205" y1="349" x2="275" y2="349" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="290" y="334" width="150" height="30" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.5"/>
+  <text x="365" y="349" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#791F1F">F&lt;Dog&gt;</text>
+  <text x="455" y="349" text-anchor="middle" dominant-baseline="central" font-size="15" fill="#791F1F">≠</text>
+  <rect x="475" y="334" width="150" height="30" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.5"/>
+  <text x="550" y="349" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#791F1F">F&lt;Animal&gt;</text>
+  <text x="300" y="386" font-size="13" fill="#791F1F">不存在子类型关系，必须完全匹配</text>
+</svg>

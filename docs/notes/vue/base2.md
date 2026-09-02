@@ -206,6 +206,7 @@ v-on指令 缩写@
   - `v-show` 只是 CSS 切换，**不管初始条件如何，元素总是会被渲染**。
 - **v-for 的优先级**
   - 当 `v-if` 与 `v-for` 一起使用时，`v-for` 的优先级更高（即：遍历每一项，然后判断是否显示）。**建议：** 尽量避免同时使用，如果为了过滤列表，建议在计算属性中处理。
+  - **Vue 3 中正好相反，v-if 优先级高于 v-for**
 - **修饰符**
   - `v-on` 和 `v-model` 都有很多修饰符，例如 `@click.stop` (阻止冒泡), `v-model.trim` (去除首尾空格) 等。
 
@@ -732,7 +733,7 @@ export default {
 **具名插槽**：当一个组件需要多个插槽时，可以使用 `name` 属性来区分不同的插槽。
 
 - **定义**：给 `<slot>` 添加 `name` 属性。
-- **分发**：父组件在使用时，通过 `slot="name"` 属性指定内容要插入到哪个位置。
+- **分发**：父组件在使用时，需要使用 `<template>` 标签配合 v-slot:插槽名（可简写为 #插槽名）。
 
 ```html
 <!-- 子组件 (my-cpn) -->
@@ -747,16 +748,24 @@ export default {
 <!-- 父组件调用 -->
 <my-cpn>
   <!-- 只传入左侧内容 -->
-  <span slot="left">我是返回按钮</span>
+  <template v-slot:left><span>我是返回按钮</span></template>
 </my-cpn>
 
 <my-cpn>
-  <!-- 传入所有内容 -->
-  <span slot="left">我是返回按钮</span>
-  <span slot="center">我是标题</span>
-  <span slot="right">我是菜单</span>
+  <!-- 简写方式 -->
+  <template #left><span>我是返回按钮</span></template>
+  <template #center><span>我是标题</span></template>
+  <template #right><span>我是菜单</span></template>
 </my-cpn>
 ```
+
+::: warning ⚠️ 注意
+
+Vue2.6+版本 核心变化点：
+
+1. 插槽内容必须包裹在 `<template>` 标签中。
+2. 将 slot="left" 替换为 v-slot:left 或简写 #left。
+3. 子组件中 `<slot name="left">` 的定义方式保持不变，无需修改。
 
 :::
 
@@ -766,12 +775,11 @@ export default {
 >
 > - **父组件模板**的所有东西都会在**父级作用域**内编译。
 > - **子组件模板**的所有东西都会在**子级作用域**内编译。
-> - **通俗解释**：在 `<my-cpn>` 标签内部写的 HTML 和变量，只能访问父组件的数据；而在 `<template id="myCpn">` 内部写的变量，只能访问子组件的数据。
 
 - **作用域插槽使用场景**：父组件想替换插槽的内容，但渲染所需的数据却来源于子组件。
 - **机制**：
   1. **子组件**：将数据绑定在 `<slot>` 上（例如 `:data="pLanguages"`）。
-  2. **父组件**：通过 `slot-scope` 接收子组件传递过来的数据对象。
+  2. **父组件**：通过 `#default` 或 `v-slot:default` 接收子组件传递过来的数据对象。
 
 ::: info 代码逻辑流程
 
@@ -793,20 +801,19 @@ export default {
 
 2. **父组件接收与使用**：
 
-   父组件使用 `<template slot-scope="slotProps">` 来获取子组件传来的数据对象。
+   父组件使用 `<template #default="slotProps">` 来获取子组件传来的数据对象。
 
    ```html
    <my-cpn>
-     <template slot-scope="slotProps">
+     <template #default="slotProps">
        <ul>
-         <!-- 注意这里使用的是 slotProps.data -->
          <li v-for="info in slotProps.data">{{ info }}</li>
        </ul>
      </template>
    </my-cpn>
    <my-cpn>
-     <template slot-scope="slotProps">
-       <span v-for="info in slotProps.data">{{ info }} </span>
+     <template #default="{ data }">
+       <span v-for="info in data">{{ info }} </span>
      </template>
    </my-cpn>
    ```
@@ -814,6 +821,8 @@ export default {
 :::
 
 ## webpack
+
+_webpack 整章是 webpack 3 + Vue CLI2 历史版本_
 
 ### 简单认识
 
@@ -1078,7 +1087,7 @@ const webpack = require('webpack')
 module.exports = {
     ...
     plugins: [
-        new webpack.BannerPlugin('最终版权归coderwhy所有')
+        new webpack.BannerPlugin('最终版权归Cris所有')
     ]
 }
 ```
@@ -1086,7 +1095,7 @@ module.exports = {
 重新打包程序：查看 bundle.js 文件的头部，看到如下信息
 
 ```text
-/*! 最终版权归coderwhy所有 */
+/*! 最终版权归Cris所有 */
 /******/ (function(modules) { // webpackBootstrap
 ```
 
@@ -1102,7 +1111,7 @@ module.exports = {
 
 ```js
 plugins: [
-  new webpack.BannerPlugin("最终版权归coderwhy所有"),
+  new webpack.BannerPlugin("最终版权归Cris所有"),
   new HtmlWebpackPlugin({
     template: "index.html",
   }),
@@ -1124,15 +1133,21 @@ const uglifyJsPlugin = require('uglifyjs-webpack-plugin')
 module.exports = {
     ...
     plugins: [
-        new webpack.BannerPlugin('最终版权归coderwhy所有')
+        new webpack.BannerPlugin('最终版权归Cris所有'),
         new uglifyJsPlugin()
     ]
 }
 ```
 
+::: warning ⚠️ 注意
+
+webpack 已到 5.x，JS 压缩用 `terser-webpack-plugin`（已内置），`uglifyjs-webpack-plugin` 基本不用了。
+
 :::
 
 ## vue cli详解
+
+_`vue init webpack my-project` / `vue create` 所属的 **Vue CLI 官方已停止维护**，官方推荐新项目用 `create-vue`（Vite）_
 
 ### vue cli介绍
 
@@ -1586,7 +1601,6 @@ router.beforeEach((to, from, next) => {
 // 全局后置守卫
 router.afterEach((to, from) => {
   console.log("全局后置守卫", to, from);
-  next();
 });
 ```
 
@@ -1650,7 +1664,7 @@ Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用�
 **安装 Vuex**：
 
 ```bash
-npm install vuex --save
+npm install vuex@3 --save
 ```
 
 **基础配置和使用**：
