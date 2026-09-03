@@ -1,8 +1,8 @@
 # Electron 基础
 
-> Electron 更新非常快，当前笔记是基于v11.2.0版本。
+> Electron 更新非常快，当前笔记是基于`v11.2.0`版本。
 >
-> 最新版本已更新至v43.1.0，后期笔记需要根据新版本进行更新。
+> 最新版本已更新至`v43.1.0`，需要根据新版本进行更新。
 
 ## Electron 基本认知
 
@@ -105,6 +105,7 @@ app.on("ready", () => {
 
 app.on("window-all-closed", () => {
   console.log("所有窗口已关闭");
+  // macOS平台习惯 上应用不会退出，其他平台会退出
   if (process.platform !== "darwin") app.quit();
 });
 
@@ -132,7 +133,7 @@ app.on("quit", () => {
 - `whenReady()` 是 `ready` 事件的 Promise 版本，推荐使用
 - macOS 上点击 Dock 图标触发 `activate`，此时若无窗口需重建
 - 关闭所有窗口并不意味着应用退出，需监听 `window-all-closed` 手动退出
-- 当监听了`window-all-closed`事件并且不做任何操作时时，`before-quit`、`will-quit`、`quit`，这三个事件就会失效
+- 当监听了`window-all-closed`事件并且不做任何操作时时，`before-quit`、`will-quit`、`quit`这三个事件不会触发
 
 :::
 
@@ -165,7 +166,7 @@ function createWindow() {
     // 页面完全加载完成（包括资源）
     mainWin.webContents.on("did-finish-load", () => {});
     // 窗口关闭事件
-    mainWin.on("close", (mainWin) => {});
+    mainWin.on("close", (event) => {});
   });
 }
 ```
@@ -242,7 +243,7 @@ function createWindow() {
 
 ```js
 webPreferences: {
-  contextIsolation: false;
+  contextIsolation: false,
 }
 ```
 
@@ -413,7 +414,7 @@ Menu.setApplicationMenu(menu);
 > `role` (String, optional) - 可以是以下值之一：
 > `undo`, `redo`, `cut`, `copy`, `paste`, `pasteAndMatchStyle`, `delete`, `selectAll`, `reload`, `forceReload`, `toggleDevTools`, `resetZoom`, `zoomIn`, `zoomOut`, `togglefullscreen`, `window`, `minimize`, `close`, `help`, `about`, `services`, `hide`, `hideOthers`, `unhide`, `quit`, `startSpeaking`, `stopSpeaking`, `zoom`, `front`, `appMenu`, `fileMenu`, `editMenu`, `viewMenu`, `recentDocuments`, `toggleTabBar`, `selectNextTab`, `selectPreviousTab`, `mergeAllWindows`, `clearRecentDocuments`, `moveTabToNewWindow` or `windowMenu`。
 >
-> _作用：定义菜单项的行为，当指定了 `click` 处理器时会被忽略。_
+> _作用：当指定了 `role` 属性时，会使用 Electron 内置的菜单能力，`click` 事件会被忽略。_
 
 ### 菜单角色及类型、自定义菜单项
 
@@ -560,7 +561,7 @@ let menu = Menu.buildFromTemplate(contextTemp);
 window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("contextmenu", (ev) => {
     ev.preventDefault(); // 阻止默认的浏览器右键菜单
-    menu.popup({ window: remote.getCurrentWindow() }, false);
+    menu.popup({ window: remote.getCurrentWindow() });
   });
 });
 ```
@@ -917,6 +918,7 @@ window.onload = function () {
 
 ```js
 const { shell } = require("electron");
+const path = require("path");
 
 window.onload = function () {
   // 1 获取元素
@@ -964,11 +966,11 @@ oBtn.addEventListener("click", () => {
 **快捷键注册**
 
 ```js
-const { app, BrowserWindow, globalShortcut } = require("electron");
+const { app, globalShortcut } = require("electron");
 
 app.on("ready", () => {
   // 注册
-  let ret = globalShortcut.register("ctrl + q", () => {
+  let ret = globalShortcut.register("CommandOrControl+Q", () => {
     console.log("快捷键注册成功");
   });
 });
@@ -978,7 +980,7 @@ app.on("ready", () => {
 
 ```js
 app.on("will-quit", () => {
-  globalShortcut.unregister("ctrl + q");
+  globalShortcut.unregister("CommandOrControl+Q");
   globalShortcut.unregisterAll();
 });
 ```
@@ -990,16 +992,14 @@ app.on("will-quit", () => {
 ```js
 const { clipboard } = require("electron");
 
-let ret = null;
-
 aBtn[0].onclick = function () {
   // 复制内容
-  ret = clipboard.writeText(aInput[0].value);
+  clipboard.writeText(aInput[0].value);
 };
 
 aBtn[1].onclick = function () {
   // 粘贴内容
-  aInput[1].value = clipboard.readText(ret);
+  aInput[1].value = clipboard.readText();
 };
 ```
 
@@ -1054,13 +1054,13 @@ oBtn.onclick = function () {
       "perMachine": true, // 允许每台机器安装一次，而不是每个用户都安装
       "allowToChangeInstallationDirectory": true // 允许用户在安装过程中选择安装目录
     },
-    "devDependencies": {
-      "electron": "^30.0.0", // 开发依赖中的 Electron 版本
-      "electron-builder": "^24.13.3" // 开发依赖中的 `electron-builder` 版本
-    },
     "author": "CrisWiki", // 作者信息
     "license": "ISC", // 许可证信息
     "description": "A video processing program based on Electron" // 应用程序的描述
+  },
+  "devDependencies": {
+    "electron": "^30.0.0", // 开发依赖中的 Electron 版本
+    "electron-builder": "^24.13.3" // 开发依赖中的 `electron-builder` 版本
   }
 }
 ```
@@ -1115,7 +1115,7 @@ npm run make
 在 index.html 里加入，如下代码，内容安全策略警告提示消失。
 
 ```html
-// electron 提供的配置 成功运行
+<!-- electron 提供的配置 成功运行 -->
 <meta
   http-equiv="Content-Security-Policy"
   content="default-src 'self'; script-src 'self'"

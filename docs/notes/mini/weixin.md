@@ -264,11 +264,11 @@ Page({
 
 Text组件用于显示文本，类似于span标签，是行内元素。
 
-| 属性       | 类型    | 默认值 | 必填 | 说明         |
-| ---------- | ------- | ------ | ---- | ------------ |
-| selectable | boolean | false  | 否   | 文本是否可选 |
-| space      | string  | -      | 否   | 显示连续空格 |
-| decode     | boolean | false  | 否   | 是否解码     |
+| 属性        | 类型    | 默认值 | 必填 | 说明         |
+| ----------- | ------- | ------ | ---- | ------------ |
+| user-select | boolean | false  | 否   | 文本是否可选 |
+| space       | string  | -      | 否   | 显示连续空格 |
+| decode      | boolean | false  | 否   | 是否解码     |
 
 | space的合法值 | 说明                   |
 | ------------- | ---------------------- |
@@ -279,8 +279,7 @@ Text组件用于显示文本，类似于span标签，是行内元素。
 > decode可以解析的有 `&nbsp;` `&lt;` `&gt;` `&amp;` `&apos;` `&ensp;` `&emsp;`
 
 ```html
-<!-- 1.selectable暂时无效 -->
-<text selectable="{{true}}">Hello World</text>
+<text user-select="{{true}}">Hello World</text>
 <view></view>
 
 <!-- 2.space属性 -->
@@ -321,7 +320,7 @@ open-type用户获取一些特殊性的权限，可以绑定一些特殊的事�
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | contact        | 打开客服会话，如果用户在会话中点击消息卡片后返回小程序，可以从bindcontact 回调中获得具体信息，具体说明 |
 | share          | 触发用户转发，使用前建议先阅读使用指引                                                                 |
-| getPhoneNumber | 获取用户手机号，可以从bindgetphonenumber回调中获取到用户信息，具体说明                                 |
+| getPhoneNumber | 获取用户手机号，可以从bindgetphonenumber回调中获取到用户信息(需解密)                                   |
 | getUserInfo    | 获取用户信息，可以从bindgetuserinfo回调中获取到用户信息                                                |
 
 ```html
@@ -342,6 +341,10 @@ open-type用户获取一些特殊性的权限，可以绑定一些特殊的事�
   </button>
 </view>
 ```
+
+::: warning ⚠️ 注意
+
+自 2021-04-28 起，`<button open-type="getUserInfo">` 不再返回真实用户信息（只返回匿名数据），官方推荐改用 `wx.getUserProfile({ desc })`
 
 :::
 
@@ -1304,8 +1307,6 @@ Component({
 **封装成Promise的方式 (network.js)**：
 
 ```js
-import { baseURL, timeout } from "./config.js";
-
 function request(options) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -1319,8 +1320,6 @@ function request(options) {
     });
   });
 }
-
-export default request;
 ```
 
 ### 展示弹窗
@@ -1339,7 +1338,7 @@ export default request;
 - `showToast` 和 `showLoading` 都会在页面切换时自动消失
 - `showToast` 和 `showLoading` 互斥，同时只能显示一个
 - `showLoading` 必须手动调用 `wx.hideLoading()` 才能关闭
-- 微信7.0.0后 `showModal` 的取消按钮默认隐藏，需设置 `showCancel: true` 显示
+- `showModal` 的取消按钮默认展示，设置 `showCancel: false` 隐藏
 
 :::
 
@@ -1380,14 +1379,14 @@ export default request;
 | open-type | string | navigate | 跳转方式                                              |
 | delta     | number | 1        | 当 open-type 为 'navigateBack' 时有效，表示回退的层数 |
 
-| open-type值  | 说明                                                      |
-| ------------ | --------------------------------------------------------- |
-| navigate     | 对应 `wx.navigateTo` 或 `wx.navigateToMiniProgram` 的功能 |
-| redirect     | 对应 `wx.redirectTo` 的功能                               |
-| switchTab    | 对应 `wx.switchTab` 的功能                                |
-| reLaunch     | 对应 `wx.reLaunch` 的功能                                 |
-| navigateBack | 对应 `wx.navigateBack` 的功能                             |
-| exit         | 退出小程序，`target="miniProgram"` 时生效                 |
+| open-type值  | 说明                                      |
+| ------------ | ----------------------------------------- |
+| navigate     | 对应 `wx.navigateTo` 的功能               |
+| redirect     | 对应 `wx.redirectTo` 的功能               |
+| switchTab    | 对应 `wx.switchTab` 的功能                |
+| reLaunch     | 对应 `wx.reLaunch` 的功能                 |
+| navigateBack | 对应 `wx.navigateBack` 的功能             |
+| exit         | 退出小程序，`target="miniProgram"` 时生效 |
 
 ::: warning ⚠️ 注意
 

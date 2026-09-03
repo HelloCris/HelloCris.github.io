@@ -55,7 +55,7 @@ DNS缓存 -> 本地Hosts文件 -> 向本地DNS服务器发起查询 -> 若未命
      - `defer`：延迟到 DOM 解析完后执行（按顺序）。
      - `async`：异步下载，下载完立即执行（不保证顺序）。
    - **遇到 `<link rel="stylesheet">`**：
-     - CSS 不阻塞 HTML 解析，但**阻塞 DOM 渲染**（因需构建 CSSOM）。
+     - CSS 不阻塞 DOM 树构建，阻塞的是渲染​——因为渲染树必须等 CSSOM 就绪。
 
 2. 加载 CSS 并构建 CSSOM
    - 下载 CSS 文件 → 解析 → 构建 **CSSOM（CSS Object Model）**
