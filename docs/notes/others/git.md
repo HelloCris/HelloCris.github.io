@@ -8,7 +8,7 @@
 | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `git config --global user.name "你的名字"`        | 设置全局用户名                                                                     |
 | `git config --global user.email "your@email.com"` | 设置全局邮箱                                                                       |
-| `git config --list`                               | 查看配置 --global：全局 --local：当前项目                                          |
+| `git config --list`                               | 查看全部配置，拼接`--global`：查看全局配置；拼接`--local`：查看当前项目配置        |
 | `git init`                                        | 在当前目录**初始化新仓库**（生成 `.git` 文件夹）                                   |
 | `git clone <仓库地址>`                            | **克隆远程仓库**到本地（如 `git clone https://github.com/HelloCris/CrisWiki.git`） |
 
@@ -91,7 +91,7 @@ git commit -m "描述本次修改"
 
 - **什么是版本控制系统**： 版本控制是一种记录一个或若干个文件内容变化，以便将来查阅特定版本修订情况的系统。（记录文件的所有历史变化、随时可恢复到任何一个历史状态、多人协作开发或修改错误恢复）
 
-- **什么是Github**： 全球最大的社交编程及代码托管网站（ https://github.com/ ）。 Github可以托管各种git库，并提供一个web界面（用户名.github.io/仓库名）
+- **什么是Github**： 全球最大的社交编程及代码托管网站（ https://github.com/ ）。 Github可以托管各种git项目库（用户名.github.io/仓库名）
 
 - **Github和Git是什么关系**：Git是版本控制软件。Github是项目代码托管的平台，借助git来管理项目代码
 
@@ -114,5 +114,4 @@ git commit -m "描述本次修改"
     1. 创建个人站点 -> 新建仓库（注意：仓库名必须是 用户名.github.io）
     2. 在仓库下新建index.html的文件
 
-  > 注意：github pages只支持静态网页
-  > 仓库里面只能是.html文件
+  > 注意：github pages只支持托管静态站点
