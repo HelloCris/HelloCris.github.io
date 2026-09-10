@@ -195,3 +195,124 @@ for (let i = 0; i < 100; i++) {
 ```
 
 > 注意：不要滥用 `will-change`，过多合成层反而增加内存开销。
+
+## 内存泄露
+
+::: info 什么是内存泄露
+
+**定义**：程序中已经不再使用、但**由于某些引用未被释放**，导致垃圾回收机制（GC）无法回收的内存。这部分内存会被持续占用，不断累积。
+
+**后果**：页面逐渐变卡 → 操作无响应 → 浏览器标签崩溃；移动端还会表现为发热、耗电、闪退。
+
+:::
+
+::: warning 内存泄露 vs 内存溢出
+
+- **内存泄露（Memory Leak）**：本该释放的内存没释放，是**慢性**问题，不易立刻察觉。
+- **内存溢出（OOM，Out Of Memory）**：申请内存时剩余空间不足，程序**直接崩溃**。泄露长期积累往往就是溢出的前兆。
+
+:::
+
+### JS 的垃圾回收（GC）机制
+
+浏览器自动管理内存，核心是“判断哪些对象还活着”。
+
+| 算法                         | 原理                                                                 | 优点           | 缺点                             |
+| ---------------------------- | -------------------------------------------------------------------- | -------------- | -------------------------------- |
+| 标记清除（Mark-Sweep，主流） | 从根对象（全局、执行栈）出发，能访问到的标记为“存活”，访问不到的回收 | 能处理循环引用 | 会产生内存碎片                   |
+| 引用计数（早期 IE）          | 记录每个对象被引用的次数，为 0 时回收                                | 回收及时       | **循环引用无法回收**，已基本淘汰 |
+
+### 常见内存泄露场景与修复
+
+| 场景                | 泄露原因                                                            | 修复方式                                               |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
+| 意外的全局变量      | 未声明直接使用变量 → 挂到 `window` 上，永不被回收                   | 用 `'use strict'`；显式声明变量                        |
+| 遗忘的定时器 / 回调 | `setInterval` 未 `clear`，回调里引用的对象一直存活                  | 在组件销毁 / 不再需要时 `clearInterval`/`clearTimeout` |
+| 闭包持有外部变量    | 闭包长期持有外层作用域引用，变量无法释放                            | 不再需要时手动置 `null`                                |
+| 脱离文档的 DOM 节点 | JS 仍持有已被移除 DOM 的引用（detached node）                       | 移除 DOM 后同步清空 JS 引用                            |
+| 未移除的事件监听    | `addEventListener` 后未 `removeEventListener`，监听器与节点互相绑定 | 在销毁时成对 `removeEventListener`                     |
+| 无限增长的缓存      | `Map`/`Set`/数组作为缓存无上限地 push                               | 设定上限（LRU）或定时清理                              |
+| 遗忘的订阅 / 连接   | `EventBus`、`WebSocket`、`ResizeObserver` 等未取消订阅或关闭        | 在生命周期结束时 `unsubscribe`/`close`                 |
+
+**1. 意外的全局变量**
+
+```js
+function leak() {
+  // 没写 var/let/const，this 指向 window，bar 变成全局变量
+  bar = "我泄露了";
+}
+// 推荐：开启严格模式 + 显式声明
+("use strict");
+function noLeak() {
+  const bar = "我会被回收";
+}
+```
+
+**2. 遗忘的定时器**
+
+```js
+//  泄露：定时器一直跑，回调里的 data 永远被引用
+const data = new Array(1000000).fill("*");
+setInterval(() => {
+  console.log(data.length);
+}, 1000);
+
+//  修复：离开时清理
+const timer = setInterval(fn, 1000);
+// 组件销毁 / 路由离开时
+clearInterval(timer);
+```
+
+**3. 闭包持有外部大对象**
+
+```js
+function createClosure() {
+  const bigData = new Array(1000000).fill("*");
+  return function () {
+    // 即便没用到 bigData，闭包仍持有它
+    console.log("still alive");
+  };
+}
+const fn = createClosure();
+fn();
+// 不再需要时手动断开引用
+fn = null; // bigData 才可被回收
+```
+
+**4. 脱离文档但被 JS 持有的 DOM**
+
+```js
+const elements = [];
+function append() {
+  const el = document.getElementById("target");
+  document.body.removeChild(el); // DOM 已从页面移除
+  elements.push(el); //  但 JS 仍引用着，无法回收 → detached node 泄露
+}
+// 修复：移除 DOM 的同时清掉 JS 引用
+// elements.length = 0 或 elements.pop()
+```
+
+**5. 未移除的事件监听（Vue/React 高发）**
+
+```js
+window.addEventListener("resize", handleResize);
+// 组件卸载 / 页面离开时必须移除
+window.removeEventListener("resize", handleResize);
+```
+
+### 如何定位内存泄露（Chrome DevTools）
+
+1. **Performance 面板**：录制一段时间，观察 JS Heap 曲线。正常运行时内存会**锯齿状**升降（涨上去又掉下来）；若曲线**只涨不跌**，基本可判定泄露。
+2. **Memory 面板 → Heap Snapshot（堆快照）**：
+   - 操作页面前后各拍一张快照，用“Comparison”对比。
+   - 重点排查数量异常增长的 `Detached HTMLDivElement` 等 detached 节点、意外的闭包、未被释放的大数组。
+3. **Memory 面板 → Allocation instrumentation on timeline**：能看到对象在**什么时间、哪段代码**被分配，精确定位泄露点。
+4. **Performance Monitor**：实时观察 `JS heap size`、`DOM Nodes` 数量是否持续增长。
+
+::: info 排查口诀
+
+- 内存**只增不减** → 八成有泄露
+- 优先查：**定时器、事件监听、闭包、DOM 引用、全局缓存**
+- SPA（Vue/React）重点在**组件卸载时的清理逻辑**是否成对
+
+:::
