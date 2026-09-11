@@ -907,3 +907,198 @@ add(1, 2)(3, 4)(5, 6); // → 21
 ```
 
 ![柯里化原理add(1)(2)(3)](asset/Currying.svg)
+
+## JS判断数据类型的四种方法
+
+| 方法                               | 能判断什么                        | 最大短板                                                                         |
+| ---------------------------------- | --------------------------------- | -------------------------------------------------------------------------------- |
+| `typeof`                           | 基本类型（除 `null`）+ `function` | `null` 误判为 `object`；所有引用类型（数组/对象/正则…）都返回 `object`，区分不出 |
+| `instanceof`                       | 引用类型（基于原型链）            | 不能判断基本类型；跨 `iframe`/多窗口失效                                         |
+| `constructor`                      | 引用类型 + 自动装箱的基本类型     | `null`/`undefined` 无 `constructor`；`constructor` 可被改写                      |
+| `Object.prototype.toString.call()` | **所有内置类型**（最准确）        | 写法略啰嗦，需自己包一层                                                         |
+
+::: info 1. `typeof` —— 判断基本类型最快
+
+返回字符串，对基本类型（除 `null`）和函数判断准确：
+
+```js
+typeof "abc"; // 'string'
+typeof 123; // 'number'
+typeof true; // 'boolean'
+typeof undefined; // 'undefined'
+typeof Symbol(); // 'symbol'
+typeof 10n; // 'bigint'
+typeof function () {}; // 'function'
+
+typeof null; // 'object'  ⚠️ 历史遗留 bug，null 不是对象
+typeof []; // 'object'   ⚠️ 区分不出数组
+typeof {}; // 'object'
+typeof /abc/; // 'object'
+```
+
+:::
+
+::: info 2. `instanceof` —— 基于原型链判断引用类型
+
+判断「对象的原型链上是否有某个构造函数的 `prototype`」，即是否是其实例：
+
+```js
+[] instanceof Array; // true
+{} instanceof Object; // true
+new Date() instanceof Date; // true
+/abc/ instanceof RegExp; // true
+
+123 instanceof Number; // false   ⚠️ 基本类型字面量不是实例
+const n = new Number(123);
+n instanceof Number; // true     （包装对象才是）
+
+// 自定义类
+class Person {}
+const p = new Person();
+p instanceof Person; // true
+```
+
+**局限：**
+
+1. 不能判断基本类型（字面量）。
+2. 跨窗口失效：`iframe` 里的数组和主页面的 `Array` 不是同一个构造函数，原型链对不上，`[] instanceof Array` 在跨 `iframe` 时会返回 `false`。
+3. 右操作数必须是**函数**（构造函数），传非函数会报错。
+
+```js
+// 手写极简版，看清原理：沿原型链找
+function myInstanceof(left, right) {
+  if (left === null || typeof left !== "object") return false;
+  let proto = Object.getPrototypeOf(left);
+  while (proto) {
+    if (proto === right.prototype) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}
+```
+
+:::
+
+::: info 3. `constructor` —— 读原型上的构造函数
+
+每个对象（除 `null`/`undefined`）的原型上都有 `constructor` 指向创建它的构造函数：
+
+```js
+"abc".constructor === String; // true   （字面量自动装箱）
+(123).constructor === Number; // true
+[].constructor === Array; // true
+{}.constructor === Object; // true
+new Date().constructor === Date; // true
+```
+
+**局限：**
+
+1. `null` / `undefined` 没有 `constructor`，访问直接报错。
+2. `constructor` 可被随意改写，结果不可靠：
+
+```js
+function Foo() {}
+Foo.prototype.constructor = Array; // 故意改成别的
+new Foo().constructor === Array; // true ⚠️ 已被污染，判断失真
+```
+
+:::
+
+::: info 4. `Object.prototype.toString.call()` —— 最准确（面试推荐）
+
+调用 `Object` 原型上的 `toString`，返回 `[object 类型]` 格式的字符串，**能精确区分所有内置类型**：
+
+```js
+const getType = (v) => Object.prototype.toString.call(v).slice(8, -1); // 截取中间的类型名
+
+getType(undefined); // 'Undefined'
+getType(null); // 'Null'
+getType("abc"); // 'String'
+getType(123); // 'Number'
+getType(true); // 'Boolean'
+getType(Symbol()); // 'Symbol'
+getType(10n); // 'BigInt'
+getType([]); // 'Array'
+getType({}); // 'Object'
+getType(new Date()); // 'Date'
+getType(/abc/); // 'RegExp'
+getType(new Error()); // 'Error'
+getType(function () {}); // 'Function'
+getType(new Map()); // 'Map'
+getType(new Set()); // 'Set'
+```
+
+> 为什么不用 `{}`.toString()？因为数组/正则/日期等重写了自己的 `toString`，会返回别的内容；而 `Object.prototype.toString` 是「原始」版本，不会被子类改写，所以**必须借 `call` 调用**。
+
+:::
+
+## JS异步加载的三种方式
+
+默认情况下，浏览器解析 HTML 时**遇到 `<script>` 会立刻停下来**：先下载（如果是外链）再执行，期间 HTML 解析被阻塞，导致页面白屏 / 渲染延迟。所谓「异步加载」，就是让脚本**下载时不阻塞 HTML 解析**，从而加快首屏。
+
+三种方式：`async`、`defer`、动态创建 `<script>`。
+
+::: info 1. `async` —— 下载不阻塞，加载完立即执行
+
+```html
+<script async src="analytics.js"></script>
+```
+
+- 脚本**异步下载**，下载过程中 HTML 继续解析，不阻塞。
+- 下载完成后**立刻暂停 HTML 解析**执行脚本（哪怕 DOM 还没解析完）。
+- **执行顺序不保证**：谁先下载完谁先执行，多个 `async` 脚本之间无顺序关系。
+- 适合**彼此独立、无依赖**的脚本，如埋点统计、广告 SDK、第三方监控。
+
+> ⚠️ 因为执行时机不可控，不要在 `async` 脚本里依赖其他脚本、也不要假设 DOM 已就绪。
+
+:::
+
+::: info 2. `defer` —— 下载不阻塞，DOM 解析完后按顺序执行
+
+```html
+<script defer src="a.js"></script>
+<script defer src="b.js"></script>
+```
+
+- 脚本**异步下载**，不阻塞 HTML 解析。
+- 等到 **HTML 文档完全解析完成（即 `DOMContentLoaded` 事件触发前）** 才执行。
+- 多个 `defer` 脚本**严格按文档中的出现顺序执行**（a.js 先于 b.js）。
+- 此时 DOM 已就绪，适合**有依赖关系、需要操作 DOM** 的业务脚本。
+
+> `defer` 只对外链脚本有效，写在 `<script>` 内联时无效。
+
+:::
+
+::: info 3. 动态创建 `<script>` 标签 —— 按需加载
+
+```js
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+}
+
+// 点击后才加载某功能模块，减少首屏负担
+button.addEventListener("click", () => {
+  loadScript("/js/editor.js").then(() => initEditor());
+});
+```
+
+- 通过 JS 运行时创建并插入 `<script>`，**插入 DOM 后才开始下载**，天然异步、不阻塞。
+- 默认行为等同于 `async`（下载完即执行）；设 `script.async = false` 可强制按顺序执行。
+- 常用于**按需加载 / 懒加载**：路由级代码分割、点击触发、条件加载重型库。
+
+:::
+
+::: warning ⚠️ 注意
+
+- `type="module"` 默认就是 `defer`
+- `async` / `defer` 只对**外链脚本**（`src`）有效，内联脚本无效（浏览器无从「异步下载」）。
+- `async` 适合「独立脚本」，`defer` 适合「有顺序/需 DOM 的业务脚本」——选错会导致偶现的顺序/依赖 bug。
+- 现代构建工具（Vite/Webpack）产出的 `<script type="module">` 已默认具备 defer 语义，无需再手加 `defer`。
+
+:::
