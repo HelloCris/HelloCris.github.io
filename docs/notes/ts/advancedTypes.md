@@ -1073,7 +1073,7 @@ type TypeA = Props[keyof Props]; // string | number | boolean
 
 ## 附录
 
-### 附录1: 协变和逆变
+### 附1: 协变和逆变
 
 **协变/逆变/不变** 描述的是：当 `A` 是 `B` 的子类型（`A ⊑ B`）时，把它套进某个「类型构造器」`F`（比如 `Array<T>`、`Promise<T>`、`(x: T) => void`）之后，`F<A>` 和 `F<B>` 之间还保不保持子类型关系、方向变不变。
 

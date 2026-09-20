@@ -433,7 +433,7 @@ db.query("UPDATE users SET status=1 WHERE id=?", 6, (err, results) => {
 
 ## 附录
 
-### 附录1: `mysql2/promise`导入方式
+### 附1: `mysql2/promise`导入方式
 
 ```js
 const mysql = require("mysql2/promise");

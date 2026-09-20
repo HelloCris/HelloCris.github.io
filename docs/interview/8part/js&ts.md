@@ -1102,3 +1102,133 @@ button.addEventListener("click", () => {
 - 现代构建工具（Vite/Webpack）产出的 `<script type="module">` 已默认具备 defer 语义，无需再手加 `defer`。
 
 :::
+
+## `Object.defineProperty()`详解
+
+`Object.defineProperty()` 是 **JavaScript 原生方法**（ECMAScript 5），用于在一个对象上**定义新属性**，或**修改已有属性**，并精确控制该属性的行为（是否可枚举、可写、可配置，以及 getter/setter）。它是 Vue 2 响应式系统的底层实现原理。
+
+### 基本语法
+
+```js
+Object.defineProperty(obj, prop, descriptor);
+```
+
+- `obj`：要定义属性的目标对象
+- `prop`：要定义/修改的属性名（字符串或 Symbol）
+- `descriptor`：属性描述符对象
+- **返回值**：被修改后的 `obj`（注意返回的是对象本身，不是描述符）
+
+| 描述符键       | 类型       | 默认值（仅声明时） | 说明                                                      |
+| -------------- | ---------- | ------------------ | --------------------------------------------------------- |
+| `value`        | 任意       | `undefined`        | 属性的值（数据描述符）                                    |
+| `writable`     | `boolean`  | `false`            | 能否被赋值修改                                            |
+| `get`          | `function` | `undefined`        | 读取属性时调用，返回值作为属性值（存取描述符）            |
+| `set`          | `function` | `undefined`        | 写入属性时调用，接收新值（存取描述符）                    |
+| `enumerable`   | `boolean`  | `false`            | 能否被 `for...in` / `Object.keys()` 枚举                  |
+| `configurable` | `boolean`  | `false`            | 能否被删除、能否再修改描述符（改为 `false` 后**不可逆**） |
+
+::: warning ⚠️ 注意
+
+- 直接用字面量添加的属性，`writable` / `enumerable` / `configurable` **默认都是 `true`**。
+- 用 `Object.defineProperty()` 添加的属性，这三个开关**默认都是 `false`** —— 这是最常见的坑。
+- 描述符不能同时包含 `value`/`writable` 与 `get`/`set`，否则报错。
+
+:::
+
+### 示例：控制可写、可枚举、存取描述符
+
+```js
+const user = {};
+
+Object.defineProperty(user, "name", {
+  value: "Cris",
+  writable: false, // 不可改
+  enumerable: true, // 可枚举
+  configurable: false, // 不可删除、不可重定义
+});
+
+user.name = "Tom";
+console.log(user.name); // 'Cris'（修改无效，严格模式会报错）
+
+delete user.name;
+console.log(user.name); // 'Cris'（删除无效）
+
+for (const key in user) {
+  console.log(key); // 'name'（因为 enumerable 为 true）
+}
+```
+
+```js
+let _age = 18;
+
+const person = {};
+Object.defineProperty(person, "age", {
+  enumerable: true,
+  configurable: true,
+  get() {
+    console.log("读取 age");
+    return _age;
+  },
+  set(newVal) {
+    console.log("设置 age 为", newVal);
+    if (newVal < 0) throw new Error("年龄不能为负");
+    _age = newVal;
+  },
+});
+
+person.age; // 控制台打印 "读取 age"，返回 18
+person.age = 20; // 控制台打印 "设置 age 为 20"
+person.age = -1; // 抛错：年龄不能为负
+```
+
+### Vue 2 响应式原理（核心应用）
+
+Vue 2 通过**数据劫持** + **发布-订阅**实现响应式：`observer` 递归遍历 data，对每个属性用 `Object.defineProperty()` 包一层 getter/setter，在 getter 里**收集依赖**（Watcher），在 setter 里**派发更新**。
+
+```js
+function defineReactive(obj, key, val) {
+  // 递归处理嵌套对象
+  if (typeof val === "object" && val !== null) observe(val);
+
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      // 1. 依赖收集：把当前 Watcher 记录到 Dep 中
+      Dep.target && dep.addSub(Dep.target);
+      return val;
+    },
+    set(newVal) {
+      if (newVal === val) return;
+      val = newVal;
+      // 2. 派发更新：通知所有订阅者重新渲染
+      dep.notify();
+    },
+  });
+}
+```
+
+::: info `Object.defineProperty()` 的局限（Vue 2 痛点）
+
+| 局限点                    | 说明                                                       | Vue 2 的应对                             |
+| ------------------------- | ---------------------------------------------------------- | ---------------------------------------- |
+| 数组索引/长度变化监听不到 | `arr[0] = x`、`arr.length = 0` 不会触发 setter             | 重写数组 7 个变异方法（`push`/`pop` 等） |
+| 新增/删除属性不响应       | `obj.newKey = 1`、`delete obj.key` 无 setter               | 提供 `Vue.set` / `Vue.delete`            |
+| 必须递归遍历初始化        | 所有嵌套属性在初始化时就要递归劫持，数据量大时初始化成本高 | 无（影响首屏）                           |
+| 无法监听 Map/Set 等集合   | 只对普通对象的 key 生效                                    | 不支持，需用普通对象                     |
+
+:::
+
+::: info Vue 3 为什么改用 `Proxy`？
+
+`Proxy` 能**代理整个对象**，天然支持新增/删除属性、数组变化、Map/Set，且是**惰性递归**（访问到才代理），解决了上述所有痛点，因此 Vue 3 用 `Proxy` 重写了响应式系统。
+
+:::
+
+| 维度          | `Object.defineProperty()` | `Proxy`                            |
+| ------------- | ------------------------- | ---------------------------------- |
+| 监听粒度      | 单个属性，需递归遍历      | 整个对象，懒代理                   |
+| 新增/删除属性 | 监听不到，需额外 API      | 原生支持                           |
+| 数组          | 需 hack 变异方法          | 原生支持（`set`/`deleteProperty`） |
+| 兼容性        | ES5，支持老浏览器（IE9+） | ES6，不支持 IE                     |
+| 性能          | 初始化需全量劫持          | 访问时才代理，初始化更快           |
