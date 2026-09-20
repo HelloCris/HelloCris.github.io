@@ -180,3 +180,70 @@ bus.emit("user:login", { name: "张三" });
 - **Node.js 的 `EventEmitter`** — 经典的发布订阅实现，`on`/`emit`/`off` 三件套
 - **Vue 2 的 EventBus** — `new Vue()` 作为中央事件总线，`$emit`/`$on`/`$off`
 - **Vue 3 的响应式系统** — 基于 `Proxy` 的 `Dep`（依赖收集）+ `effect`（副作用追踪），本质是观察者模式
+
+## Vue中computed和watch的区别
+
+| 维度     | computed                                  | watch                                                 |
+| -------- | ----------------------------------------- | ----------------------------------------------------- |
+| 定位     | **派生值**（由已有数据算出新值）          | **副作用**（变化时执行一段逻辑）                      |
+| 缓存     | ✅ 有缓存，依赖不变则直接返回旧值         | ❌ 无缓存，变化必执行                                 |
+| 返回值   | 必须 `return`，模板/逻辑直接消费          | 回调**无返回值**，结果靠副作用（改 data、发请求）     |
+| 触发时机 | **惰性**：被「读取」时才算（dirty 机制）  | 依赖一变**立即**触发，不管有没有人读                  |
+| 异步     | ❌ 不应有异步逻辑（getters 要同步返回值） | ✅ 天然适合异步（防抖请求等）                         |
+| 监听范围 | 依赖收集，声明里用到谁就监听谁            | 显式声明监听谁，支持 `deep` / `immediate`             |
+| 典型场景 | fullName、过滤列表、总价、状态拼接        | 路由变化、props 深层变化、联动请求、localStorage 同步 |
+
+```js
+export default {
+  data: () => ({ firstName: "Gui", lastName: "Xian", userId: 1 }),
+
+  // 场景1：拼接显示 —— 用 computed
+  computed: {
+    // 只依赖 firstName/lastName，其他数据变了不会触发重算
+    fullName() {
+      return this.firstName + " " + this.lastName;
+    },
+    // 带完整 get/set 的写法（v-model 绑 computed 的关键）
+    fullNameTwo: {
+      get() {
+        return this.firstName + " " + this.lastName;
+      },
+      set(val) {
+        [this.firstName, this.lastName] = val.split(" ");
+      },
+    },
+  },
+
+  watch: {
+    // 场景2：变化后要做「别的事」—— 用 watch
+    userId: {
+      handler(newVal, oldVal) {
+        this.fetchUser(newVal); // 异步请求，computed 干不了这事
+      },
+      immediate: true, // 组件创建时立即执行一次（否则初始值不触发）
+      // deep: true,    // 监听对象内部属性变化，深度遍历有性能开销
+    },
+  },
+  methods: {
+    fetchUser(id) {
+      /* ... */
+    },
+  },
+};
+```
+
+::: warning ⚠️ 注意
+
+**1. computed 的缓存本质是 `dirty` 标记**  
+依赖变化时它**不会立刻重算**，只是把 `dirty` 置为 true；等下次有人读它才真正执行 getter。所以「依赖变了但你从不读」→ 一次都不会算。这和 watch 的「变了就执行」是根本区别。
+
+**2. computed 不能被「异步」污染**  
+getter 必须同步 return。异步结果回来时函数早返回了，拿到的是 undefined。
+
+**3. watch 对象属性，默认是浅监听**  
+`deep` 监听时回调拿到的 `newVal === oldVal`（同一个对象引用），要拿到变化得用 `$watch` 字符串路径或展开符快照。
+
+**4. watch 一个 computed 是合法且常用的组合**  
+例如 `watch: { fullName(val) { this.updateTitle(val) } }` —— 依赖 computed 的值做副作用。
+
+:::
