@@ -247,3 +247,157 @@ getter 必须同步 return。异步结果回来时函数早返回了，拿到的
 例如 `watch: { fullName(val) { this.updateTitle(val) } }` —— 依赖 computed 的值做副作用。
 
 :::
+
+## Vue中`transition`组件
+
+`<transition>` 本身不渲染额外 DOM，它只是个**状态机包裹器**。在你用 `v-if / v-show / 动态组件 / 路由切换` 让元素「出现/消失」时，自动在关键时刻**挂载/卸载 6 个 CSS 类**，只需对这些类写动画即可。
+
+![Transition](asset/Transition.svg)
+
+### 6个CSS类（Vue2命名）
+
+| 阶段 | 类名             | 存在窗口            | 你通常写什么                                           |
+| ---- | ---------------- | ------------------- | ------------------------------------------------------ |
+| 进入 | `v-enter`        | t0 瞬间（下一帧前） | **起始态**：`opacity:0; transform:translateY(-20px)`   |
+| 进入 | `v-enter-active` | 全程                | **`transition: all .3s`** + 可写 enter-to 的目标值兜底 |
+| 进入 | `v-enter-to`     | 下一帧 → 结束       | **目标态**：`opacity:1; transform:none`                |
+| 离开 | `v-leave`        | 离开 t0（下一帧前） | 起始态（一般和默认态一致，可省略）                     |
+| 离开 | `v-leave-active` | 全程                | **`transition: all .3s`**                              |
+| 离开 | `v-leave-to`     | 下一帧 → 结束       | 目标态：`opacity:0; transform:translateY(-20px)`       |
+
+### 基础用法（Vue 2）
+
+```html
+<template>
+  <div>
+    <button @click="show = !show">toggle</button>
+
+    <!-- name 自定义前缀，否则默认是 v- -->
+    <transition name="fade">
+      <p v-if="show">Hello Vue Transition</p>
+    </transition>
+  </div>
+</template>
+
+<style>
+  /* 进入/离开的「怎么动」：过渡属性写在 active 类 */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.3s ease;
+  }
+  /* 起始态 与 目标态 */
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
+  }
+</style>
+```
+
+### `<transition-group>`：列表动画
+
+`<transition>` 只能包**单个**元素/组件；多个元素（如 `v-for` 列表）要用 `<transition-group>`，它**会渲染一个真实 DOM 容器**（默认 `<span>`，可用 `tag` 改）。
+
+```html
+<transition-group name="list" tag="ul">
+  <li v-for="item in items" :key="item.id">{{ item.text }}</li>
+</transition-group>
+
+<style>
+  .list-enter-active,
+  .list-leave-active {
+    transition: all 0.5s;
+  }
+  .list-enter,
+  .list-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  /* 列表「挪位置」的平滑移动，必加 */
+  .list-move {
+    transition: transform 0.5s;
+  }
+</style>
+```
+
+⚠️ 列表动画两大坑（面试高频）：
+
+1. **每个子项必须有唯一 `key`**，且不能是 `index`（index 会随删除错位，导致动画错乱）。
+2. 离开的元素**默认脱离文档流前会占位**，要让其他项平滑顶上来，需给 `v-leave-active` 加 `position: absolute`（否则 `list-move` 看着像「瞬间跳位」）。
+
+### 过渡模式 `mode`
+
+两个元素切换（如 `v-if / v-else`）默认「旧走新来同时发生」，会重叠/闪跳。用 `mode` 控制顺序：
+
+| mode     | 行为                       | 场景                               |
+| -------- | -------------------------- | ---------------------------------- |
+| `in-out` | 新元素先进，旧元素再离     | 较少用                             |
+| `out-in` | **旧元素先离，新元素再进** | 路由切换、tab 切换最常用，避免重叠 |
+
+```html
+<transition name="fade" mode="out-in">
+  <component :is="currentTab" />
+</transition>
+```
+
+### JS 钩子（钩子函数）
+
+纯 CSS 不够时（如动画库、或不知道结束时间），用 JS 钩子，配合 `:css="false"` 让 Vue 跳过 CSS 检测、完全由你控制：
+
+```html
+<transition
+  @before-enter="beforeEnter"
+  @enter="enter"
+  @after-enter="afterEnter"
+  @before-leave="beforeLeave"
+  @leave="leave"
+  :css="false"
+>
+  <p v-if="show">JS 控制动画</p>
+</transition>
+
+<script>
+  export default {
+    methods: {
+      // el 是真实 DOM；done 是「动画结束」回调（必须调，否则 Vue 不知道何时移除）
+      enter(el, done) {
+        el.style.opacity = 0;
+        // 用 requestAnimationFrame 或动画库，结束后调 done()
+        requestAnimationFrame(() => {
+          el.style.transition = "opacity .5s";
+          el.style.opacity = 1;
+          el.addEventListener("transitionend", done, { once: true });
+        });
+      },
+      leave(el, done) {
+        /* 同理，结束时 done() */
+      },
+    },
+  };
+</script>
+```
+
+> 钩子函数列表（对应 6 个类）：`before-enter` / `enter` / `after-enter` / `enter-cancelled` 与 `before-leave` / `leave` / `after-leave` / `leave-cancelled`。
+
+### 面试高频 Q&A
+
+**Q：`transition` 为什么必须包单个根元素？**  
+A：因为同一时刻只能决定「一个元素」的进入/离开状态。多个并列子节点时要用 `transition-group`，且每个子节点要有 `key`。
+
+**Q：`v-show` 和 `v-if` 触发的过渡有区别吗？**  
+A：都有。`v-show` 是display 切换，触发 enter/leave；`v-if` 是真正的挂载/卸载，触发同样流程。注意 `v-show` 初始为 `false` 时不会触发「进入」动画（已经在 DOM 里了）。
+
+**Q：初始渲染就想有动画？**  
+A：给 `<transition appear>` 加 `appear`，并写 `*-appear / *-appear-active / *-appear-to` 三件套（或 `appear` 钩子）。
+
+**Q：如何给多个不同动画的元素批量用？**  
+A：`name` 属性统一前缀，或在 `<transition>` 上用 `enter-class` / `enter-active-class` 等**自定义类绑定**，把动画名直接传进去（配合 Animate.css 很常见）。
+
+### Vue 2 vs Vue 3 命名差异
+
+| 概念                    | Vue 2                       | Vue 3                                                       |
+| ----------------------- | --------------------------- | ----------------------------------------------------------- |
+| 起始态类                | `v-enter` / `v-leave`       | `v-enter-from` / `v-leave-from`（`*-from` 更语义化）        |
+| 目标态类                | `v-enter-to` / `v-leave-to` | 同 Vue 2                                                    |
+| active 类               | 不变                        | 不变                                                        |
+| `transition-group` 渲染 | 默认 `<span>`，可 `tag`     | 默认不再渲染根元素（Vue 3.4+ 行为），需手动包一层或用 `tag` |
+| 根节点要求              | 单根                        | 支持多根（fragment），但过渡仍建议单元素                    |
