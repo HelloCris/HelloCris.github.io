@@ -180,3 +180,299 @@ bus.emit("user:login", { name: "张三" });
 - **Node.js 的 `EventEmitter`** — 经典的发布订阅实现，`on`/`emit`/`off` 三件套
 - **Vue 2 的 EventBus** — `new Vue()` 作为中央事件总线，`$emit`/`$on`/`$off`
 - **Vue 3 的响应式系统** — 基于 `Proxy` 的 `Dep`（依赖收集）+ `effect`（副作用追踪），本质是观察者模式
+
+## Vue中computed和watch的区别
+
+| 维度     | computed                                  | watch                                                 |
+| -------- | ----------------------------------------- | ----------------------------------------------------- |
+| 定位     | **派生值**（由已有数据算出新值）          | **副作用**（变化时执行一段逻辑）                      |
+| 缓存     | ✅ 有缓存，依赖不变则直接返回旧值         | ❌ 无缓存，变化必执行                                 |
+| 返回值   | 必须 `return`，模板/逻辑直接消费          | 回调**无返回值**，结果靠副作用（改 data、发请求）     |
+| 触发时机 | **惰性**：被「读取」时才算（dirty 机制）  | 依赖一变**立即**触发，不管有没有人读                  |
+| 异步     | ❌ 不应有异步逻辑（getters 要同步返回值） | ✅ 天然适合异步（防抖请求等）                         |
+| 监听范围 | 依赖收集，声明里用到谁就监听谁            | 显式声明监听谁，支持 `deep` / `immediate`             |
+| 典型场景 | fullName、过滤列表、总价、状态拼接        | 路由变化、props 深层变化、联动请求、localStorage 同步 |
+
+```js
+export default {
+  data: () => ({ firstName: "Gui", lastName: "Xian", userId: 1 }),
+
+  // 场景1：拼接显示 —— 用 computed
+  computed: {
+    // 只依赖 firstName/lastName，其他数据变了不会触发重算
+    fullName() {
+      return this.firstName + " " + this.lastName;
+    },
+    // 带完整 get/set 的写法（v-model 绑 computed 的关键）
+    fullNameTwo: {
+      get() {
+        return this.firstName + " " + this.lastName;
+      },
+      set(val) {
+        [this.firstName, this.lastName] = val.split(" ");
+      },
+    },
+  },
+
+  watch: {
+    // 场景2：变化后要做「别的事」—— 用 watch
+    userId: {
+      handler(newVal, oldVal) {
+        this.fetchUser(newVal); // 异步请求，computed 干不了这事
+      },
+      immediate: true, // 组件创建时立即执行一次（否则初始值不触发）
+      // deep: true,    // 监听对象内部属性变化，深度遍历有性能开销
+    },
+  },
+  methods: {
+    fetchUser(id) {
+      /* ... */
+    },
+  },
+};
+```
+
+::: warning ⚠️ 注意
+
+**1. computed 的缓存本质是 `dirty` 标记**  
+依赖变化时它**不会立刻重算**，只是把 `dirty` 置为 true；等下次有人读它才真正执行 getter。所以「依赖变了但你从不读」→ 一次都不会算。这和 watch 的「变了就执行」是根本区别。
+
+**2. computed 不能被「异步」污染**  
+getter 必须同步 return。异步结果回来时函数早返回了，拿到的是 undefined。
+
+**3. watch 对象属性，默认是浅监听**  
+`deep` 监听时回调拿到的 `newVal === oldVal`（同一个对象引用），要拿到变化得用 `$watch` 字符串路径或展开符快照。
+
+**4. watch 一个 computed 是合法且常用的组合**  
+例如 `watch: { fullName(val) { this.updateTitle(val) } }` —— 依赖 computed 的值做副作用。
+
+:::
+
+## Vue中`transition`组件
+
+`<transition>` 本身不渲染额外 DOM，它只是个**状态机包裹器**。在你用 `v-if / v-show / 动态组件 / 路由切换` 让元素「出现/消失」时，自动在关键时刻**挂载/卸载 6 个 CSS 类**，只需对这些类写动画即可。
+
+![Transition](asset/Transition.svg)
+
+### 6个CSS类（Vue2命名）
+
+| 阶段 | 类名             | 存在窗口            | 你通常写什么                                           |
+| ---- | ---------------- | ------------------- | ------------------------------------------------------ |
+| 进入 | `v-enter`        | t0 瞬间（下一帧前） | **起始态**：`opacity:0; transform:translateY(-20px)`   |
+| 进入 | `v-enter-active` | 全程                | **`transition: all .3s`** + 可写 enter-to 的目标值兜底 |
+| 进入 | `v-enter-to`     | 下一帧 → 结束       | **目标态**：`opacity:1; transform:none`                |
+| 离开 | `v-leave`        | 离开 t0（下一帧前） | 起始态（一般和默认态一致，可省略）                     |
+| 离开 | `v-leave-active` | 全程                | **`transition: all .3s`**                              |
+| 离开 | `v-leave-to`     | 下一帧 → 结束       | 目标态：`opacity:0; transform:translateY(-20px)`       |
+
+### 基础用法（Vue 2）
+
+```html
+<template>
+  <div>
+    <button @click="show = !show">toggle</button>
+
+    <!-- name 自定义前缀，否则默认是 v- -->
+    <transition name="fade">
+      <p v-if="show">Hello Vue Transition</p>
+    </transition>
+  </div>
+</template>
+
+<style>
+  /* 进入/离开的「怎么动」：过渡属性写在 active 类 */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.3s ease;
+  }
+  /* 起始态 与 目标态 */
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
+  }
+</style>
+```
+
+### `<transition-group>`：列表动画
+
+`<transition>` 只能包**单个**元素/组件；多个元素（如 `v-for` 列表）要用 `<transition-group>`，它**会渲染一个真实 DOM 容器**（默认 `<span>`，可用 `tag` 改）。
+
+```html
+<transition-group name="list" tag="ul">
+  <li v-for="item in items" :key="item.id">{{ item.text }}</li>
+</transition-group>
+
+<style>
+  .list-enter-active,
+  .list-leave-active {
+    transition: all 0.5s;
+  }
+  .list-enter,
+  .list-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  /* 列表「挪位置」的平滑移动，必加 */
+  .list-move {
+    transition: transform 0.5s;
+  }
+</style>
+```
+
+⚠️ 列表动画两大坑（面试高频）：
+
+1. **每个子项必须有唯一 `key`**，且不能是 `index`（index 会随删除错位，导致动画错乱）。
+2. 离开的元素**默认脱离文档流前会占位**，要让其他项平滑顶上来，需给 `v-leave-active` 加 `position: absolute`（否则 `list-move` 看着像「瞬间跳位」）。
+
+### 过渡模式 `mode`
+
+两个元素切换（如 `v-if / v-else`）默认「旧走新来同时发生」，会重叠/闪跳。用 `mode` 控制顺序：
+
+| mode     | 行为                       | 场景                               |
+| -------- | -------------------------- | ---------------------------------- |
+| `in-out` | 新元素先进，旧元素再离     | 较少用                             |
+| `out-in` | **旧元素先离，新元素再进** | 路由切换、tab 切换最常用，避免重叠 |
+
+```html
+<transition name="fade" mode="out-in">
+  <component :is="currentTab" />
+</transition>
+```
+
+### JS 钩子（钩子函数）
+
+纯 CSS 不够时（如动画库、或不知道结束时间），用 JS 钩子，配合 `:css="false"` 让 Vue 跳过 CSS 检测、完全由你控制：
+
+```html
+<transition
+  @before-enter="beforeEnter"
+  @enter="enter"
+  @after-enter="afterEnter"
+  @before-leave="beforeLeave"
+  @leave="leave"
+  :css="false"
+>
+  <p v-if="show">JS 控制动画</p>
+</transition>
+
+<script>
+  export default {
+    methods: {
+      // el 是真实 DOM；done 是「动画结束」回调（必须调，否则 Vue 不知道何时移除）
+      enter(el, done) {
+        el.style.opacity = 0;
+        // 用 requestAnimationFrame 或动画库，结束后调 done()
+        requestAnimationFrame(() => {
+          el.style.transition = "opacity .5s";
+          el.style.opacity = 1;
+          el.addEventListener("transitionend", done, { once: true });
+        });
+      },
+      leave(el, done) {
+        /* 同理，结束时 done() */
+      },
+    },
+  };
+</script>
+```
+
+> 钩子函数列表（对应 6 个类）：`before-enter` / `enter` / `after-enter` / `enter-cancelled` 与 `before-leave` / `leave` / `after-leave` / `leave-cancelled`。
+
+### 面试高频 Q&A
+
+**Q：`transition` 为什么必须包单个根元素？**  
+A：因为同一时刻只能决定「一个元素」的进入/离开状态。多个并列子节点时要用 `transition-group`，且每个子节点要有 `key`。
+
+**Q：`v-show` 和 `v-if` 触发的过渡有区别吗？**  
+A：都有。`v-show` 是display 切换，触发 enter/leave；`v-if` 是真正的挂载/卸载，触发同样流程。注意 `v-show` 初始为 `false` 时不会触发「进入」动画（已经在 DOM 里了）。
+
+**Q：初始渲染就想有动画？**  
+A：给 `<transition appear>` 加 `appear`，并写 `*-appear / *-appear-active / *-appear-to` 三件套（或 `appear` 钩子）。
+
+**Q：如何给多个不同动画的元素批量用？**  
+A：`name` 属性统一前缀，或在 `<transition>` 上用 `enter-class` / `enter-active-class` 等**自定义类绑定**，把动画名直接传进去（配合 Animate.css 很常见）。
+
+### Vue 2 vs Vue 3 命名差异
+
+| 概念                    | Vue 2                       | Vue 3                                                       |
+| ----------------------- | --------------------------- | ----------------------------------------------------------- |
+| 起始态类                | `v-enter` / `v-leave`       | `v-enter-from` / `v-leave-from`（`*-from` 更语义化）        |
+| 目标态类                | `v-enter-to` / `v-leave-to` | 同 Vue 2                                                    |
+| active 类               | 不变                        | 不变                                                        |
+| `transition-group` 渲染 | 默认 `<span>`，可 `tag`     | 默认不再渲染根元素（Vue 3.4+ 行为），需手动包一层或用 `tag` |
+| 根节点要求              | 单根                        | 支持多根（fragment），但过渡仍建议单元素                    |
+
+## Vue组件keep-alive原理
+
+`<keep-alive>` 是 Vue 内置的一个**抽象组件（abstract component）**：它自身**不渲染任何真实的 DOM 节点**，只作为一个“包裹层”把被包裹的动态组件 / 路由组件的**实例（Vue 2）或子树（Vue 3）缓存起来**，从而在组件切换时避免重复创建与销毁，保留组件状态（表单输入、滚动位置、已加载的异步数据等），提升切换性能。
+
+### 基本用法
+
+```html
+<!-- 1. 配合动态组件 -->
+<keep-alive :include="['A','B']" :max="10">
+  <component :is="currentComp"></component>
+</keep-alive>
+
+<!-- 2. 配合路由视图 -->
+<keep-alive :exclude="['Detail']" :max="5">
+  <router-view />
+</keep-alive>
+```
+
+| 属性      | 类型                 | 作用                                                       |
+| --------- | -------------------- | ---------------------------------------------------------- |
+| `include` | 字符串 / 正则 / 数组 | **白名单**，只有匹配到的组件会被缓存（其余正常销毁）       |
+| `exclude` | 字符串 / 正则 / 数组 | **黑名单**，匹配到的组件**不缓存**（优先级高于 `include`） |
+| `max`     | `number`             | 最大缓存实例数，超出后按 **LRU** 淘汰最久未访问的实例      |
+
+> `include` / `exclude` 匹配的是组件的 `name` 选项（SFC 中 `<script>` 导出的 `name`，或文件名）。**匿名组件无法被匹配**，需要显式写 `name`。
+
+### 专属生命周期钩子
+
+被 `<keep-alive>` 包裹的组件会额外获得两个钩子：
+
+| 钩子          | 触发时机                                           |
+| ------------- | -------------------------------------------------- |
+| `activated`   | 组件被**插入 / 重新激活**到 DOM 时（含首次挂载后） |
+| `deactivated` | 组件被**切换出去（从 DOM 移除但实例保留）** 时     |
+
+Vue 3 组合式 API 中对应为 `onActivated` / `onDeactivated`。
+
+```js
+export default {
+  name: "List",
+  activated() {
+    console.log("组件被激活，可在此拉取最新数据 / 恢复滚动");
+  },
+  deactivated() {
+    console.log("组件被缓存，状态被保留");
+  },
+};
+```
+
+::: warning ⚠️ 注意
+
+- `activated` / `deactivated` **只在被 `<keep-alive>` 包裹时才生效**；普通组件没有这两个钩子。
+- 缓存组件**不会重新走 `created` / `mounted`**，所以“每次进入都要刷新数据”的逻辑要放在 `activated` 里，而不是 `mounted`。
+
+:::
+
+### 核心原理
+
+1. **抽象组件，不渲染 DOM**
+   它自己不产生任何节点，只处理插槽里第一个子组件，相当于一个“缓存中间层”。
+
+2. **用 `cache` + `keys` 管理缓存（LRU）**
+   - `created` 时建一个 `cache = {}`（key → 组件实例）和一个 `keys = []`（访问顺序）。
+   - 每次 `render`，给子组件算一个 key：命中缓存就**直接复用实例**，并把 key 挪到 `keys` 末尾（标记为最近用过）；没命中就存进 `cache`。
+   - 超过 `max` 时，淘汰 `keys[0]`（最久没访问的那个）——这就是 LRU。
+
+3. **靠 `keepAlive` 标记改变 patch 行为**
+   缓存的 vnode 被打上 `keepAlive = true`，所以重新插入 DOM 时 Vue **不新建实例、不重新 `mount`**，而是执行“激活”（触发 `activated`）；移出时也不 `$destroy`，而是“停用”（触发 `deactivated`），实例留在内存里。
+
+::: info LRU 淘汰机制
+
+`keys` 数组按“最近访问”排序：**最新访问的 key 在数组末尾，最久未访问的在头部**。当缓存数量超过 `max` 时，直接 `pruneCacheEntry(this.cache, this.keys[0])` 淘汰头部那个，再把新 key push 到末尾——这就是典型的 **LRU（Least Recently Used）**。
+
+:::
