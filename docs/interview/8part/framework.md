@@ -401,3 +401,78 @@ A：`name` 属性统一前缀，或在 `<transition>` 上用 `enter-class` / `en
 | active 类               | 不变                        | 不变                                                        |
 | `transition-group` 渲染 | 默认 `<span>`，可 `tag`     | 默认不再渲染根元素（Vue 3.4+ 行为），需手动包一层或用 `tag` |
 | 根节点要求              | 单根                        | 支持多根（fragment），但过渡仍建议单元素                    |
+
+## Vue组件keep-alive原理
+
+`<keep-alive>` 是 Vue 内置的一个**抽象组件（abstract component）**：它自身**不渲染任何真实的 DOM 节点**，只作为一个“包裹层”把被包裹的动态组件 / 路由组件的**实例（Vue 2）或子树（Vue 3）缓存起来**，从而在组件切换时避免重复创建与销毁，保留组件状态（表单输入、滚动位置、已加载的异步数据等），提升切换性能。
+
+### 基本用法
+
+```html
+<!-- 1. 配合动态组件 -->
+<keep-alive :include="['A','B']" :max="10">
+  <component :is="currentComp"></component>
+</keep-alive>
+
+<!-- 2. 配合路由视图 -->
+<keep-alive :exclude="['Detail']" :max="5">
+  <router-view />
+</keep-alive>
+```
+
+| 属性      | 类型                 | 作用                                                       |
+| --------- | -------------------- | ---------------------------------------------------------- |
+| `include` | 字符串 / 正则 / 数组 | **白名单**，只有匹配到的组件会被缓存（其余正常销毁）       |
+| `exclude` | 字符串 / 正则 / 数组 | **黑名单**，匹配到的组件**不缓存**（优先级高于 `include`） |
+| `max`     | `number`             | 最大缓存实例数，超出后按 **LRU** 淘汰最久未访问的实例      |
+
+> `include` / `exclude` 匹配的是组件的 `name` 选项（SFC 中 `<script>` 导出的 `name`，或文件名）。**匿名组件无法被匹配**，需要显式写 `name`。
+
+### 专属生命周期钩子
+
+被 `<keep-alive>` 包裹的组件会额外获得两个钩子：
+
+| 钩子          | 触发时机                                           |
+| ------------- | -------------------------------------------------- |
+| `activated`   | 组件被**插入 / 重新激活**到 DOM 时（含首次挂载后） |
+| `deactivated` | 组件被**切换出去（从 DOM 移除但实例保留）** 时     |
+
+Vue 3 组合式 API 中对应为 `onActivated` / `onDeactivated`。
+
+```js
+export default {
+  name: "List",
+  activated() {
+    console.log("组件被激活，可在此拉取最新数据 / 恢复滚动");
+  },
+  deactivated() {
+    console.log("组件被缓存，状态被保留");
+  },
+};
+```
+
+::: warning ⚠️ 注意
+
+- `activated` / `deactivated` **只在被 `<keep-alive>` 包裹时才生效**；普通组件没有这两个钩子。
+- 缓存组件**不会重新走 `created` / `mounted`**，所以“每次进入都要刷新数据”的逻辑要放在 `activated` 里，而不是 `mounted`。
+
+:::
+
+### 核心原理
+
+1. **抽象组件，不渲染 DOM**
+   它自己不产生任何节点，只处理插槽里第一个子组件，相当于一个“缓存中间层”。
+
+2. **用 `cache` + `keys` 管理缓存（LRU）**
+   - `created` 时建一个 `cache = {}`（key → 组件实例）和一个 `keys = []`（访问顺序）。
+   - 每次 `render`，给子组件算一个 key：命中缓存就**直接复用实例**，并把 key 挪到 `keys` 末尾（标记为最近用过）；没命中就存进 `cache`。
+   - 超过 `max` 时，淘汰 `keys[0]`（最久没访问的那个）——这就是 LRU。
+
+3. **靠 `keepAlive` 标记改变 patch 行为**
+   缓存的 vnode 被打上 `keepAlive = true`，所以重新插入 DOM 时 Vue **不新建实例、不重新 `mount`**，而是执行“激活”（触发 `activated`）；移出时也不 `$destroy`，而是“停用”（触发 `deactivated`），实例留在内存里。
+
+::: info LRU 淘汰机制
+
+`keys` 数组按“最近访问”排序：**最新访问的 key 在数组末尾，最久未访问的在头部**。当缓存数量超过 `max` 时，直接 `pruneCacheEntry(this.cache, this.keys[0])` 淘汰头部那个，再把新 key push 到末尾——这就是典型的 **LRU（Least Recently Used）**。
+
+:::
