@@ -109,13 +109,34 @@ export const sidebarConfig = [
     ],
   },
   {
-    text: "🛠️ 实战（待排期）",
+    text: "🛠️ 实战",
     collapsed: false,
     items: [
       { text: "目录", link: "/projects/index.md" },
       {
-        text: "课题一",
-        items: [{ text: "第一节", link: "" }],
+        text: "荣耀官网",
+        collapsed: true,
+        items: [
+          {
+            text: "域名切换专项",
+            link: "/projects/honorWebsite/domainSwitch.md",
+          },
+          {
+            text: "性能优化专项",
+            link: "/projects/honorWebsite/performanceOptimization.md",
+          },
+          { text: "VUE&AEM专项", link: "/projects/honorWebsite/vueAem.md" },
+          {
+            text: "无障碍专项",
+            link: "/projects/honorWebsite/accessibility.md",
+          },
+          { text: "PINTLE专项", link: "/projects/honorWebsite/pintle.md" },
+          {
+            text: "GA实现JS监控告警专项",
+            link: "/projects/honorWebsite/gaMonitor.md",
+          },
+          { text: "GEO专项", link: "/projects/honorWebsite/geo.md" },
+        ],
       },
     ],
   },
