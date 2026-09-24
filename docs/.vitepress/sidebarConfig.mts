@@ -126,6 +126,7 @@ export const sidebarConfig = [
       { text: "目录", link: "/interview/index.md" },
       {
         text: "八股文",
+        collapsed: true,
         items: [
           { text: "HTML/CSS 问题", link: "/interview/8part/html&css.md" },
           { text: "JS/TS 问题", link: "/interview/8part/js&ts.md" },
@@ -145,6 +146,7 @@ export const sidebarConfig = [
       },
       {
         text: "面经",
+        collapsed: true,
         items: [
           { text: "honor", link: "/interview/experience/honor.md" },
           { text: "baidu", link: "/interview/experience/baidu.md" },

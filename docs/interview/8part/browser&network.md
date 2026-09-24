@@ -185,3 +185,136 @@ CSS 字节流   →  CSSOM 树  →  渲染树(Render Tree)
             ↓
         合成 Composite → 多图层合并上屏（GPU）
 ```
+
+## 浏览器多页签通信
+
+“多页签通信”指同源（或跨源）下多个浏览器标签页 / 窗口之间互相传递数据。
+
+四种常用方案：
+
+| 方案                   | 同源 | 跨源 | 自身收到       | 是否需要服务端 | 数据类型        | 典型场景                     |
+| ---------------------- | ---- | ---- | -------------- | -------------- | --------------- | ---------------------------- |
+| localStorage + storage | ✅   | ❌   | ❌             | ❌             | 字符串          | 简单状态同步（登录态、主题） |
+| BroadcastChannel       | ✅   | ❌   | ❌             | ❌             | 结构化克隆      | 同源多标签页广播（最推荐）   |
+| postMessage            | ✅   | ✅   | 取决于引用     | ❌             | 结构化克隆      | 跨源、与 iframe / 弹窗通信   |
+| WebSocket              | ✅   | ✅   | ✅（经服务端） | ✅             | 字符串 / 二进制 | 实时协同、跨设备、IM         |
+
+::: info 选型建议
+
+1. **同源多标签页、简单广播** → 首选 `BroadcastChannel`；要兼容老浏览器就退而用 `localStorage + storage`。
+2. **只是同步少量状态**（如“另一个标签页已退出登录”）→ `localStorage + storage` 足够。
+3. **跨源或与 iframe / 子窗口通信** → `postMessage`（记得校验 `origin`）。
+4. **需要服务端参与、跨设备 / 实时协同** → `WebSocket`。
+
+:::
+
+### localStorage+storage事件
+
+同源标签页共享同一份 `localStorage`。当某个标签页调用 `setItem` 修改值时，**其他标签页**会收到 `storage` 事件（注意：触发修改的那个标签页自身**不会**收到）。
+
+```js
+// 发送方（某个标签页）
+localStorage.setItem(
+  "channel-msg",
+  JSON.stringify({ type: "refresh", ts: Date.now() }),
+);
+
+// 接收方（其他标签页）
+window.addEventListener("storage", (e) => {
+  if (e.key === "channel-msg") {
+    console.log("收到消息：", JSON.parse(e.newValue));
+  }
+});
+```
+
+| 要点       | 说明                            |
+| ---------- | ------------------------------- |
+| 通信范围   | 同源的所有标签页 / 窗口         |
+| 跨源       | ❌ 不支持                       |
+| 触发方自身 | 收不到 `storage` 事件           |
+| 数据格式   | 字符串，对象需 `JSON.stringify` |
+| 容量       | 约 5MB，超限抛错                |
+| 实时性     | 同步写入即通知，足够大多数场景  |
+
+::: warning ⚠️ 注意
+只有值**真正发生变化**才会触发 `storage`；连续 `setItem` 相同值不会触发。复杂通信建议带上时间戳 / 随机 id 保证每次都变。
+:::
+
+### BroadcastChannel
+
+API 语义最贴合“多页签通信”：创建一个频道，所有**同源**的标签页 / iframe / Worker 都能加入并互发消息。
+
+```js
+// 所有标签页都用同一个频道名
+const bc = new BroadcastChannel("app-channel");
+
+// 发送
+bc.postMessage({ type: "logout" });
+
+// 接收
+bc.onmessage = (e) => {
+  console.log("收到广播：", e.data);
+};
+
+// 不再需要时关闭，释放资源
+bc.close();
+```
+
+| 要点         | 说明                                                       |
+| ------------ | ---------------------------------------------------------- |
+| 通信范围     | 同源标签页 / iframe / Worker                               |
+| 跨源         | ❌ 不支持                                                  |
+| 自身能否收到 | 默认不能（除非自己再 `postMessage` 给自身逻辑）            |
+| 数据类型     | **任意结构化克隆数据**（对象、ArrayBuffer 等，无需序列化） |
+| 兼容性       | 现代浏览器均支持，IE 不支持                                |
+
+### postMessage
+
+`window.postMessage` 是浏览器原生的“跨文档消息”机制，既能同源也能跨源，但需要**明确知道目标窗口的引用**。
+
+```js
+// 发送方：拿到目标窗口引用（如 window.open 返回值、iframe.contentWindow）
+const target = window.open("", "otherTab"); // 或 document.querySelector('iframe').contentWindow
+target.postMessage({ type: "ping" }, "https://example.com"); // 第二个参数是目标 origin，* 表示不限制（不安全）
+
+// 接收方
+window.addEventListener("message", (e) => {
+  // 务必校验来源，防止恶意站点的伪造消息
+  if (e.origin !== "https://example.com") return;
+  console.log("收到：", e.data, "来自：", e.source);
+});
+```
+
+| 要点     | 说明                                                                    |
+| -------- | ----------------------------------------------------------------------- |
+| 通信范围 | 任意窗口（标签页、iframe、弹窗），可跨源                                |
+| 安全性   | 接收方必须校验 `e.origin`；发送方应尽量指定具体 `targetOrigin` 而非 `*` |
+| 数据格式 | 结构化克隆，支持对象                                                    |
+| 难点     | 需要拿到目标窗口引用，纯“未知的其他标签页”之间不好直接用                |
+
+> 同源多标签页若只是想互发，`BroadcastChannel` 比 `postMessage` 简单得多；`postMessage` 更适合**跨源 / 与 iframe 通信**。
+
+### WebSocket
+
+前三种都是“浏览器内”通信；WebSocket 通过**服务端中转**，可以实现跨标签页、跨设备、跨用户的实时通信。
+
+```js
+const ws = new WebSocket("wss://example.com/ws");
+
+ws.onopen = () => ws.send(JSON.stringify({ type: "tab-sync", data: 123 }));
+
+ws.onmessage = (e) => {
+  const msg = JSON.parse(e.data);
+  console.log("服务端广播：", msg);
+};
+
+// 某个标签页发，服务端再推给所有连着的客户端（含其他标签页）
+```
+
+| 要点     | 说明                                     |
+| -------- | ---------------------------------------- |
+| 通信范围 | 跨标签页 / 跨设备 / 跨用户（经由服务端） |
+| 跨源     | ✅ 支持（由服务端决定）                  |
+| 依赖     | 需要后端 WebSocket 服务                  |
+| 实时性   | 最好，服务端可主动推送                   |
+| 成本     | 最高，要维护长连接与心跳                 |
