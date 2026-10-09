@@ -41,6 +41,8 @@ JSP模式 → Sling + OSGi模式 → HTL模式（We are here） → SPA模式 �
 
 **架构概览：**
 
+![aem-vue整体设计架构图](asset/aem-vue-overall-design.svg)
+
 ::: info 核心设计思想
 
 > JSON 数据约定，AEM maven 工程安装 node.js 构建的 frontend 模块，自定义前端脚手架，命令行式完成组件与 dialog 的初始化操作，前后端隔离：前端专注于视图，后端专注于数据。
