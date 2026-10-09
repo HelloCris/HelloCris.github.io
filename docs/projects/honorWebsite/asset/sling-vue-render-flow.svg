@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" width="100%" role="img">
+  <title>Sling + Vue 渲染流程图</title>
+  <rect x="0" y="0" width="680" height="580" fill="#F7F8FA"/>
+  <desc>Web发起请求后服务端解析HTL并注入Sling数据，浏览器端解析Clientlib-vue并initVue渲染Vue组件实例</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+      markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect x="150" y="130" width="500" height="158" rx="16" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="0.5"/>
+  <rect x="150" y="300" width="340" height="240" rx="16" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="0.5"/>
+
+  <g fill="#444441" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="15" font-weight="500" text-anchor="middle">
+    <text x="92" y="134">服</text>
+    <text x="92" y="154">务</text>
+    <text x="92" y="174">端</text>
+    <text x="92" y="194">渲</text>
+    <text x="92" y="214">染</text>
+    <text x="92" y="384">浏</text>
+    <text x="92" y="404">览</text>
+    <text x="92" y="424">器</text>
+    <text x="92" y="444">渲</text>
+    <text x="92" y="464">染</text>
+  </g>
+
+  <g stroke="#185FA5" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M310 100 L310 136"/>
+    <path d="M310 184 L310 220"/>
+    <path d="M310 268 L310 304"/>
+    <path d="M310 352 L310 388"/>
+    <path d="M310 436 L310 472"/>
+  </g>
+  <path d="M505 162 L406 162" fill="none" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <g font-family="-apple-system, 'PingFang SC', sans-serif" font-size="13">
+    <g>
+      <rect x="220" y="56" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="78" text-anchor="middle" dominant-baseline="central" fill="#0C447C">Web发起请求</text>
+    </g>
+    <g>
+      <rect x="220" y="140" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="162" text-anchor="middle" dominant-baseline="central" fill="#0C447C">解析HTL</text>
+    </g>
+    <g>
+      <rect x="220" y="224" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="246" text-anchor="middle" dominant-baseline="central" fill="#0C447C">&lt;component :value&gt;</text>
+    </g>
+    <g>
+      <rect x="220" y="308" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="330" text-anchor="middle" dominant-baseline="central" fill="#0C447C">解析Clientlib-vue</text>
+    </g>
+    <g>
+      <rect x="220" y="392" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="414" text-anchor="middle" dominant-baseline="central" fill="#0C447C">initVue&lt;component&gt;</text>
+    </g>
+    <g>
+      <rect x="220" y="476" width="180" height="44" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+      <text x="310" y="498" text-anchor="middle" dominant-baseline="central" fill="#0C447C">渲染Vue组件实例</text>
+    </g>
+    <g>
+      <rect x="505" y="140" width="130" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+      <text x="570" y="162" text-anchor="middle" dominant-baseline="central" fill="#085041">Sling数据注入</text>
+    </g>
+  </g>
+</svg>
