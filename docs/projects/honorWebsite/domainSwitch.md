@@ -6,7 +6,7 @@
 
 ### 架构流程
 
-![域名切换架构设计](./asset/domainSwitch.webp)
+![域名切换架构设计](asset/domainSwitch.webp)
 
 ### 工作梳理
 
@@ -48,45 +48,9 @@
 | ② 站点发布         | 推送内链刷新结果至现网                                                                            |
 | ③ 缓存清理         | 清理当前站点的 Dispatcher 及 CDN 缓存                                                             |
 
-## 四、荣耀账号登录方案
+## 荣耀账号登录方案
 
-### 4.1 登录流程
-
-```
-荣耀官网
-  │ ① 拉起荣耀账号登录
-  ▼
-荣耀账号：携带登录 code 重定向到 api-ap-mkt.c.honor.com
-  │ ②
-  ▼
-官网集成服务：获取 honor 相关登录配置
-  │ ③
-  ▼
-官网集成服务（公服）：返回配置信息
-  │
-  ▼
-获取登录 token → 返回 token 信息
-  │
-  ▼
-使用 token 换取用户 ID（UUM） → 返回用户 ID
-  │
-  ▼
-设置响应头 Set-Cookie 的域名为 honor.com
-  │ ④
-  ▼
-将 cookie 写入 honor.com 域名下，返回 api-ap-mkt.c.hihonor.com 重定向链接
-  │ ⑤
-  ▼
-携带 cookie 信息请求 api-ap-mkt.c.hihonor.com
-  │ ⑥
-  ▼
-设置响应头 Set-Cookie 的域名为 hihonor.com
-  │ ⑦
-  ▼
-将 cookie 二次写入 hihonor.com 域名下，返回官网 www.honor.com 页面
-```
-
-### 4.2 方案要点
+![荣耀官网双域 Cookie 登录流程](asset/honor-login-cookie-flow.svg)
 
 | 序号 | 内容                                                                                                        |
 | ---- | ----------------------------------------------------------------------------------------------------------- |
@@ -98,52 +62,16 @@
 | 6    | **新增二次写入 cookie 新方法**：调用集成服务 hihonor 域名的二次写入方法                                     |
 | 7    | **二次写入 cookie**：二次写入 cookie 到 hihonor 域名下，完成 cookie 双写                                    |
 
----
+## SEO 方案
 
-## 五、SEO 方案
+| 方案                 | 作用                                                                                                | 示例                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Canonical            | 指示网页首选版本，解决重复内容、集中权重、优化索引                                                  | `<link rel="canonical" href="https://www.honor.com/uk/" />`                  |
+| Hreflang + alternate | 指示网页的语言和地区版本，多语言多地区优化、避免重复内容、支持国际化                                | `<link rel="alternate" href="https://www.honor.com/cn/" hreflang="zh-CN" />` |
+| 结构化数据           | 用 Schema.org 标记描述内容结构，提高搜索引擎理解、丰富搜索结果、优化排名                            | 官网使用 **JSON-LD**（业界主流），另有 Microdata、RDFa                       |
+| Sitemap + robots.txt | 网站地图帮助搜索引擎抓取、提高索引效率、优化排名；`sitemap.xml` 面向引擎，`sitemap.html` 面向消费者 | 见下                                                                         |
 
-### 5.1 Canonical
-
-Canonical 是 HTML 标签，用于指示搜索引擎对网页的“首选”版本。
-
-- **解决重复内容问题**：多个 URL 指向相同或相似内容时，规范标签帮助搜索引擎识别主要版本。
-- **集中权重**：通过指定规范 URL，将相关页面链接权重集中到主版本上。
-- **优化搜索引擎索引**：帮助搜索引擎更有效地索引网页，确保抓取和显示正确版本。
-
-```html
-<link rel="canonical" href="https://www.honor.com/uk/" />
-```
-
-### 5.2 Hreflang + alternate
-
-Hreflang 是一种 HTML 属性，用于指示搜索引擎某个网页的语言和地区版本。
-
-- 多语言和多地区优化
-- 帮助搜索引擎识别同一内容的不同语言或地区版本
-- 避免重复内容问题
-- 提升用户体验、搜索引擎排名，支持国际化网站
-
-```html
-<link rel="alternate" href="https://www.honor.com/cn/" hreflang="zh-CN" />
-<link rel="alternate" href="https://www.honor.com/global/" hreflang="en" />
-<link rel="alternate" href="https://www.honor.com/my/" hreflang="en-MY" />
-<link rel="alternate" href="https://www.honor.com/pk/" hreflang="en-PK" />
-<link rel="alternate" href="https://www.honor.com/ie/" hreflang="en-IE" />
-```
-
-### 5.3 结构化数据
-
-网页结构化数据是指在网页中使用特定的标记（通常是 Schema.org 标准）来描述内容的结构和含义。
-
-- 提高搜索引擎理解能力
-- 丰富搜索结果（评分、价格、活动时间等）
-- 优化 SEO 排名
-- 官网使用 **JSON-LD**（业界主流），另有 Microdata、RDFa 方式
-
-### 5.4 Sitemap + robots.txt
-
-- **网站地图**：`sitemap.xml` 面向搜索引擎，`sitemap.html` 面向消费者。
-- 帮助搜索引擎抓取、提高索引效率、优化排名、提供页面优先级、改善用户体验。
+`sitemap.xml` 示例：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -165,22 +93,11 @@ Hreflang 是一种 HTML 属性，用于指示搜索引擎某个网页的语言�
 </urlset>
 ```
 
----
+## MyHonor APP 免升级兼容方案
 
-## 六、MyHonor APP 免升级兼容方案
+> _MyHonor 老版本 App 仍使用 `hihonor.com` / `honor.ru` 域名，需要通过 Nginx 做 UA 识别，使其在无需升级的情况下兼容新的 `honor.com` 域名。_
 
-### 6.1 问题背景
-
-MyHonor 老版本 App 仍使用 `hihonor.com` / `honor.ru` 域名，需要通过 Nginx 做 UA 识别，使其在无需升级的情况下兼容新的 `honor.com` 域名。
-
-### 6.2 请求链路
-
-| 场景                                       | 步骤                  | 动作                                                                                                     |
-| ------------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------- |
-| 老版本 App 访问 `hihonor.com` / `honor.ru` | 1 → 2 → 3 → 4         | UA 标识 → 直接到 Web 服务 → 返回 `hihonor.com` / `honor.ru` 页面                                         |
-| 老版本 App 访问 `honor.com`                | 1 → 2 → 3 → 4 → 5 → 6 | UA 标识 → 重定向到 `hihonor.com` → 访问 `hihonor.com` → 到 Web 服务 → 返回页面 → 返回 `hihonor.com` 页面 |
-
-### 6.3 方案要点
+![yHonor老版本架构图](asset/myhonor-architecture.svg)
 
 | 模块                      | 内容                                                                                                                                     |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |

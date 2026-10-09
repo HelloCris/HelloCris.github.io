@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 560" width="100%" role="img">
+  <title>荣耀官网双域 Cookie 登录流程</title>
+  <rect x="0" y="0" width="680" height="560" fill="#F7F8FA"/>
+  <desc>以序列图方式展示荣耀官网通过荣耀账号登录，并在 honor.com 与 hihonor.com 双域名下写入 Cookie 的完整流程</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-dashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .t { font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); font-size: 11px; font-weight: 400; }
+      .th { font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); font-size: 13px; font-weight: 500; }
+      .ts { font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); font-size: 10px; font-weight: 400; }
+      .tl { font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); font-size: 11px; font-weight: 400; }
+      .num { font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); font-size: 11px; font-weight: 500; text-anchor: middle; dominant-baseline: central; }
+    </style>
+  </defs>
+
+  <text class="th" x="340" y="24" text-anchor="middle" fill="#2C2C2A" font-size="15">荣耀官网双域 Cookie 登录流程</text>
+
+  <!-- 参与者框 -->
+  <g>
+    <rect x="35" y="44" width="90" height="44" rx="8" fill="#EAF3DE" stroke="#639922" stroke-width="1"/>
+    <text class="th" x="80" y="70" text-anchor="middle" fill="#173404">荣耀官网</text>
+
+    <rect x="165" y="44" width="90" height="44" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="1"/>
+    <text class="th" x="210" y="70" text-anchor="middle" fill="#2C2C2A">荣耀账号</text>
+
+    <rect x="295" y="44" width="90" height="44" rx="8" fill="#EAF3DE" stroke="#639922" stroke-width="1"/>
+    <text class="th" x="340" y="70" text-anchor="middle" fill="#173404">官网集成服务</text>
+
+    <rect x="425" y="44" width="90" height="44" rx="8" fill="#EAF3DE" stroke="#639922" stroke-width="1"/>
+    <text class="tl" x="470" y="58" text-anchor="middle" fill="#173404">官网集成服务</text>
+    <text class="ts" x="470" y="74" text-anchor="middle" fill="#3B6D11">公服</text>
+
+    <rect x="555" y="44" width="90" height="44" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="1"/>
+    <text class="th" x="600" y="70" text-anchor="middle" fill="#2C2C2A">UUM</text>
+  </g>
+
+  <!-- 生命线 -->
+  <g stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4 4">
+    <line x1="80" y1="88" x2="80" y2="500"/>
+    <line x1="210" y1="88" x2="210" y2="500"/>
+    <line x1="340" y1="88" x2="340" y2="500"/>
+    <line x1="470" y1="88" x2="470" y2="500"/>
+    <line x1="600" y1="88" x2="600" y2="500"/>
+  </g>
+
+  <!-- ① 拉起荣耀账号登录 -->
+  <g>
+    <line x1="80" y1="120" x2="210" y2="120" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <circle cx="145" cy="120" r="9" fill="#E24B4A"/>
+    <text class="num" x="145" y="120" fill="#ffffff">1</text>
+    <text class="t" x="145" y="108" text-anchor="middle" fill="#2C2C2A">拉起荣耀账号登录</text>
+  </g>
+
+  <!-- ② 携带登录 code 重定向 -->
+  <g>
+    <line x1="210" y1="150" x2="340" y2="150" stroke="#888780" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-dashed)"/>
+    <circle cx="275" cy="150" r="9" fill="#E24B4A"/>
+    <text class="num" x="275" y="150" fill="#ffffff">2</text>
+    <text class="t" x="275" y="132" text-anchor="middle" fill="#2C2C2A">携带登录 code 重定向到</text>
+    <text class="t" x="275" y="144" text-anchor="middle" fill="#2C2C2A">api-ap-mkt.c.honor.com</text>
+  </g>
+
+  <!-- ③ 获取 honor 相关登录配置 -->
+  <g>
+    <line x1="340" y1="180" x2="470" y2="180" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <circle cx="405" cy="180" r="9" fill="#E24B4A"/>
+    <text class="num" x="405" y="180" fill="#ffffff">3</text>
+    <text class="t" x="405" y="173" text-anchor="middle" fill="#2C2C2A">获取 honor 相关登录配置</text>
+  </g>
+
+  <!-- 返回配置信息 -->
+  <g>
+    <line x1="470" y1="210" x2="340" y2="210" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text class="t" x="405" y="203" text-anchor="middle" fill="#2C2C2A">返回配置信息</text>
+  </g>
+
+  <!-- 获取登录 token（荣耀账号 ↔ 官网集成服务，虚线） -->
+  <g>
+    <line x1="340" y1="240" x2="210" y2="240" stroke="#888780" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-dashed)"/>
+    <text class="t" x="275" y="233" text-anchor="middle" fill="#2C2C2A">获取登录 token</text>
+  </g>
+
+  <!-- 返回 token 信息（荣耀账号 ↔ 官网集成服务，虚线） -->
+  <g>
+    <line x1="210" y1="270" x2="340" y2="270" stroke="#888780" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-dashed)"/>
+    <text class="t" x="275" y="263" text-anchor="middle" fill="#2C2C2A">返回 token 信息</text>
+  </g>
+
+  <!-- 使用 token 换取用户 ID -->
+  <g>
+    <line x1="340" y1="300" x2="600" y2="300" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text class="t" x="470" y="293" text-anchor="middle" fill="#2C2C2A">使用 token 换取用户 ID</text>
+  </g>
+
+  <!-- 返回用户 ID -->
+  <g>
+    <line x1="600" y1="330" x2="340" y2="330" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text class="t" x="470" y="323" text-anchor="middle" fill="#2C2C2A">返回用户 ID</text>
+  </g>
+
+  <!-- ④ 设置 honor.com cookie + 重定向 -->
+  <g>
+    <line x1="340" y1="360" x2="80" y2="360" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <circle cx="150" cy="360" r="9" fill="#E24B4A"/>
+    <circle cx="180" cy="360" r="9" fill="#E24B4A"/>
+    <text class="num" x="150" y="360" fill="#ffffff">4</text>
+    <text class="num" x="180" y="360" fill="#ffffff">5</text>
+    <text class="t" x="150" y="342" text-anchor="middle" fill="#2C2C2A">设置 set-cookie 域名为 honor.com</text>
+    <text class="t" x="150" y="354" text-anchor="middle" fill="#2C2C2A">返回 api-ap-mkt.c.hihonor.com 重定向链接</text>
+  </g>
+
+  <!-- 写入 honor.com cookie -->
+  <g>
+    <path d="M80 375 L120 375 L120 393 L80 393" fill="none" stroke="#639922" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text class="t" x="105" y="368" text-anchor="middle" fill="#173404">将 cookie 写入 honor.com</text>
+  </g>
+
+  <!-- ⑤ 携带 cookie 请求 hihonor.com -->
+  <g>
+    <line x1="80" y1="420" x2="340" y2="420" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <circle cx="280" cy="420" r="9" fill="#E24B4A"/>
+    <text class="num" x="280" y="420" fill="#ffffff">6</text>
+    <text class="t" x="280" y="413" text-anchor="middle" fill="#2C2C2A">携带 cookie 信息请求 api-ap-mkt.c.hihonor.com</text>
+  </g>
+
+  <!-- ⑥ 设置 hihonor.com cookie -->
+  <g>
+    <line x1="340" y1="450" x2="80" y2="450" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+    <circle cx="280" cy="450" r="9" fill="#E24B4A"/>
+    <text class="num" x="280" y="450" fill="#ffffff">7</text>
+    <text class="t" x="280" y="443" text-anchor="middle" fill="#2C2C2A">设置 set-cookie 域名为 hihonor.com</text>
+  </g>
+
+  <!-- 写入 hihonor.com cookie 并返回页面 -->
+  <g>
+    <path d="M80 465 L120 465 L120 483 L80 483" fill="none" stroke="#639922" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text class="t" x="105" y="458" text-anchor="middle" fill="#173404">将 cookie 二次写入 hihonor.com</text>
+    <text class="t" x="105" y="470" text-anchor="middle" fill="#173404">返回官网 www.hihonor.com 页面</text>
+  </g>
+
+  <!-- 底部说明 -->
+  <g>
+    <rect x="40" y="510" width="600" height="38" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+    <text class="t" x="340" y="525" text-anchor="middle" fill="#412402">双域 Cookie 写入：先在 honor.com 域种下 cookie，再跳转至 hihonor.com 域二次写入</text>
+    <text class="ts" x="340" y="540" text-anchor="middle" fill="#854F0B">虚线表示浏览器重定向 / 前端回调，实线表示服务间调用</text>
+  </g>
+</svg>
