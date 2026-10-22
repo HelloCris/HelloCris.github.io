@@ -230,3 +230,88 @@ Lighthouse 是 Google 开源的自动化网页质量审计工具，性能（Perf
 ```
 
 ## 案例分析
+
+> 分析对象：`https://www.honor.com/my/phones/honor-x9e-pro/buy/`（马来西亚站 HONOR X9e Pro 购买页）
+> 数据来源：Lighthouse 13.4.1 报告（Captured 2026/10/21 17:22）+ 页面源码结构分析。
+> ⚠️ 报告约束：在 **Emulated Moto G Power + Slow 4G 节流** 下跑分，且提示「loaded too slowly to finish… Results may be incomplete」「IndexedDB 影响加载 → 建议无痕窗口」。以下为**实验室估计值**，真实字段值以 CrUX / RUM 为准。
+
+### LCP 候选元素定位
+
+该页为 AEM 架构，首屏最大可见图为顶部 **leaderboard 横幅**，由 `<picture>` 以真实 `srcset` **eager 输出、未走懒加载**：
+
+```html
+<picture>
+  <source
+    media="(min-width: 840px)"
+    srcset=".../honor-x9e-pro/open-sale/x9e-pro-ribbon-pc-10.05.jpeg"
+  />
+  <source
+    media="(max-width: 839px)"
+    srcset=".../honor-x9e-pro/open-sale/x9e-pro-ribbon-mb-10.05.jpeg"
+  />
+</picture>
+```
+
+首屏下方 **183 个**推荐产品图均使用 `data-srcset` + 占位 `placeholder.png` 懒加载，不会成为 LCP。因此 **LCP 候选 = 顶部 ribbon 横幅 `x9e-pro-ribbon-pc-10.05.jpeg`（PC）/ `-mb-`（移动）**。
+
+快网对照探测（仅相对参考）：HTML TTFB ≈ 654ms、文档 781KB；横幅图 **79.6KB / image/jpeg**、CDN 已缓存。可见**单图与 CDN 本身不慢**，瓶颈是慢网下被阻塞与体积拖垮。
+
+### Lighthouse 实测指标（实验室值）
+
+性能总分 **21 / 100（红区）**，且 **CLS 0.13 已超出 0.1 优秀线、落入「需改进」区间**：
+
+| 指标             | 实测值     | 分级                   | 备注                       |
+| ---------------- | ---------- | ---------------------- | -------------------------- |
+| Performance 总分 | 21         | 🔴 差                  | 远低于 90 优秀线           |
+| FCP              | 11.8 s     | 🔴 差（好 ≤1.8s）      | —                          |
+| **LCP**          | **38.5 s** | 🔴 差（好 ≤2.5s）      | 横幅图过晚绘制             |
+| TBT              | 3,180 ms   | 🔴 差（好 ≤200ms）     | 主线程长任务堆积，明显偏高 |
+| **CLS**          | **0.13**   | 🟡 需改进（≤0.1 为好） | 超出优秀线                 |
+| Speed Index      | 30.2 s     | 🔴 差                  | —                          |
+
+### 瓶颈归因（Insights + Diagnostics）
+
+| 来源        | 问题                                    | 量级                       | 映射 LCP 阶段        |
+| ----------- | --------------------------------------- | -------------------------- | -------------------- |
+| Insights    | **渲染阻塞请求**                        | **预计可省 10,350 ms**     | 加载延迟             |
+| Insights    | **优化图片交付**                        | 预计可省 3,668 KiB         | 加载时间 + 渲染延迟  |
+| Insights    | 使用更高效的缓存周期                    | 预计可省 1,566 KiB         | 加载时间             |
+| Diagnostics | **减少主线程工作**                      | **15.0 s**                 | 渲染延迟             |
+| Diagnostics | **减少 JavaScript 执行时间**            | **10.8 s**                 | 渲染延迟             |
+| Diagnostics | 避免庞大的网络载荷                      | **总 9,118 KiB（≈9.1MB）** | 加载时间             |
+| Diagnostics | 减少未使用的 JavaScript                 | 预计可省 1,341 KiB         | 加载延迟 + 渲染延迟  |
+| Diagnostics | 减少未使用的 CSS                        | 预计可省 1,247 KiB         | 渲染延迟             |
+| Diagnostics | 压缩 JavaScript（Minify）               | 预计可省 410 KiB           | 渲染延迟             |
+| Diagnostics | 避免长主线程任务                        | **20 个长任务**            | 渲染延迟             |
+| Diagnostics | **图片元素未设置显式 width/height**     | —                          | **CLS 元凶**（0.13） |
+| Diagnostics | **页面阻止了 bfcache 恢复（1 失败项）** | —                          | 前进/后退缓存失效    |
+| Warnings    | >4 个 `preconnect` 连接                 | —                          | 干扰关键资源优先度   |
+| Diagnostics | 避免非合成动画                          | 1 个动画元素               | 主线程渲染压力       |
+
+**四阶段再归因**
+
+- **TTFB**：快网 654ms 属「好」，非主因。
+- **加载延迟（最大元凶）**：渲染阻塞 **10.35s** + 全站无 LCP 图预加载，浏览器要等 HTML/CSS/JS 解析完才轮到横幅请求；叠加 9.1MB 总载荷争抢慢网带宽。
+- **加载时间**：单张横幅仅 79.6KB JPEG（本身不慢），但图片交付可省 **3.7MB**、总载荷高达 9.1MB，慢网下累计拖慢首屏图到达。
+- **渲染延迟**：主线程工作 15.0s、JS 执行 10.8s、20 个长任务，图片解码后排队等主线程空闲 → LCP 推到 38.5s。
+- **CLS 专项**：报告明确列出 `Layout shift culprits` 且 `Image elements do not have explicit width and height`——**未声明尺寸的图片在加载后撑开布局**，是 CLS 升到 0.13、超出优秀线的直接原因。
+
+### 优化清单（按报告节省量排序）
+
+| 优先级 | 措施                                                              | 依据                                           | 预期收益          |
+| ------ | ----------------------------------------------------------------- | ---------------------------------------------- | ----------------- |
+| **P0** | 消除渲染阻塞：关键 CSS 内联、非关键 CSS/JS `defer`/`async`        | 渲染阻塞请求 预计可省 10,350 ms                | 砍最大 load delay |
+| **P0** | LCP 横幅加 `<link rel="preload" as="image">` + **转 AVIF/WebP**   | 优化图片交付 预计可省 3,668 KiB                 | 提前发现 + 减体积 |
+| **P0** | 削减总载荷至合理区间：代码分割、删冗余 JS/CSS、懒加载（已做）     | 避免庞大的网络载荷 9,118 KiB                   | 减少带宽争抢      |
+| **P1** | **给所有图片加显式 `width`/`height` 或 `aspect-ratio`**           | 图片无显式尺寸 → CLS 0.13                      | 把 CLS 拉回 ≤0.1  |
+| **P1** | 减少主线程占用：拆分长任务、精简第三方、Minify JS（410 KiB）      | 主线程 15.0s / JS 10.8s / 20 个长任务          | 缩短 render delay |
+| **P1** | 删冗余 JS 1,341 KiB / CSS 1,247 KiB                               | 减少未使用的 JS/CSS                            | 减负              |
+| **P1** | **修复 bfcache**：移除 `unload`、用 `pagehide`/`visibilitychange` | 页面阻止 bfcache 恢复（1 失败项）              | 前进/后退秒开     |
+| **P2** | `preconnect` 收敛到 ≤4 个最关键源                                 | >4 个 preconnect 连接警告                      | 避免预连接浪费    |
+| **P2** | 收敛非合成动画为 transform/opacity                                | 1 个非合成动画元素                             | 减主线程压力      |
+
+::: info 结论
+
+本页 LCP 差（38.5s）与 CLS 超标（0.13）的**根因是「慢网下渲染阻塞 10.35s + 9.1MB 总载荷 + 15s 主线程工作」三重叠加**，且图片缺失尺寸直接拉高了 CLS。最高杠杆三件事：**消除渲染阻塞、预加载并转 AVIF/WebP 的 LCP 图、给图片补尺寸并砍冗余体积**。建议针对性治理后用 CrUX 字段数据复核线上真实表现（并建议无痕窗口重跑排除 IndexedDB 干扰）。
+
+:::
