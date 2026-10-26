@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#444"/>
+    </marker>
+    <style>
+      .box { fill:#e8f1fb; stroke:#0069af; stroke-width:2; rx:8; }
+      .boxText { fill:#06283d; font-size:14px; font-weight:600; }
+      .subText { fill:#3a5169; font-size:12px; }
+      .pipe { fill:#fff4e0; stroke:#e08a00; stroke-width:2; }
+      .pipeText { fill:#8a5300; font-size:13px; font-weight:700; }
+      .decision { fill:#fde8e8; stroke:#c0392b; stroke-width:2; }
+      .decisionText { fill:#8a1f16; font-size:14px; font-weight:700; }
+      .step { fill:#0069af; font-size:13px; font-weight:700; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="760" height="560" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="380" y="26" text-anchor="middle" font-size="18" font-weight="700" fill="#06283d">PINTLE 提交前拦截 — 整体数据流</text>
+
+  <!-- 1 git commit -->
+  <rect x="270" y="44" width="220" height="42" rx="8" class="box"/>
+  <text x="380" y="70" text-anchor="middle" class="boxText">① git commit 触发</text>
+
+  <line x1="380" y1="86" x2="380" y2="106" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 2 git hook -->
+  <rect x="200" y="108" width="360" height="58" rx="8" class="box"/>
+  <text x="380" y="132" text-anchor="middle" class="boxText">② Git Pre-commit Hook（githook.js · Node 子进程）</text>
+  <text x="380" y="152" text-anchor="middle" class="subText">收集暂存区 .js 文件 → 连接管道 → 阻塞等待响应</text>
+
+  <line x1="380" y1="166" x2="380" y2="186" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 3 named pipe -->
+  <rect x="120" y="188" width="520" height="46" rx="8" class="pipe"/>
+  <text x="380" y="211" text-anchor="middle" class="pipeText">③ 命名管道 \\.\pipe\pinple-pipe（钩子 ↔ Electron 主进程的桥）</text>
+  <text x="380" y="227" text-anchor="middle" class="subText" fill="#8a5300">发送 JSON：{ configFile, filesToLint, projectRoot }</text>
+
+  <line x1="380" y1="234" x2="380" y2="254" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 4 main process -->
+  <rect x="170" y="256" width="420" height="58" rx="8" class="box"/>
+  <text x="380" y="280" text-anchor="middle" class="boxText">④ Electron Main Process（主进程.js · net.createServer）</text>
+  <text x="380" y="300" text-anchor="middle" class="subText">监听管道 → 解析数据 → 调用 ESLint 静态检查</text>
+
+  <line x1="380" y1="314" x2="380" y2="334" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 5 renderer -->
+  <rect x="170" y="336" width="420" height="58" rx="8" class="box"/>
+  <text x="380" y="360" text-anchor="middle" class="boxText">⑤ Renderer（渲染进程.vue · Vue GUI）</text>
+  <text x="380" y="380" text-anchor="middle" class="subText">展示提交文件 + ESLint 结果 →【确认处理】/【拒绝处理】</text>
+
+  <line x1="380" y1="394" x2="380" y2="414" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 6 write back -->
+  <rect x="120" y="416" width="520" height="42" rx="8" class="pipe"/>
+  <text x="380" y="442" text-anchor="middle" class="pipeText">⑥ 用户决策 → IPC 'user-confirm' → 主进程 socket.write 回写管道</text>
+
+  <line x1="380" y1="458" x2="380" y2="478" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 7 decision -->
+  <rect x="190" y="480" width="380" height="58" rx="8" class="decision"/>
+  <text x="380" y="504" text-anchor="middle" class="decisionText">⑦ Hook 解析响应 → process.exit(0) / process.exit(1)</text>
+  <text x="380" y="524" text-anchor="middle" class="subText" fill="#8a1f16">exit 0：Git 放行提交　｜　非 0：Git 中止提交（拦截生效）</text>
+</svg>
