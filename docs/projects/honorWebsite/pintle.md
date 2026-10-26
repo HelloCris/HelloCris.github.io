@@ -57,3 +57,184 @@ Git 钩子运行在**无界面的终端 / CLI 上下文**里，无法弹出富�
 
 :::
 
+## 关键代码拆解
+
+### Git 钩子客户端 — `githook.js`
+
+```js
+const net = require("net");
+const PIPE_PATH = "\\\\.\\pipe\\pinple-pipe";
+const client = net.createConnection(PIPE_PATH, () => {
+  // 将待检查 js 文件、eslint 配置文件和项目根目录通过 json 格式传递至 electron 主进程
+  const FILES_TO_SUBMIT = process.argv
+    .slice(2)
+    .filter((file) => /.(js)$/.test(file));
+  const messageObj = {
+    configFile: CONFIG_FILE,
+    filesToLint: FILES_TO_SUBMIT,
+    projectRoot: PROJECT_ROOT,
+  };
+  client.write(JSON.stringify(messageObj));
+});
+
+client.on("data", (data) => {
+  try {
+    handleMessage(data); // 有效返回值：submit | cancel | quit
+  } catch (e) {
+    console.error("解析响应失败:", e);
+  }
+});
+
+function handleMessage(data) {
+  switch (data.event) {
+    case "submit":
+      if (data.data.allowSubmit) {
+        console.log("检查通过");
+        process.exit(0);
+      } else {
+        console.error("检查不通过，请修改后重新提交");
+        process.exit(1);
+      }
+      break;
+    case "cancel":
+      console.error("提交已取消");
+      process.exit(1);
+      break;
+    case "quit":
+      process.exit(1);
+      break;
+    default:
+      break;
+  }
+}
+```
+
+**要点：**
+
+- `process.argv.slice(2)` 拿到的是 Git 传给 pre-commit 钩子的暂存文件列表，脚本只过滤出 `.js` 文件。
+- 通过 `net.createConnection(PIPE_PATH)` 连接命名管道，把 `{ configFile, filesToLint, projectRoot }` 以 JSON 发出。
+- 收到主进程回写的数据后，按 `event` 字段决定退出码：**这是拦截真正生效的地方**（`exit(0)` 放行，`exit(1)` 拦截 / 取消 / 退出）。
+
+### Electron 主进程 — `主进程.js`
+
+```js
+import { app, BrowserWindow, ipcMain } from "electron";
+import net from "net";
+import path from "path";
+
+let mainWindow;
+const PIPE_PATH = "\\\\.\\pipe\\pinple-pipe";
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+    },
+  });
+  mainWindow.loadFile("dist/index.html");
+}
+
+app.whenReady().then(() => {
+  createWindow();
+  const server = net.createServer(async (socket) => {
+    let receivedData = "";
+    socket.on("data", async (data) => {
+      receivedData += data.toString();
+      try {
+        const receivedObj = JSON.parse(receivedData);
+        mainWindow.webContents.send("pipe-data", receivedObj);
+        if (receivedObj.filePath) {
+          const lintResult = await lintFiles(receivedObj.xxx);
+          mainWindow.webContents.send("eslint-result", lintResult);
+        }
+        ipcMain.once("user-confirm", (_, result) => {
+          socket.write(result);
+        });
+        receivedData = "";
+      } catch {}
+    });
+  });
+  server.listen(PIPE_PATH);
+});
+```
+
+**要点：**
+
+- 主进程创建 `BrowserWindow`（Vue 渲染进程），并通过 `preload.js` + `contextIsolation: true` 做安全的 IPC 暴露。
+- 用 `net.createServer(...).listen(PIPE_PATH)` 在命名管道上起一个服务端，**反向接收**钩子的连接（钩子是客户端，Electron 是服务端）。
+- 收到管道数据 → `webContents.send('pipe-data', ...)` 推给渲染进程 → 触发 ESLint → 等渲染进程回 `user-confirm` → 把结果 `socket.write` 回给钩子。
+
+### 渲染进程 — `渲染进程.vue`
+
+```vue
+<script setup>
+import { ref, onMounted } from "vue";
+const { ipcRenderer } = require("electron");
+const receivedData = ref(null);
+const showButtons = ref(false);
+onMounted(() => {
+  ipcRenderer.on("pipe-data", (event, data) => {
+    receivedData.value = data;
+    showButtons.value = true;
+  });
+  ipcRenderer.on("pipe-result", (event, data) => {
+    eslintData.value = data;
+  });
+});
+const handleConfirm = (confirmed) => {
+  ipcRenderer.send("user-confirm", confirmed);
+  showButtons.value = false;
+};
+</script>
+```
+
+**要点：**
+
+- 监听 `pipe-data` 渲染「待提交数据」并显示「确认处理 / 拒绝处理」按钮。
+- 用户点击后通过 `ipcRenderer.send('user-confirm', confirmed)` 把决策回传主进程，再由主进程经管道回写给钩子。
+- 这一层就是 PINTLE「桌面端 GUI」的落点：让拦截动作对开发者可见、可交互。
+
+### ESLint 检查模块 — `eslint.js`
+
+```js
+const { ESLint } = require("eslint");
+
+async function lintFiles(configPath, filePaths, projectRoot, globals = []) {
+  const overrideConfig = {
+    globals: globals.reduce((acc, name) => {
+      if (name) acc[name] = "readonly";
+      return acc;
+    }, {}),
+  };
+
+  const eslint = new ESLint({
+    overrideConfigFile: configPath, // 指定自定义配置文件
+    overrideConfig, // 注入动态生成的全局变量
+    cwd: projectRoot, // 工作目录设为项目根目录
+    fix: false, // 禁用自动修复（仅检查）
+  });
+
+  const results = await eslint.lintFiles(filePaths);
+  return {
+    totalErrors: results.reduce((sum, r) => sum + r.errorCount, 0),
+    totalWarnings: results.reduce((sum, r) => sum + r.warningCount, 0),
+    fileResults: results.map((r) => ({
+      filePath: r.filePath,
+      messages: r.messages,
+      errorCount: r.errorCount,
+      warningCount: r.warningCount,
+    })),
+  };
+}
+```
+
+**要点：**
+
+- 使用 **ESLint 编程式 API**（`new ESLint(...)` + `lintFiles`），而不是命令行 `eslint` 调用，便于在主进程内直接拿到结构化结果。
+- `overrideConfigFile` 指定项目自己的 ESLint 配置；`overrideConfig.globals` 动态注入全局变量声明，避免误报「未定义变量」。
+- `fix: false` 表示**只检查不自动修复**，把是否修复 / 是否放行的决策权留给开发者。
+
+## 小结
+
+PINTLE = **Git pre-commit 钩子（拦截闸门）+ 命名管道（进程间桥）+ Electron GUI（可视化决策）+ ESLint（检查能力）** 的组合。它把质量门禁前置到提交前，并通过桌面端 GUI 让拦截过程对开发者可见、可交互。理解它的关键在于：拦截的「开关」是 Git 钩子的退出码，Electron 只是让这个开关「看得见、点得动」。
