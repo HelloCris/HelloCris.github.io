@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 690" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#3b6ea5"/>
+    </marker>
+    <style>
+      .card { fill:#e3eefb; stroke:#5b86b8; stroke-width:2; }
+      .cardTitle { fill:#06283d; font-size:15px; font-weight:700; }
+      .tool { fill:#f0f6fc; stroke:#7f9fc0; stroke-width:2; }
+      .toolTitle { fill:#12324f; font-size:14px; font-weight:700; }
+      .subText { fill:#3a5169; font-size:11px; }
+      .tiny { fill:#5b7fa6; font-size:10px; }
+      .link { stroke:#3b6ea5; stroke-width:1.8; fill:none; }
+      .badgeText { fill:#ffffff; font-size:11px; font-weight:700; }
+      .stepText { fill:#8a3b00; font-size:10px; font-weight:700; }
+      .icon { fill:#5b7fa6; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1120" height="690" fill="#ffffff"/>
+  <text x="560" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#06283d">前端监控 — 组件与接口视图（谁调谁）</text>
+
+  <!-- ===== visitor ===== -->
+  <circle cx="58" cy="316" r="12" class="icon"/>
+  <rect x="44" y="332" width="28" height="26" rx="11" class="icon"/>
+  <text x="58" y="376" text-anchor="middle" class="subText">visitor</text>
+
+  <line x1="78" y1="330" x2="140" y2="330" class="link" marker-end="url(#arrow)"/>
+  <text x="109" y="320" text-anchor="middle" class="tiny">https</text>
+
+  <!-- ===== Honor website ===== -->
+  <rect x="145" y="268" width="190" height="145" rx="14" class="card"/>
+  <text x="240" y="297" text-anchor="middle" class="cardTitle">Honor website</text>
+  <rect x="175" y="320" width="130" height="62" rx="6" fill="#ffffff" stroke="#a8c3de" stroke-width="1.2"/>
+  <text x="240" y="344" text-anchor="middle" font-size="13" font-weight="700" fill="#12324f">gtag.js</text>
+  <text x="240" y="366" text-anchor="middle" class="tiny">GA4 跟踪代码</text>
+  <text x="240" y="402" text-anchor="middle" class="tiny">UA 时代称 GATC</text>
+
+  <!-- ① Ajax Link -->
+  <line x1="337" y1="330" x2="396" y2="330" class="link" marker-end="url(#arrow)"/>
+  <text x="366" y="318" text-anchor="middle" class="stepText">① Ajax Link</text>
+
+  <!-- conversion 回环 -->
+  <path d="M400,294 C 372,230 292,228 262,266" class="link" marker-end="url(#arrow)"/>
+  <text x="332" y="226" text-anchor="middle" class="tiny">conversion</text>
+
+  <!-- ===== GA Web Tools ===== -->
+  <rect x="400" y="268" width="215" height="132" rx="16" class="tool"/>
+  <text x="507" y="290" text-anchor="middle" class="toolTitle">Google Analytics</text>
+  <text x="507" y="308" text-anchor="middle" class="toolTitle">Web Tools</text>
+  <rect x="410" y="320" width="64" height="24" rx="12" fill="#4a7ebb"/>
+  <text x="442" y="337" text-anchor="middle" class="badgeText">Filter</text>
+  <rect x="481" y="320" width="68" height="24" rx="12" fill="#e8875a"/>
+  <text x="515" y="337" text-anchor="middle" class="badgeText">Notify</text>
+  <rect x="556" y="320" width="56" height="24" rx="12" fill="#5fa864"/>
+  <text x="584" y="337" text-anchor="middle" class="badgeText">Share</text>
+  <text x="507" y="368" text-anchor="middle" class="tiny">GA 控制台：分析 / 报告 / 权限管理</text>
+  <text x="507" y="384" text-anchor="middle" class="tiny">（GA4 中对应「管理」与「探索」）</text>
+
+  <!-- ===== Analytics Reports ===== -->
+  <rect x="640" y="88" width="215" height="118" rx="6" fill="#ffffff" stroke="#b9c7d6" stroke-width="1.4"/>
+  <rect x="640" y="88" width="215" height="22" rx="6" fill="#f0f2f5"/>
+  <rect x="640" y="102" width="215" height="8" fill="#f0f2f5"/>
+  <line x1="652" y1="126" x2="770" y2="126" stroke="#cfd8e3" stroke-width="3"/>
+  <line x1="652" y1="138" x2="740" y2="138" stroke="#cfd8e3" stroke-width="3"/>
+  <line x1="652" y1="150" x2="756" y2="150" stroke="#cfd8e3" stroke-width="3"/>
+  <circle cx="800" cy="148" r="21" fill="none" stroke="#4a7ebb" stroke-width="8"/>
+  <path d="M800,148 L800,127 A21,21 0 0 1 819,159 Z" fill="#e8875a"/>
+  <text x="700" y="194" text-anchor="middle" class="subText" font-weight="700">Analytics Reports</text>
+
+  <path d="M600,268 C 636,240 662,218 690,210" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ===== admin ===== -->
+  <circle cx="1035" cy="98" r="12" class="icon"/>
+  <rect x="1021" y="114" width="28" height="26" rx="11" class="icon"/>
+  <text x="1035" y="78" text-anchor="middle" class="subText" font-weight="700">admin</text>
+
+  <line x1="857" y1="128" x2="1016" y2="128" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ② Internal flow → GA 数据库 -->
+  <line x1="455" y1="400" x2="455" y2="536" class="link" marker-end="url(#arrow)"/>
+  <text x="443" y="470" text-anchor="end" class="stepText">② Internal flow</text>
+
+  <path d="M410,546 h90 v50 a45,10 0 0 1 -90,0 z" fill="#dbe6f2" stroke="#8fa3b8" stroke-width="1.4"/>
+  <ellipse cx="455" cy="546" rx="45" ry="10" fill="#eaf1f8" stroke="#8fa3b8" stroke-width="1.4"/>
+  <text x="455" y="630" text-anchor="middle" class="subText">GA 数据库</text>
+
+  <!-- ③ Admin API → Google Cloud -->
+  <line x1="617" y1="352" x2="698" y2="352" class="link" marker-end="url(#arrow)"/>
+  <text x="657" y="368" text-anchor="middle" class="stepText">③ Admin API</text>
+
+  <!-- ===== Google Cloud ===== -->
+  <rect x="700" y="298" width="150" height="108" rx="10" fill="#e9f5ea" stroke="#5fa864" stroke-width="2"/>
+  <polygon points="720,314 733,321 733,335 720,342 707,335 707,321" fill="#5fa864"/>
+  <text x="748" y="324" class="toolTitle" font-size="13">Google Cloud</text>
+  <text x="775" y="352" text-anchor="middle" class="tiny">iam.gserviceaccount.com</text>
+  <text x="775" y="368" text-anchor="middle" class="tiny">服务账号（机器身份）</text>
+
+  <!-- ④ private_key → OAuth2.0 client -->
+  <line x1="852" y1="352" x2="912" y2="352" class="link" marker-end="url(#arrow)"/>
+  <text x="882" y="368" text-anchor="middle" class="stepText">④ private_key</text>
+
+  <circle cx="932" cy="330" r="15" fill="#dbe6f2" stroke="#5b86b8" stroke-width="1.8"/>
+  <circle cx="932" cy="324" r="4.5" fill="#5b7fa6"/>
+  <path d="M923,341 a9,9 0 0 1 18,0 z" fill="#5b7fa6"/>
+  <text x="932" y="392" text-anchor="middle" class="subText">OAuth2.0 client</text>
+
+  <!-- ⑤ → Analytics Data API -->
+  <line x1="949" y1="330" x2="984" y2="330" class="link" marker-end="url(#arrow)"/>
+  <text x="966" y="320" text-anchor="middle" class="stepText">⑤</text>
+
+  <rect x="990" y="290" width="105" height="84" rx="5" fill="#ffffff" stroke="#b9c7d6" stroke-width="1.4"/>
+  <line x1="1002" y1="308" x2="1083" y2="308" stroke="#cfd8e3" stroke-width="3"/>
+  <line x1="1002" y1="320" x2="1070" y2="320" stroke="#cfd8e3" stroke-width="3"/>
+  <line x1="1002" y1="332" x2="1078" y2="332" stroke="#cfd8e3" stroke-width="3"/>
+  <text x="1042" y="352" text-anchor="middle" class="subText" font-weight="700">Analytics</text>
+  <text x="1042" y="365" text-anchor="middle" class="subText" font-weight="700">Data API</text>
+
+  <!-- ⑥ → smtp.hihonor.com → admin -->
+  <line x1="1042" y1="288" x2="1042" y2="242" class="link" marker-end="url(#arrow)"/>
+
+  <rect x="985" y="180" width="110" height="60" rx="6" fill="#eef2f7" stroke="#8fa3b8" stroke-width="1.6"/>
+  <rect x="1000" y="192" width="80" height="12" rx="2" fill="#c3d0dd"/>
+  <rect x="1000" y="210" width="80" height="12" rx="2" fill="#c3d0dd"/>
+  <circle cx="1060" cy="196" r="3" fill="#5fa864"/>
+  <text x="1040" y="236" text-anchor="middle" class="tiny" font-weight="700">smtp.hihonor.com</text>
+  <circle cx="966" cy="176" r="11" fill="#c0392b"/>
+  <text x="966" y="180" text-anchor="middle" class="badgeText">6</text>
+
+  <line x1="1042" y1="178" x2="1038" y2="144" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ===== legend ===== -->
+  <line x1="145" y1="652" x2="975" y2="652" stroke="#e2eaf3" stroke-width="1"/>
+  <text x="145" y="674" class="tiny">调用顺序：① 上报数据　② 落库　③ 管理面 API　④ 换取凭据　⑤ 取数　⑥ 投递告警　｜　箭头方向即数据流向</text>
+</svg>
