@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 760" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#444"/>
+    </marker>
+    <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M8,0 L0,3 L8,6 Z" fill="#444"/>
+    </marker>
+    <style>
+      .box { fill:#e8f1fb; stroke:#0069af; stroke-width:2; }
+      .boxText { fill:#06283d; font-size:14px; font-weight:600; }
+      .subText { fill:#3a5169; font-size:12px; }
+      .decision { fill:#fde8e8; stroke:#c0392b; stroke-width:2; }
+      .decisionText { fill:#8a1f16; font-size:14px; font-weight:700; }
+      .lane { stroke:#cddded; stroke-width:1; }
+      .laneLabelText { fill:#ffffff; font-size:15px; font-weight:700; }
+      .link { stroke:#444; stroke-width:2; fill:none; }
+      .tag { fill:#c0392b; font-size:13px; font-weight:700; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1120" height="760" fill="#ffffff"/>
+  <text x="560" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#06283d">前端监控流程 — 从页面报错到邮件告警</text>
+
+  <!-- ============ 泳道背景与标签 ============ -->
+  <rect x="118" y="60" width="990" height="118" class="lane" fill="#f7fbff"/>
+  <rect x="118" y="178" width="990" height="142" class="lane" fill="#ffffff"/>
+  <rect x="118" y="320" width="990" height="132" class="lane" fill="#f7fbff"/>
+  <rect x="118" y="452" width="990" height="268" class="lane" fill="#ffffff"/>
+
+  <rect x="0" y="60" width="118" height="118" fill="#0069af"/>
+  <rect x="0" y="178" width="118" height="142" fill="#005a96"/>
+  <rect x="0" y="320" width="118" height="132" fill="#0069af"/>
+  <rect x="0" y="452" width="118" height="268" fill="#005a96"/>
+
+  <text transform="translate(36,119) rotate(-90)" text-anchor="middle" class="laneLabelText">官网页面</text>
+  <text transform="translate(36,249) rotate(-90)" text-anchor="middle" class="laneLabelText">Google Analytics</text>
+  <text transform="translate(36,386) rotate(-90)" text-anchor="middle" class="laneLabelText">Google Cloud</text>
+  <text transform="translate(36,586) rotate(-90)" text-anchor="middle" class="laneLabelText">前端监控定时任务</text>
+
+  <!-- ============ ① 官网页面：发生错误 → 日志上报 ============ -->
+  <rect x="200" y="96" width="140" height="48" rx="8" class="box"/>
+  <text x="270" y="125" text-anchor="middle" class="boxText">发生错误</text>
+
+  <rect x="400" y="96" width="140" height="48" rx="8" class="box"/>
+  <text x="470" y="119" text-anchor="middle" class="boxText">日志上报</text>
+  <text x="470" y="135" text-anchor="middle" class="subText">errorTraceEvent</text>
+
+  <line x1="340" y1="120" x2="400" y2="120" class="link" marker-end="url(#arrow)"/>
+  <line x1="470" y1="144" x2="470" y2="214" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ============ ② Google Analytics 层 ============ -->
+  <rect x="440" y="214" width="160" height="50" rx="8" class="box"/>
+  <text x="520" y="244" text-anchor="middle" class="boxText">web tool</text>
+
+  <rect x="760" y="214" width="150" height="50" rx="8" class="box"/>
+  <text x="835" y="244" text-anchor="middle" class="boxText">GA 数据库</text>
+
+  <line x1="760" y1="239" x2="600" y2="239" class="link" marker-end="url(#arrow)" marker-start="url(#arrowStart)"/>
+  <line x1="520" y1="264" x2="520" y2="350" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ============ ③ Google Cloud 层 ============ -->
+  <rect x="180" y="350" width="140" height="54" rx="8" class="box"/>
+  <text x="250" y="382" text-anchor="middle" class="boxText">Google IAM</text>
+
+  <rect x="400" y="350" width="290" height="54" rx="8" class="box"/>
+  <text x="545" y="374" text-anchor="middle" class="boxText">Core Reporting API</text>
+  <text x="545" y="392" text-anchor="middle" class="subText">analytics/v3/data/ga（UA）</text>
+
+  <line x1="320" y1="377" x2="400" y2="377" class="link" marker-end="url(#arrow)"/>
+
+  <!-- ============ ④ 定时任务层 ============ -->
+  <rect x="140" y="478" width="160" height="48" rx="8" class="box"/>
+  <text x="220" y="507" text-anchor="middle" class="boxText">生成 OAuth 客户端</text>
+
+  <rect x="330" y="478" width="120" height="48" rx="8" class="box"/>
+  <text x="390" y="507" text-anchor="middle" class="boxText">密钥鉴权</text>
+
+  <line x1="300" y1="502" x2="330" y2="502" class="link" marker-end="url(#arrow)"/>
+  <path d="M390,478 V436 H250 V404" class="link" marker-end="url(#arrow)"/>
+
+  <rect x="380" y="558" width="160" height="54" rx="8" class="box"/>
+  <text x="460" y="582" text-anchor="middle" class="boxText">得到日志数据</text>
+  <text x="460" y="598" text-anchor="middle" class="subText">runReport 结果集</text>
+
+  <path d="M545,404 V520 H460 V558" class="link" marker-end="url(#arrow)"/>
+
+  <polygon points="605,587 700,530 795,587 700,644" class="decision"/>
+  <text x="700" y="582" text-anchor="middle" class="decisionText">分析，判断</text>
+  <text x="700" y="600" text-anchor="middle" class="decisionText">是否触发告警</text>
+
+  <line x1="540" y1="587" x2="605" y2="587" class="link" marker-end="url(#arrow)"/>
+
+  <rect x="830" y="558" width="160" height="58" rx="8" class="box"/>
+  <text x="910" y="582" text-anchor="middle" class="boxText">SMTP 邮件转发</text>
+  <text x="910" y="598" text-anchor="middle" class="boxText">服务器</text>
+
+  <line x1="795" y1="587" x2="830" y2="587" class="link" marker-end="url(#arrow)"/>
+  <text x="812" y="575" text-anchor="middle" class="tag">是</text>
+
+  <rect x="1005" y="558" width="95" height="58" rx="8" class="box"/>
+  <text x="1052" y="592" text-anchor="middle" class="boxText">接收邮箱</text>
+
+  <line x1="990" y1="587" x2="1005" y2="587" class="link" marker-end="url(#arrow)"/>
+
+  <line x1="700" y1="644" x2="700" y2="668" class="link" marker-end="url(#arrow)"/>
+  <text x="714" y="662" class="tag">否</text>
+
+  <rect x="640" y="670" width="120" height="42" rx="8" class="box"/>
+  <text x="700" y="696" text-anchor="middle" class="boxText">无操作</text>
+</svg>
