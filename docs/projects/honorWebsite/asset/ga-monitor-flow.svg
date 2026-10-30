@@ -3,6 +3,9 @@
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L8,3 L0,6 Z" fill="#444"/>
     </marker>
+    <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M8,0 L0,3 L8,6 Z" fill="#444"/>
+    </marker>
     <style>
       .box { fill:#e8f1fb; stroke:#0069af; stroke-width:2; }
       .boxText { fill:#06283d; font-size:14px; font-weight:600; }
@@ -40,7 +43,7 @@
 
   <rect x="400" y="96" width="140" height="48" rx="8" class="box"/>
   <text x="470" y="119" text-anchor="middle" class="boxText">日志上报</text>
-  <text x="470" y="135" text-anchor="middle" class="subText">gtag exception</text>
+  <text x="470" y="135" text-anchor="middle" class="subText">errorTraceEvent</text>
 
   <line x1="340" y1="120" x2="400" y2="120" class="link" marker-end="url(#arrow)"/>
   <line x1="470" y1="144" x2="470" y2="214" class="link" marker-end="url(#arrow)"/>
@@ -52,7 +55,7 @@
   <rect x="760" y="214" width="150" height="50" rx="8" class="box"/>
   <text x="835" y="244" text-anchor="middle" class="boxText">GA 数据库</text>
 
-  <line x1="760" y1="239" x2="600" y2="239" class="link" marker-end="url(#arrow)"/>
+  <line x1="760" y1="239" x2="600" y2="239" class="link" marker-end="url(#arrow)" marker-start="url(#arrowStart)"/>
   <line x1="520" y1="264" x2="520" y2="350" class="link" marker-end="url(#arrow)"/>
 
   <!-- ============ ③ Google Cloud 层 ============ -->
@@ -60,8 +63,8 @@
   <text x="250" y="382" text-anchor="middle" class="boxText">Google IAM</text>
 
   <rect x="400" y="350" width="290" height="54" rx="8" class="box"/>
-  <text x="545" y="374" text-anchor="middle" class="boxText">analytics.googleapis.com</text>
-  <text x="545" y="392" text-anchor="middle" class="subText">Analytics Data API 服务</text>
+  <text x="545" y="374" text-anchor="middle" class="boxText">Core Reporting API</text>
+  <text x="545" y="392" text-anchor="middle" class="subText">analytics/v3/data/ga（UA）</text>
 
   <line x1="320" y1="377" x2="400" y2="377" class="link" marker-end="url(#arrow)"/>
 
